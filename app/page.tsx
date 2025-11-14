@@ -25,7 +25,7 @@ const defaultLabels: Record<keyof ExpenseMedian, string> = {
 const createInitialExpenseItems = (prefName: string): ExpenseItem[] => {
   const med = prefectureData[prefName];
   return (Object.keys(med) as (keyof ExpenseMedian)[]).map((key) => ({
-    id: key, // とりあえず key をそのまま ID に
+    id: key,
     key,
     label: defaultLabels[key],
     value: String(med[key]),
@@ -103,7 +103,6 @@ export default function Page() {
         if (item.id !== id) return item;
 
         if (preset.kind === "custom") {
-          // カスタム：中央値とのひもづけを外し、ラベル/金額はそのまま
           return {
             ...item,
             key: null,
@@ -111,7 +110,6 @@ export default function Page() {
         }
 
         if (preset.kind === "basic") {
-          // 基本カテゴリ：その都道府県の中央値を反映しつつラベルも更新
           const med = prefectureData[pref];
           const newKey = preset.key;
           return {
@@ -123,7 +121,6 @@ export default function Page() {
         }
 
         if (preset.kind === "extra") {
-          // その他カテゴリ：ラベルだけ変える（中央値はなし）
           return {
             ...item,
             key: null,
@@ -144,7 +141,7 @@ export default function Page() {
         ...prev,
         {
           id: newId,
-          key: null, // カスタム項目
+          key: null,
           label: "",
           value: "",
         },
@@ -172,13 +169,18 @@ export default function Page() {
     0
   );
 
+  // 貯金予測
+  const predictedSaving = totalIncome - totalExpense;
+  const savingRate =
+    totalIncome > 0 ? (predictedSaving / totalIncome) * 100 : 0;
+
   // SavingSimulation に渡す用
   const totalIncomeDigits = totalIncome > 0 ? String(totalIncome) : "";
 
   // 現在の都道府県の中央値（コンポーネントに渡す用）
   const currentMedian: ExpenseMedian = prefectureData[pref];
 
-  // ✅ 「この予算でスタート」ボタンの処理
+  // 「この予算でスタート」ボタン
   const handleStartBudget = () => {
     if (typeof window === "undefined") return;
 
@@ -197,146 +199,266 @@ export default function Page() {
   };
 
   return (
-    <main className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">貯金ができる家計簿アプリ</h1>
+    <main>
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
+        {/* ヘッダー（ブランド＋サブタイトル） */}
+        <header className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+              貯金ができる家計簿アプリ
+            </h1>
+            <p className="text-xs lg:text-sm text-slate-500 mt-1">
+              今月の収入・支出・貯金見込みをひと目で確認できるダッシュボード
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 px-3 py-1 text-xs font-medium">
+              β版 / データはこの端末のブラウザにのみ保存
+            </span>
+          </div>
+        </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2 space-y-4">
-          <div className="bg-white p-4 rounded shadow">
-            {/* 都道府県選択 */}
-            <PrefectureSelector selectedPref={pref} onChange={setPref} />
+        {/* サマリーカード */}
+        <section className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-emerald-50 px-4 py-4 lg:px-6 lg:py-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-semibold text-slate-700">
+                  今月の家計サマリー
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  世帯収入・支出予算・貯金見込みの全体像
+                </p>
+              </div>
+              <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-[11px] font-medium">
+                {pref}
+              </span>
+            </div>
 
-            {/* 世帯人数 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+              <div className="bg-emerald-50 rounded-xl px-3 py-3">
+                <p className="text-xs text-emerald-800 font-medium mb-1">
+                  世帯収入合計
+                </p>
+                <p className="text-lg font-semibold">
+                  {totalIncome.toLocaleString()}円
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl px-3 py-3">
+                <p className="text-xs text-slate-600 font-medium mb-1">
+                  支出予想額（予算）
+                </p>
+                <p className="text-lg font-semibold">
+                  {totalExpense.toLocaleString()}円
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-xl px-3 py-3">
+                <p className="text-xs text-slate-600 font-medium mb-1">
+                  毎月の貯金見込み
+                </p>
+                <p
+                  className={`text-lg font-semibold ${
+                    predictedSaving >= 0 ? "text-emerald-700" : "text-red-500"
+                  }`}
+                >
+                  {predictedSaving.toLocaleString()}円
+                </p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  貯蓄率:{" "}
+                  {Number.isFinite(savingRate) ? savingRate.toFixed(1) : "0.0"}%
+                </p>
+              </div>
+            </div>
+
+            {/* 予算消化バー */}
             <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">
-                収入の人数
-              </label>
-              <select
-                value={memberCount}
-                onChange={(e) => setMemberCount(Number(e.target.value))}
-                className="border rounded px-2 py-1 text-sm"
-              >
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n}人
-                  </option>
-                ))}
-              </select>
+              <div className="flex justify-between text-[11px] text-slate-500 mb-1">
+                <span>予算消化の目安</span>
+                <span>
+                  {totalExpense > 0 && totalIncome > 0
+                    ? `${((totalExpense / totalIncome) * 100).toFixed(1)}%`
+                    : "0.0%"}
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${
+                    totalExpense <= totalIncome
+                      ? "bg-emerald-500"
+                      : "bg-red-400"
+                  }`}
+                  style={{
+                    width: `${
+                      totalIncome > 0
+                        ? Math.min(100, (totalExpense / totalIncome) * 100)
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
             </div>
-
-            {/* 人数分の収入入力 + 収入割合表示 */}
-            <div className="mt-3 space-y-2">
-              {memberIncomes.map((value, index) => {
-                const incomeNum = Number(value) || 0;
-                const hasIncome = incomeNum > 0 && totalIncome > 0;
-                const ratio = hasIncome ? (incomeNum / totalIncome) * 100 : 0;
-
-                const label = hasIncome
-                  ? `収入（${index + 1}人目・世帯の${ratio.toFixed(
-                      1
-                    )}%・半角数字のみ）`
-                  : `収入（${index + 1}人目・半角数字のみ）`;
-
-                return (
-                  <NumberInput
-                    key={index}
-                    label={label}
-                    value={value}
-                    onChange={(val) => handleMemberIncomeChange(index, val)}
-                    placeholder="例: 200000"
-                  />
-                );
-              })}
-            </div>
-
-            {/* 世帯収入合計 */}
-            <div className="mt-2 font-semibold">
-              世帯収入合計: {totalIncome.toLocaleString()}円
-            </div>
-
-            {/* 支出予想額入力（項目名編集＋追加/削除＋プリセット） */}
-            <div className="mt-4">
-              <ExpenseInputsBlock
-                items={expenseItems}
-                median={currentMedian}
-                onItemLabelChange={handleExpenseLabelChange}
-                onItemValueChange={handleExpenseValueChange}
-                onItemPresetChange={handleExpensePresetChange}
-                onAddItem={handleAddExpenseItem}
-                onRemoveItem={handleRemoveExpenseItem}
-              />
-            </div>
-
-            {/* 支出予想額の合計 */}
-            <div className="mt-4 font-semibold">
-              支出予想額の合計: {totalExpense.toLocaleString()}円
-            </div>
-
-            {/* 貯金シミュレーション */}
-            <SavingSimulation
-              incomeDigits={totalIncomeDigits}
-              totalExpense={totalExpense}
-            />
-
-            {/* ▶ この予算でスタート（カレンダーへ） */}
-            <button
-              type="button"
-              onClick={handleStartBudget}
-              className="mt-4 inline-flex items-center px-4 py-2 rounded bg-blue-600 text-white text-sm hover:bg-blue-700"
-            >
-              この予算でスタート（カレンダーページへ）
-            </button>
           </div>
 
-          {/* 支出予算のグラフ（項目名の変更も反映される） */}
-          <div className="bg-white p-4 rounded shadow">
-            <ExpenseChart items={expenseItems} />
+          {/* 右側ミニカード（都道府県選択） */}
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 text-sm space-y-3">
+            <p className="text-xs font-semibold text-slate-700">地域を選択</p>
+            <p className="text-xs text-slate-500">
+              都道府県ごとの支出中央値をもとに、初期の予算を自動セットします。
+            </p>
+            <PrefectureSelector selectedPref={pref} onChange={setPref} />
+            <p className="text-[11px] text-slate-400">
+              ※中央値は実際のデータに近づけておくと、より現実に近いシミュレーションができます。
+            </p>
           </div>
         </section>
 
-        {/* サイドバー：使い方 */}
-        <aside className="space-y-4">
-          <div className="bg-white p-4 rounded shadow text-sm">
-            <p className="font-medium mb-2">使い方</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>
-                まず<strong>都道府県</strong>を選択します。
-              </li>
-              <li>
-                <strong>収入の人数</strong>
-                を選ぶと、その人数分の収入入力欄が表示されます。
-              </li>
-              <li>
-                各収入欄には、その人の収入が
-                <strong>世帯収入合計の何％か</strong>が表示されます。
-              </li>
-              <li>
-                支出の<strong>項目の種類</strong>
-                から、食費・住居費・水道光熱費・
-                交通費などの基本カテゴリ、または通信費・交際費・趣味・娯楽などの
-                その他カテゴリを選べます。
-              </li>
-              <li>
-                支出欄には「今月の<strong>支出予想額（予算）</strong>
-                」を入力してください。 項目名は自由に編集できます（例: 日用品 →
-                サブスク代）。
-              </li>
-              <li>
-                「＋
-                項目を追加」で支出項目を増やせます。不要な行は「削除」で消せます。
-              </li>
-              <li>
-                貯金見込みは、
-                <strong>世帯収入合計 − あなたの支出予想額合計</strong>
-                に基づいて計算します。
-              </li>
-              <li>
-                「この予算でスタート」を押すと、カレンダーページに移動し、
-                予算情報が保存されます。
-              </li>
-            </ul>
+        {/* メインコンテンツ：収入・支出予算・ボタン・グラフ */}
+        <section className="grid gap-6 lg:grid-cols-3">
+          {/* 左：収入＆支出入力 */}
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
+              {/* 収入ブロック */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-slate-800">
+                    収入の設定
+                  </h2>
+                  <span className="text-[11px] text-slate-500">
+                    人数ごとの収入を入力してください
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium mb-1">
+                    収入の人数
+                  </label>
+                  <select
+                    value={memberCount}
+                    onChange={(e) => setMemberCount(Number(e.target.value))}
+                    className="border rounded-md px-2 py-1 text-sm w-32"
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}人
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  {memberIncomes.map((value, index) => {
+                    const incomeNum = Number(value) || 0;
+                    const hasIncome = incomeNum > 0 && totalIncome > 0;
+                    const ratio = hasIncome
+                      ? (incomeNum / totalIncome) * 100
+                      : 0;
+
+                    const label = hasIncome
+                      ? `収入（${index + 1}人目・世帯の${ratio.toFixed(
+                          1
+                        )}%・半角数字のみ）`
+                      : `収入（${index + 1}人目・半角数字のみ）`;
+
+                    return (
+                      <NumberInput
+                        key={index}
+                        label={label}
+                        value={value}
+                        onChange={(val) => handleMemberIncomeChange(index, val)}
+                        placeholder="例: 200000"
+                      />
+                    );
+                  })}
+                </div>
+
+                <div className="text-sm font-semibold text-slate-700">
+                  世帯収入合計:{" "}
+                  <span className="text-base">
+                    {totalIncome.toLocaleString()}円
+                  </span>
+                </div>
+              </div>
+
+              {/* 支出予算ブロック */}
+              <div className="border-t border-slate-100 pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-slate-800">
+                    支出予想額（今月の予算）
+                  </h2>
+                  <span className="text-[11px] text-slate-500">
+                    カテゴリ別の今月の予算を設定してください
+                  </span>
+                </div>
+
+                <ExpenseInputsBlock
+                  items={expenseItems}
+                  median={currentMedian}
+                  onItemLabelChange={handleExpenseLabelChange}
+                  onItemValueChange={handleExpenseValueChange}
+                  onItemPresetChange={handleExpensePresetChange}
+                  onAddItem={handleAddExpenseItem}
+                  onRemoveItem={handleRemoveExpenseItem}
+                />
+
+                <div className="text-sm font-semibold text-slate-700">
+                  支出予想額の合計:{" "}
+                  <span className="text-base">
+                    {totalExpense.toLocaleString()}円
+                  </span>
+                </div>
+
+                {/* 貯金シミュレーション */}
+                <SavingSimulation
+                  incomeDigits={totalIncomeDigits}
+                  totalExpense={totalExpense}
+                />
+
+                {/* カレンダーへ */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleStartBudget}
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-600 text-white text-sm font-medium px-5 py-2.5 hover:bg-emerald-700 transition-colors"
+                  >
+                    この予算でスタート
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </aside>
+
+          {/* 右：使い方・ヒント */}
+          <aside className="space-y-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 text-sm">
+              <p className="font-semibold text-slate-800 mb-2">使い方</p>
+              <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600">
+                <li>
+                  都道府県を選ぶと、その地域の支出中央値をもとに
+                  初期予算がセットされます。
+                </li>
+                <li>
+                  収入の人数を選び、それぞれの収入を半角数字で入力してください。
+                </li>
+                <li>
+                  支出の項目の種類から「食費」「住居費」などを選ぶと、
+                  中央値をもとに予算が提案されます。
+                </li>
+                <li>項目名は自由に編集できます（例: 日用品 → サブスク代）。</li>
+                <li>
+                  「この予算でスタート」でカレンダーページに移動し、
+                  日別の実績を入力できます。
+                </li>
+              </ul>
+            </div>
+          </aside>
+        </section>
+
+        {/* 支出予算のグラフ */}
+        <section>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5">
+            <ExpenseChart items={expenseItems} />
+          </div>
+        </section>
       </div>
     </main>
   );
