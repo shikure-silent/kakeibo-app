@@ -100,10 +100,10 @@ export default function CalendarPage() {
   // 月の切り替え（前月 / 次月）
   const handleMonthChange = (delta: number) => {
     if (!calendarInfo) return;
-    const baseIndex = calendarInfo.month - 1 + delta; // 0 ベース
+    const baseIndex = calendarInfo.month - 1 + delta;
 
     const newYear = calendarInfo.year + Math.floor(baseIndex / 12);
-    const newMonthIndex = ((baseIndex % 12) + 12) % 12; // マイナス対策
+    const newMonthIndex = ((baseIndex % 12) + 12) % 12;
     const newMonth = newMonthIndex + 1;
 
     setupMonth(newYear, newMonth);
@@ -130,12 +130,10 @@ export default function CalendarPage() {
             1
           ).getDay(); // 0 = 日曜
 
-          // 月初めまで空マスを入れる
           for (let i = 0; i < firstWeekday; i++) {
             cells.push({ day: null, index: null });
           }
 
-          // 日付ぶんのマス
           for (let day = 1; day <= calendarInfo.daysInMonth; day++) {
             cells.push({ day, index: day - 1 });
           }
@@ -145,141 +143,154 @@ export default function CalendarPage() {
       : [];
 
   return (
-    <main className="max-w-5xl mx-auto p-6">
-      {/* 上部ヘッダー：タイトル＋ホームへ戻る */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">カレンダーページ</h1>
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="text-sm px-3 py-1 rounded border border-gray-300 hover:bg-gray-50"
-        >
-          ホームに戻る
-        </button>
-      </div>
-
-      {!budget || !calendarInfo ? (
-        <p className="text-sm text-gray-600">
-          まだ予算が設定されていません。
-          トップページで支出予想額を入力して「この予算でスタート」を押してください。
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 左側：予算サマリ＋カレンダー入力 */}
-          <section className="lg:col-span-2 space-y-4">
-            {/* 予算サマリ */}
-            <div className="bg-white p-4 rounded shadow">
-              <h2 className="font-semibold mb-2">
-                {budget.prefecture} の予算サマリー
-              </h2>
-              <div className="text-sm space-y-1">
-                <div>
-                  表示中の月: {calendarInfo.year}年{calendarInfo.month}月
-                </div>
-                <div>世帯収入合計: {budget.totalIncome.toLocaleString()}円</div>
-                <div>
-                  支出予想額の合計: {budget.totalExpense.toLocaleString()}円
-                </div>
-                <div>
-                  現在までの実績支出合計: {totalSpent.toLocaleString()}円
-                </div>
-                <div>
-                  予算残り:{" "}
-                  {(budget.totalExpense - totalSpent).toLocaleString()}円
-                </div>
-                <div className="text-xs text-gray-500">
-                  予算を保存した日時:{" "}
-                  {new Date(budget.createdAt).toLocaleString("ja-JP")}
-                </div>
-              </div>
-            </div>
-
-            {/* 日別支出カレンダー */}
-            <div className="bg-white p-4 rounded shadow">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="font-semibold">日別の支出入力</h2>
-                <div className="flex items-center gap-2 text-sm">
-                  <button
-                    type="button"
-                    onClick={() => handleMonthChange(-1)}
-                    className="px-2 py-1 border rounded hover:bg-gray-50"
-                  >
-                    ＜ 前の月
-                  </button>
-                  <span>
-                    {calendarInfo.year}年{calendarInfo.month}月
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleMonthChange(1)}
-                    className="px-2 py-1 border rounded hover:bg-gray-50"
-                  >
-                    次の月 ＞
-                  </button>
-                </div>
-              </div>
-
-              {/* 曜日ヘッダー */}
-              <div className="grid grid-cols-7 gap-1 text-xs mb-1">
-                {weekdayLabels.map((w) => (
-                  <div
-                    key={w}
-                    className="text-center font-semibold text-gray-600"
-                  >
-                    {w}
-                  </div>
-                ))}
-              </div>
-
-              {/* カレンダー本体 */}
-              <div className="grid grid-cols-7 gap-1 text-xs">
-                {calendarCells.map((cell, idx) =>
-                  cell.day == null ? (
-                    <div
-                      key={idx}
-                      className="border border-transparent rounded p-2"
-                    />
-                  ) : (
-                    <div
-                      key={idx}
-                      className="border rounded p-1 flex flex-col gap-1 min-h-[64px]"
-                    >
-                      <div className="text-[10px] text-gray-500 text-right">
-                        {cell.day}日
-                      </div>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        className="border rounded px-1 py-0.5 text-right text-[11px]"
-                        value={dailyAmounts[cell.index!] || ""}
-                        onChange={(e) =>
-                          handleDailyAmountChange(cell.index!, e.target.value)
-                        }
-                        placeholder="0"
-                      />
-                      <span className="text-[10px] text-gray-400 text-right">
-                        円
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-
-              <p className="mt-2 text-xs text-gray-500">
-                ※入力内容はブラウザ内（localStorage）に自動保存されます。
-              </p>
-            </div>
-          </section>
-
-          {/* 右側：日別支出の縦グラフ */}
-          <aside className="space-y-4">
-            <div className="bg-white p-4 rounded shadow">
-              <CalendarSpendingChart data={chartData} />
-            </div>
-          </aside>
+    <main>
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
+        {/* 上部ヘッダー：タイトル＋ホームへ戻る */}
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold tracking-tight">
+              カレンダーで支出を記録
+            </h1>
+            <p className="text-xs lg:text-sm text-slate-500 mt-1">
+              日別の実績を入力して、予算とのズレを確認しましょう
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="text-xs lg:text-sm px-3 py-1.5 rounded-full border border-slate-300 hover:bg-slate-50"
+          >
+            ホームに戻る
+          </button>
         </div>
-      )}
+
+        {!budget || !calendarInfo ? (
+          <p className="text-sm text-slate-600">
+            まだ予算が設定されていません。
+            ホーム画面で支出予想額を入力して「この予算でスタート」を押してください。
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* 左側：予算サマリ＋カレンダー入力 */}
+            <section className="lg:col-span-2 space-y-4">
+              {/* 予算サマリ */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5">
+                <h2 className="text-sm font-semibold text-slate-800 mb-2">
+                  {budget.prefecture} の予算サマリー
+                </h2>
+                <div className="text-sm space-y-1">
+                  <div>
+                    表示中の月: {calendarInfo.year}年{calendarInfo.month}月
+                  </div>
+                  <div>
+                    世帯収入合計: {budget.totalIncome.toLocaleString()}円
+                  </div>
+                  <div>
+                    支出予想額の合計: {budget.totalExpense.toLocaleString()}円
+                  </div>
+                  <div>
+                    現在までの実績支出合計: {totalSpent.toLocaleString()}円
+                  </div>
+                  <div>
+                    予算残り:{" "}
+                    {(budget.totalExpense - totalSpent).toLocaleString()}円
+                  </div>
+                  <div className="text-xs text-slate-500">
+                    予算を保存した日時:{" "}
+                    {new Date(budget.createdAt).toLocaleString("ja-JP")}
+                  </div>
+                </div>
+              </div>
+
+              {/* 日別支出カレンダー */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-slate-800">
+                    日別の支出入力
+                  </h2>
+                  <div className="flex items-center gap-2 text-xs lg:text-sm">
+                    <button
+                      type="button"
+                      onClick={() => handleMonthChange(-1)}
+                      className="px-2 py-1 rounded-full border border-slate-300 hover:bg-slate-50"
+                    >
+                      ＜ 前の月
+                    </button>
+                    <span className="font-medium">
+                      {calendarInfo.year}年{calendarInfo.month}月
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleMonthChange(1)}
+                      className="px-2 py-1 rounded-full border border-slate-300 hover:bg-slate-50"
+                    >
+                      次の月 ＞
+                    </button>
+                  </div>
+                </div>
+
+                {/* 曜日ヘッダー */}
+                <div className="grid grid-cols-7 gap-1 text-[11px] mb-1">
+                  {weekdayLabels.map((w) => (
+                    <div
+                      key={w}
+                      className="text-center font-semibold text-slate-500"
+                    >
+                      {w}
+                    </div>
+                  ))}
+                </div>
+
+                {/* カレンダー本体 */}
+                <div className="grid grid-cols-7 gap-1 text-xs">
+                  {calendarCells.map((cell, idx) =>
+                    cell.day == null ? (
+                      <div
+                        key={idx}
+                        className="border border-transparent rounded p-2"
+                      />
+                    ) : (
+                      <div
+                        key={idx}
+                        className="border rounded-xl p-1.5 flex flex-col gap-1 min-h-[70px] bg-white hover:bg-emerald-50/40 transition-colors"
+                      >
+                        <div className="text-[10px] text-slate-500 text-right">
+                          {cell.day}日
+                        </div>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          className="border rounded-md px-1 py-0.5 text-right text-[11px]"
+                          value={dailyAmounts[cell.index!] || ""}
+                          onChange={(e) =>
+                            handleDailyAmountChange(cell.index!, e.target.value)
+                          }
+                          placeholder="0"
+                        />
+                        <span className="text-[10px] text-slate-400 text-right">
+                          円
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                <p className="mt-2 text-xs text-slate-500">
+                  ※入力内容はブラウザ内（localStorage）に自動保存されます。
+                </p>
+              </div>
+            </section>
+
+            {/* 右側：日別支出の縦グラフ */}
+            <aside className="space-y-4">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-5 lg:py-5">
+                <CalendarSpendingChart data={chartData} />
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
     </main>
   );
 }
