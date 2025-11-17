@@ -1,227 +1,186 @@
 "use client";
+
 import React from "react";
-import { ExpenseMedian } from "../data/prefectureData";
 import NumberInput from "./NumberInput";
-
-export type ExpenseItem = {
-  id: string;
-  key: keyof ExpenseMedian | null; // 食費/家賃などのキー。カスタムは null
-  label: string; // 画面に表示する項目名
-  value: string; // 金額（文字列）
-};
-
-// プリセット選択時に親コンポーネントへ渡す情報
-export type ExpensePresetSelection =
-  | { kind: "basic"; key: keyof ExpenseMedian } // 中央値ありの基本カテゴリ
-  | { kind: "extra"; label: string } // 中央値なしの追加カテゴリ
-  | { kind: "custom" }; // 完全カスタム
-
-const defaultLabels: Record<keyof ExpenseMedian, string> = {
-  food: "食費",
-  utilities: "水道・光熱費",
-  dailyGoods: "日用品",
-  rent: "住居費（家賃）",
-  transport: "交通費",
-};
+import { ExpenseMedian } from "../data/prefectureData";
+import { CustomExpenseItem } from "../types/budget";
+import { CUSTOM_EXPENSE_TEMPLATES } from "../lib/const";
 
 type Props = {
-  items: ExpenseItem[];
   median: ExpenseMedian;
-  onItemLabelChange: (id: string, label: string) => void;
-  onItemValueChange: (id: string, value: string) => void;
-  onItemPresetChange: (id: string, preset: ExpensePresetSelection) => void;
-  onAddItem: () => void;
-  onRemoveItem: (id: string) => void;
+  inputs: Record<keyof ExpenseMedian, string>;
+  onChange: (key: keyof ExpenseMedian, value: string) => void;
+  customItems: CustomExpenseItem[];
+  onAddCustomItem: () => void;
+  onChangeCustomItemLabel: (id: string, label: string) => void;
+  onChangeCustomItemAmount: (id: string, amount: string) => void;
+  onRemoveCustomItem: (id: string) => void;
 };
 
-// 中央値とひもづく「基本カテゴリ」
-type BasicPresetOption = {
-  id: string;
+// デフォルト8項目
+const DEFAULT_ITEMS: {
   key: keyof ExpenseMedian;
   label: string;
-};
-
-// その他のよくあるカテゴリ（中央値はひもづけない）
-type ExtraPresetOption = { id: string; label: string };
-
-const basicPresetOptions: BasicPresetOption[] = [
-  { id: "food", key: "food", label: "食費" },
-  { id: "dailyGoods", key: "dailyGoods", label: "日用品" },
-  { id: "rent", key: "rent", label: "住居費（家賃）" },
-  { id: "utilities", key: "utilities", label: "水道・光熱費" },
-  { id: "transport", key: "transport", label: "交通費" },
-];
-
-const extraPresetOptions: ExtraPresetOption[] = [
-  { id: "communication", label: "通信費" },
-  { id: "social", label: "交際費" },
-  { id: "hobby", label: "趣味・娯楽" },
-  { id: "fashion", label: "衣服・美容" },
-  { id: "health", label: "健康・医療" },
-  { id: "education", label: "教育・子ども" },
-  { id: "insurance", label: "保険" },
-  { id: "special", label: "特別な支出" },
-  { id: "other", label: "その他" },
+}[] = [
+  { key: "food", label: "食費" },
+  { key: "utilities", label: "水道・光熱費" },
+  { key: "dailyGoods", label: "日用品" },
+  { key: "rent", label: "家賃・住居" },
+  { key: "transport", label: "交通費" },
+  { key: "subscription", label: "サブスク" },
+  { key: "entertainment", label: "娯楽費（趣味娯楽）" },
+  { key: "medicalInsurance", label: "医療・保険" },
 ];
 
 export default function ExpenseInputsBlock({
-  items,
   median,
-  onItemLabelChange,
-  onItemValueChange,
-  onItemPresetChange,
-  onAddItem,
-  onRemoveItem,
+  inputs,
+  onChange,
+  customItems,
+  onAddCustomItem,
+  onChangeCustomItemLabel,
+  onChangeCustomItemAmount,
+  onRemoveCustomItem,
 }: Props) {
   return (
-    <div>
-      <h3 className="font-semibold mb-2">
-        支出予想額（今月の予算。項目名は自由に編集できます）
-      </h3>
-      <div className="grid grid-cols-1 gap-3">
-        {items.map((item, index) => {
-          const medianValue = item.key != null ? median[item.key] : 0;
+    <div className="space-y-4">
+      {/* デフォルト8項目 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {DEFAULT_ITEMS.map((item) => (
+          <div
+            key={item.key}
+            className="
+              rounded-2xl border border-slate-100 bg-slate-50
+              px-3 py-3 lg:px-4 lg:py-3
+              space-y-1.5
+            "
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[11px] font-medium text-slate-700">
+                {item.label}
+              </p>
+              <p className="text-[10px] text-slate-400">
+                目安: ¥{median[item.key].toLocaleString()}
+              </p>
+            </div>
+            <NumberInput
+              label="予算額（半角数字）"
+              value={inputs[item.key]}
+              onChange={(v) => onChange(item.key, v)}
+              placeholder="例: 30000"
+            />
+          </div>
+        ))}
+      </div>
 
-          const baseLabel =
-            item.label ||
-            (item.key ? defaultLabels[item.key] : `項目${index + 1}`);
+      {/* カスタム項目（他アプリにもありそうな項目＋手動入力） */}
+      <div className="mt-2 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium text-slate-700">
+            カスタム項目（例: 教育費・ペット費・保険料の細分化 など）
+          </p>
+          <button
+            type="button"
+            onClick={onAddCustomItem}
+            className="
+              inline-flex items-center gap-1
+              text-[11px] font-semibold
+              text-emerald-700
+              hover:text-emerald-800
+            "
+          >
+            <span>＋</span>
+            <span>項目を追加</span>
+          </button>
+        </div>
 
-          const labelText =
-            item.key != null
-              ? `${baseLabel}（中央値: ${medianValue.toLocaleString()}円）`
-              : baseLabel;
+        {customItems.length === 0 && (
+          <p className="text-[11px] text-slate-400">
+            まだカスタム項目はありません。「項目を追加」から作成できます。
+          </p>
+        )}
 
-          // セレクトボックスの現在値を決める
-          const selectValue = (() => {
-            if (item.key != null) {
-              const basic = basicPresetOptions.find((o) => o.key === item.key);
-              if (basic) return `basic:${basic.id}`;
-            }
-            const extra = extraPresetOptions.find(
-              (o) => o.label === item.label
-            );
-            if (extra) return `extra:${extra.id}`;
-            return "";
-          })();
-
-          return (
+        <div className="space-y-2">
+          {customItems.map((item) => (
             <div
               key={item.id}
-              className="bg-white p-3 rounded shadow-sm space-y-2 border border-gray-100"
+              className="
+                rounded-2xl border border-slate-100 bg-white
+                px-3 py-3 lg:px-4 lg:py-3
+                space-y-3
+              "
             >
-              <div className="flex items-start gap-2">
-                <div className="flex-1 space-y-1">
-                  {/* デフォルト項目選択（食費/家賃など & その他カテゴリ） */}
-                  <div>
-                    <label className="block text-xs font-medium mb-1">
-                      項目の種類
-                    </label>
-                    <select
-                      className="w-full border rounded px-2 py-1 text-xs"
-                      value={selectValue}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === "") {
-                          onItemPresetChange(item.id, { kind: "custom" });
-                          return;
-                        }
-                        if (v.startsWith("basic:")) {
-                          const id = v.slice("basic:".length);
-                          const basic = basicPresetOptions.find(
-                            (o) => o.id === id
-                          );
-                          if (basic) {
-                            onItemPresetChange(item.id, {
-                              kind: "basic",
-                              key: basic.key,
-                            });
-                          }
-                          return;
-                        }
-                        if (v.startsWith("extra:")) {
-                          const id = v.slice("extra:".length);
-                          const extra = extraPresetOptions.find(
-                            (o) => o.id === id
-                          );
-                          if (extra) {
-                            onItemPresetChange(item.id, {
-                              kind: "extra",
-                              label: extra.label,
-                            });
-                          }
-                          return;
-                        }
-                      }}
-                    >
-                      <option value="">カスタム（自由入力）</option>
-                      <optgroup label="基本カテゴリ（中央値あり）">
-                        {basicPresetOptions.map((opt) => (
-                          <option key={opt.id} value={`basic:${opt.id}`}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                      <optgroup label="その他カテゴリ">
-                        {extraPresetOptions.map((opt) => (
-                          <option key={opt.id} value={`extra:${opt.id}`}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </optgroup>
-                    </select>
-                  </div>
-
-                  {/* 項目名（ユーザー編集用） */}
-                  <div>
-                    <label className="block text-xs font-medium mb-1">
-                      項目名
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full border rounded px-2 py-1 text-sm"
-                      value={item.label}
-                      onChange={(e) =>
-                        onItemLabelChange(item.id, e.target.value)
+              {/* 項目名 + 候補から選ぶ */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-medium text-slate-600">
+                  項目名
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={item.label}
+                    onChange={(e) =>
+                      onChangeCustomItemLabel(item.id, e.target.value)
+                    }
+                    placeholder="例: 教育費 / ペット費 / 推し活 など"
+                    className="
+                      flex-1 border border-slate-200 rounded-full
+                      px-3 py-1.5 text-xs text-slate-700
+                      bg-white
+                      focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                    "
+                  />
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v) {
+                        onChangeCustomItemLabel(item.id, v);
                       }
-                      placeholder={baseLabel}
-                    />
-                  </div>
+                    }}
+                    className="
+                      w-full sm:w-48 border border-slate-200 rounded-full
+                      px-3 py-1.5 text-[11px] text-slate-700
+                      bg-white
+                      focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                    "
+                  >
+                    <option value="">候補から選ぶ</option>
+                    {CUSTOM_EXPENSE_TEMPLATES.map((label) => (
+                      <option key={label} value={label}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+              </div>
 
-                {/* 削除ボタン */}
+              {/* 金額＋削除ボタン */}
+              <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                <div className="flex-1">
+                  <NumberInput
+                    label="予算額（半角数字）"
+                    value={item.value}
+                    onChange={(v) => onChangeCustomItemAmount(item.id, v)}
+                    placeholder="例: 5000"
+                  />
+                </div>
                 <button
                   type="button"
-                  className="text-xs text-red-500 mt-6 px-2"
-                  onClick={() => onRemoveItem(item.id)}
+                  onClick={() => onRemoveCustomItem(item.id)}
+                  className="
+                    text-[10px] text-slate-400
+                    hover:text-red-500 underline-offset-2 hover:underline
+                    self-start sm:self-end
+                  "
                 >
                   削除
                 </button>
               </div>
-
-              {/* 金額入力 */}
-              <NumberInput
-                label={labelText}
-                value={item.value}
-                onChange={(v) => onItemValueChange(item.id, v)}
-                placeholder={
-                  item.key != null && medianValue
-                    ? String(medianValue)
-                    : "例: 10000"
-                }
-              />
             </div>
-          );
-        })}
+          ))}
+        </div>
       </div>
-
-      {/* 追加ボタン */}
-      <button
-        type="button"
-        className="mt-3 text-xs text-blue-600 underline"
-        onClick={onAddItem}
-      >
-        ＋ 項目を追加
-      </button>
     </div>
   );
 }

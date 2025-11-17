@@ -9,8 +9,13 @@ import {
   ResponsiveContainer,
   TooltipProps,
 } from "recharts";
-import type { ExpenseItem } from "./ExpenseInputsBlock";
 import { ExpenseMedian } from "../data/prefectureData";
+
+type ExpenseChartItem = {
+  key?: keyof ExpenseMedian | null;
+  label?: string | null;
+  value?: number | string | null;
+};
 
 const FALLBACK_LABELS: Record<keyof ExpenseMedian, string> = {
   food: "食費",
@@ -18,6 +23,9 @@ const FALLBACK_LABELS: Record<keyof ExpenseMedian, string> = {
   dailyGoods: "日用品",
   rent: "家賃",
   transport: "交通費",
+  subscription: "サブスク",
+  entertainment: "娯楽費（趣味娯楽）",
+  medicalInsurance: "医療・保険",
 };
 
 const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
@@ -34,7 +42,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
 };
 
 type Props = {
-  items: ExpenseItem[];
+  items: ExpenseChartItem[];
 };
 
 export default function ExpenseChart({ items }: Props) {
@@ -51,7 +59,7 @@ export default function ExpenseChart({ items }: Props) {
 
   return (
     <div>
-      <h3 className="font-semibold mb-2">支出の内訳</h3>
+      <h3 className="font-semibold mb-2">支出予想額の内訳</h3>
       <div style={{ width: "100%", height: 280 }}>
         <ResponsiveContainer>
           <PieChart>

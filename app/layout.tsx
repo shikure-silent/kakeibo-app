@@ -1,16 +1,13 @@
 // app/layout.tsx
 import "./globals.css";
 import type { Metadata } from "next";
-import { Noto_Sans_JP } from "next/font/google";
-
-const notoSansJp = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "500", "700"], // 普通 / 中 / 太字
-});
+import BottomNav from "../components/BottomNav";
+import TopNav from "../components/TopNav";
+import { APP_NAME } from "../lib/const";
 
 export const metadata: Metadata = {
-  title: "貯金ができる家計簿アプリ",
-  description: "貯金ができる家計簿アプリ",
+  title: APP_NAME,
+  description: APP_NAME,
 };
 
 export default function RootLayout({
@@ -20,10 +17,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body
-        className={`${notoSansJp.className} bg-slate-50 text-slate-800 antialiased`}
-      >
-        <div className="min-h-screen">{children}</div>
+      <body className="bg-slate-50 text-slate-800 antialiased font-sans">
+        {/* PC用トップナビ（lg以上で表示） */}
+        <TopNav />
+
+        {/* メインコンテンツ（下ナビぶん余白確保） */}
+        <div className="min-h-screen pb-16 lg:pb-0">{children}</div>
+
+        {/* スマホ用ボトムナビ（lg未満で表示） */}
+        <BottomNav />
       </body>
     </html>
   );
