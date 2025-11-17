@@ -3,3 +3,8 @@
 @tailwind utilities;
 
 html, body, #__next { height: 100%; }
+
+body {
+  font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo",
+    "MS PGothic", sans-serif;
+}
