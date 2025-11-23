@@ -17,6 +17,33 @@ export default function SavingHighlightCard({
   savingRate,
   ageGroupLabel,
 }: Props) {
+  const noInput = totalIncome <= 0 && totalExpense <= 0;
+
+  const formatSavingText = () => {
+    if (noInput) {
+      return "収入と支出を入力してください";
+    }
+
+    if (saving >= 0) {
+      return `¥${saving.toLocaleString()}`;
+    }
+
+    // マイナス時も「赤字」とは言わず、マイナス表記だけにする
+    const abs = Math.abs(saving);
+    return `¥-${abs.toLocaleString()}`;
+    // もし「-10,000円」スタイルが好みなら:
+    // return `-${abs.toLocaleString()}円`;
+  };
+
+  const savingTextColor = noInput
+    ? "text-slate-900"
+    : saving >= 0
+    ? "text-emerald-900"
+    : "text-slate-900"; // マイナスでも赤くしない
+
+  const savingRateColor =
+    savingRate !== null && saving < 0 ? "text-slate-900" : "text-emerald-700";
+
   return (
     <section className="bg-white rounded-2xl shadow-sm border border-emerald-100 px-4 py-4 lg:px-6 lg:py-5 flex flex-col gap-3">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
@@ -24,25 +51,13 @@ export default function SavingHighlightCard({
           <p className="text-[11px] font-medium text-emerald-700">
             今月の貯金見込み
           </p>
-          <p
-            className={`text-2xl lg:text-3xl font-bold ${
-              saving >= 0 ? "text-emerald-900" : "text-red-700"
-            }`}
-          >
-            {totalIncome <= 0 && totalExpense <= 0
-              ? "収入と支出を入力してください"
-              : saving >= 0
-              ? `¥${saving.toLocaleString()}`
-              : `¥${Math.abs(saving).toLocaleString()} の赤字`}
+          <p className={`text-2xl lg:text-3xl font-bold ${savingTextColor}`}>
+            {formatSavingText()}
           </p>
           {savingRate !== null && totalIncome > 0 && (
             <p className="text-[11px] text-slate-500 mt-1">
               貯蓄率:{" "}
-              <span
-                className={saving >= 0 ? "text-emerald-700" : "text-red-600"}
-              >
-                {savingRate.toFixed(1)}%
-              </span>
+              <span className={savingRateColor}>{savingRate.toFixed(1)}%</span>
             </p>
           )}
         </div>

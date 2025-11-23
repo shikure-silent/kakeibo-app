@@ -1,6 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 import { MonthlyBudget } from "../../types/calendar";
 
 type WeeklySummary = {
@@ -19,7 +27,11 @@ type Props = {
   maxAmount: number;
   dailyTarget: number | null;
   weeklySummary: WeeklySummary | null;
+  onSelectDayFromChart?: (day: number) => void;
 };
+
+const formatYen = (value: number | null | undefined) =>
+  `¥${Number(value ?? 0).toLocaleString()}`;
 
 export default function MonthlySummaryCard({
   monthlyTotal,
@@ -27,132 +39,132 @@ export default function MonthlySummaryCard({
   remainingBudget,
   daysInMonth,
   amounts,
-  maxAmount,
   dailyTarget,
   weeklySummary,
+  onSelectDayFromChart,
 }: Props) {
+  const data = useMemo(
+    () =>
+      Array.from({ length: daysInMonth }, (_, i) => ({
+        day: i + 1,
+        amount: amounts[i] || 0,
+      })),
+    [amounts, daysInMonth]
+  );
+
+  const handleBarClick = (entry: any) => {
+    if (!onSelectDayFromChart) return;
+    const day = entry?.payload?.day;
+    if (typeof day === "number") {
+      onSelectDayFromChart(day);
+    }
+  };
+
+  const dailyTargetBadge =
+    dailyTarget != null
+      ? `💡 約${Math.round(dailyTarget).toLocaleString()}円 / 日`
+      : null;
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 space-y-3">
-      <h2 className="text-sm font-semibold text-slate-800">今月のサマリー</h2>
-
-      <div className="space-y-1.5">
-        <p className="text-[11px] text-slate-500">今月の合計支出</p>
-        <p className="text-xl font-bold text-slate-900">
-          ¥{monthlyTotal.toLocaleString()}
-        </p>
-
-        {budget ? (
-          <p
-            className={`mt-1 text-[11px] ${
-              remainingBudget !== null && remainingBudget < 0
-                ? "text-red-600"
-                : "text-emerald-700"
-            }`}
-          >
-            予算との差額:{" "}
-            {remainingBudget !== null && remainingBudget < 0
-              ? `¥${Math.abs(remainingBudget).toLocaleString()} オーバー`
-              : `残り ¥${
-                  remainingBudget !== null
-                    ? remainingBudget.toLocaleString()
-                    : "0"
-                }`}
+    <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">
+            今月のサマリー
+          </h2>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            支出の流れと予算の残りをざっくりチェックできます。
           </p>
-        ) : (
-          <p className="mt-1 text-[11px] text-slate-400">
-            この月の予算がまだ設定されていません。ホーム画面で支出予算を入力し、
-            「この予算でスタート」を押すとここに表示されます。
-          </p>
-        )}
-
-        <p className="mt-1 text-[11px] text-slate-400">
-          1日あたり平均{" "}
-          {daysInMonth > 0
-            ? `¥${Math.round(monthlyTotal / daysInMonth).toLocaleString()}`
-            : "¥0"}{" "}
-          です。
-        </p>
-      </div>
-
-      {/* 日別の棒グラフ */}
-      <div className="mt-3">
-        <p className="text-[11px] text-slate-500 mb-1">
-          日別の支出（棒グラフ）
-        </p>
-        <div className="h-32 flex items-end gap-[2px] bg-slate-50 rounded-xl px-2 py-2">
-          {Array.from({ length: daysInMonth }).map((_, index) => {
-            const amt = amounts[index] || 0;
-            const ratio = maxAmount > 0 ? amt / maxAmount : 0;
-            const heightPercent = ratio === 0 ? 0 : Math.max(8, ratio * 100);
-
-            const isOverTarget = dailyTarget !== null && amt > dailyTarget;
-
-            const barColorClass =
-              amt === 0
-                ? "bg-slate-200"
-                : isOverTarget
-                ? "bg-red-400"
-                : "bg-emerald-400";
-
-            return (
-              <div
-                key={index}
-                className="flex-1 flex flex-col justify-end items-center h-full"
-              >
-                <div
-                  className={`w-full rounded-t-full ${barColorClass}`}
-                  style={{
-                    height: `${heightPercent}%`,
-                  }}
-                />
-                <span className="mt-1 text-[9px] text-slate-400">
-                  {index + 1}
-                </span>
-              </div>
-            );
-          })}
         </div>
-        {dailyTarget !== null && (
-          <p className="mt-1 text-[10px] text-slate-400">
-            緑: 1日の目安以内 / 赤: 1日の目安超え（目安: 予算 ÷ 日数 ≒ ¥
-            {Math.round(dailyTarget).toLocaleString()})
-          </p>
+        {dailyTargetBadge && (
+          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-[11px] font-medium text-amber-700">
+            {dailyTargetBadge}
+          </span>
         )}
       </div>
 
-      {/* 直近1週間のサマリー */}
-      {weeklySummary && (
-        <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2 space-y-1">
-          <p className="text-[11px] font-medium text-slate-700">
-            直近1週間の支出サマリー
+      {/* 数値サマリー */}
+      <div className="grid grid-cols-2 gap-3 text-[12px]">
+        <div className="space-y-0.5">
+          <p className="text-slate-500">今月の支出合計</p>
+          <p className="text-base font-semibold text-slate-900">
+            {formatYen(monthlyTotal)}
           </p>
-          <p className="text-[11px] text-slate-600">
-            {weeklySummary.startDay}〜{weeklySummary.endDay}日の合計:{" "}
-            <span className="font-semibold">
-              ¥{weeklySummary.total.toLocaleString()}
-            </span>
-          </p>
-          <p className="text-[11px] text-slate-600">
-            1日あたり平均: ¥{Math.round(weeklySummary.average).toLocaleString()}
-          </p>
-          {remainingBudget !== null && (
-            <p className="text-[11px] text-slate-600">
-              月の予算残額:{" "}
-              <span
-                className={
-                  remainingBudget < 0
-                    ? "text-red-600 font-semibold"
-                    : "text-emerald-700 font-semibold"
-                }
-              >
-                {remainingBudget < 0
-                  ? `¥${Math.abs(remainingBudget).toLocaleString()} オーバー`
-                  : `¥${remainingBudget.toLocaleString()}`}
-              </span>
+          {weeklySummary && (
+            <p className="text-[11px] text-slate-500 mt-1">
+              直近7日間：{formatYen(weeklySummary.total)}（
+              {formatYen(Math.round(weeklySummary.average))}/日）
             </p>
           )}
         </div>
-      )}
-    </div>
+
+        <div className="space-y-0.5 text-right">
+          <p className="text-slate-500">残り予算</p>
+          <p
+            className={`text-base font-semibold ${
+              remainingBudget != null && remainingBudget < 0
+                ? "text-red-500"
+                : "text-emerald-600"
+            }`}
+          >
+            {remainingBudget != null ? formatYen(remainingBudget) : "未設定"}
+          </p>
+          {budget && (
+            <p className="text-[11px] text-slate-500 mt-1">
+              予算：{formatYen(budget.totalBudget)}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* 棒グラフ */}
+      <div className="mt-2">
+        {daysInMonth === 0 ? (
+          <p className="text-[12px] text-slate-400">
+            今月のカレンダー情報が見つかりません。
+          </p>
+        ) : monthlyTotal === 0 ? (
+          <p className="text-[12px] text-slate-400">
+            まだ今月の支出は登録されていません。カレンダーか入力タブから支出を追加してみましょう。
+          </p>
+        ) : (
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data}>
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 10, fill: "#64748b" }}
+                  axisLine={{ stroke: "#e2e8f0" }}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(value: any, name: any) => {
+                    const v = Number(value || 0);
+                    // [表示したい値, 表示したいラベル] を返す
+                    return [`¥${v.toLocaleString()}`, "支出合計"];
+                  }}
+                  labelFormatter={(label: any) => `${label}日`}
+                />
+                {dailyTarget && (
+                  <ReferenceLine
+                    y={dailyTarget}
+                    stroke="#f97316"
+                    strokeDasharray="4 4"
+                  />
+                )}
+                <Bar
+                  dataKey="amount"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={18}
+                  fill="#22c55e"
+                  cursor={onSelectDayFromChart ? "pointer" : "default"}
+                  onClick={handleBarClick}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

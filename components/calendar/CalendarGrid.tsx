@@ -2,113 +2,142 @@
 
 import React from "react";
 import { WEEKDAY_LABELS } from "../../lib/const";
+import { DetailRecord } from "../../types/calendar";
 
 type Props = {
   calendarCells: (number | null)[];
-  amounts: number[];
+  amounts: number[]; // 支出合計
+  incomeAmounts: number[]; // 収入合計（新規）
   selectedDay: number | null;
   onSelectDay: (day: number) => void;
   today: Date;
   currentYear: number;
   currentMonth: number;
+  dailyDetails: DetailRecord[][];
 };
 
 export default function CalendarGrid({
   calendarCells,
   amounts,
+  incomeAmounts,
   selectedDay,
   onSelectDay,
   today,
   currentYear,
   currentMonth,
+  dailyDetails,
 }: Props) {
-  const isToday = (day: number | null) => {
-    if (!day) return false;
-    return (
-      today.getFullYear() === currentYear &&
-      today.getMonth() + 1 === currentMonth &&
-      today.getDate() === day
-    );
-  };
+  const todayYear = today.getFullYear();
+  const todayMonth = today.getMonth() + 1;
+  const todayDate = today.getDate();
 
   return (
-    <section className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-800">月間カレンダー</h2>
-        <p className="text-[11px] text-slate-400">
-          金額の合計は、その日の支出の合計です。
-        </p>
-      </div>
-
+    <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 lg:p-4">
       {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 text-center text-[11px] font-medium text-slate-500 mt-1">
+      <div className="grid grid-cols-7 mb-2">
         {WEEKDAY_LABELS.map((w) => (
-          <div key={w} className="py-1">
+          <div
+            key={w}
+            className="text-center text-[10px] font-medium text-slate-400"
+          >
             {w}
           </div>
         ))}
       </div>
 
-      {/* カレンダー本体 */}
-      <div className="grid grid-cols-7 gap-1.5 text-xs">
+      {/* 日付セル */}
+      <div className="grid grid-cols-7 gap-1.5 lg:gap-2">
         {calendarCells.map((day, idx) => {
           if (!day) {
             return (
-              <div key={idx} className="aspect-square rounded-xl text-[11px]" />
+              <div
+                key={idx}
+                className="aspect-square rounded-xl bg-transparent"
+              />
             );
           }
 
-          const total = amounts[day - 1] || 0;
-          const hasSpending = total > 0;
+          const isToday =
+            currentYear === todayYear &&
+            currentMonth === todayMonth &&
+            day === todayDate;
           const isSelected = selectedDay === day;
+
+          const spending = amounts[day - 1] ?? 0;
+          const income = incomeAmounts[day - 1] ?? 0;
+
+          const dayDetails =
+            dailyDetails && dailyDetails.length >= day
+              ? dailyDetails[day - 1] || []
+              : [];
+
+          const hasDetails = dayDetails.length > 0;
+          const visibleDetails = hasDetails ? dayDetails.slice(0, 2) : [];
 
           return (
             <button
               key={idx}
               type="button"
               onClick={() => onSelectDay(day)}
-              className={`
-                aspect-square
-                rounded-xl
-                border
-                px-1.5 py-1.5
-                flex flex-col justify-between
-                text-left
-                transition
-                ${
-                  isSelected
-                    ? "bg-emerald-100 border-emerald-400"
-                    : hasSpending
-                    ? "bg-emerald-50 border-emerald-200 hover:bg-emerald-100"
-                    : "bg-white border-slate-200 hover:bg-slate-50"
-                }
-              `}
+              className={`relative flex flex-col items-start justify-between rounded-xl border px-1.5 py-1.5 lg:px-2 lg:py-2 text-left transition-colors ${
+                isSelected
+                  ? "border-emerald-500 bg-emerald-50"
+                  : "border-slate-200 bg-slate-50 hover:bg-slate-100"
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <span
-                  className={`
-                    text-[11px] font-medium
-                    ${isToday(day) ? "text-emerald-700" : "text-slate-600"}
-                  `}
-                >
+              {/* 上部：日付＋今日ラベル */}
+              <div className="flex items-center justify-between w-full">
+                <span className="text-[11px] font-semibold text-slate-800">
                   {day}
                 </span>
-                {isToday(day) && (
-                  <span className="text-[10px] text-emerald-600 font-medium">
+                {isToday && (
+                  <span className="rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white">
                     今日
                   </span>
                 )}
               </div>
-              <div className="text-[11px] text-right mt-1 leading-tight">
-                {hasSpending ? (
+
+              {/* 中段：カテゴリの簡易表示（最大2件） */}
+              <div className="mt-0.5 flex-1 w-full min-h-[26px] space-y-0.5">
+                {hasDetails ? (
+                  <div className="space-y-0.5">
+                    {visibleDetails.map((rec, i) => (
+                      <p
+                        key={i}
+                        className="text-[10px] text-slate-600 truncate"
+                        title={rec.category || ""}
+                      >
+                        {rec.category || "未分類"}
+                      </p>
+                    ))}
+                    {dayDetails.length > visibleDetails.length && (
+                      <p className="text-[10px] text-slate-400">
+                        +{dayDetails.length - visibleDetails.length}件
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-slate-300">内訳なし</span>
+                )}
+              </div>
+
+              {/* 下部：支出合計 ＋ 収入 */}
+              <div className="mt-0.5 w-full text-right leading-tight">
+                {spending > 0 || income > 0 ? (
                   <>
-                    <span className="block text-slate-500">合計</span>
-                    <span className="font-semibold text-slate-800">
-                      ¥{total.toLocaleString()}
-                    </span>
+                    {spending > 0 && (
+                      <span className="block text-[10px] text-slate-700">
+                        ¥{spending.toLocaleString()}
+                      </span>
+                    )}
+                    {income > 0 && (
+                      <span className="block text-[10px] text-emerald-600">
+                        +¥{income.toLocaleString()}
+                      </span>
+                    )}
                   </>
                 ) : (
-                  <span className="text-slate-300">なし</span>
+                  <span className="text-[10px] text-slate-300">なし</span>
                 )}
               </div>
             </button>
