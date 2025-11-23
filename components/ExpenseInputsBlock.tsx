@@ -46,31 +46,49 @@ export default function ExpenseInputsBlock({
     <div className="space-y-4">
       {/* デフォルト8項目 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {DEFAULT_ITEMS.map((item) => (
-          <div
-            key={item.key}
-            className="
-              rounded-2xl border border-slate-100 bg-slate-50
-              px-3 py-3 lg:px-4 lg:py-3
-              space-y-1.5
-            "
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[11px] font-medium text-slate-700">
-                {item.label}
-              </p>
-              <p className="text-[10px] text-slate-400">
-                目安: ¥{median[item.key].toLocaleString()}
-              </p>
+        {DEFAULT_ITEMS.map((item) => {
+          const isFixed = item.key === "rent" || item.key === "subscription";
+
+          return (
+            <div
+              key={item.key}
+              className="
+                rounded-2xl border border-slate-100 bg-slate-50
+                px-3 py-3 lg:px-4 lg:py-3
+                space-y-1.5
+              "
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-[11px] font-medium text-slate-700">
+                    {item.label}
+                  </p>
+                  {isFixed && (
+                    <span
+                      className="
+                        text-[10px] px-2 py-[2px]
+                        rounded-full
+                        bg-emerald-50 text-emerald-600
+                        border border-emerald-100
+                      "
+                    >
+                      自動更新
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  目安: ¥{median[item.key].toLocaleString()}
+                </p>
+              </div>
+              <NumberInput
+                label="予算額（半角数字）"
+                value={inputs[item.key]}
+                onChange={(v) => onChange(item.key, v)}
+                placeholder="例: 30000"
+              />
             </div>
-            <NumberInput
-              label="予算額（半角数字）"
-              value={inputs[item.key]}
-              onChange={(v) => onChange(item.key, v)}
-              placeholder="例: 30000"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* カスタム項目（他アプリにもありそうな項目＋手動入力） */}
@@ -169,12 +187,17 @@ export default function ExpenseInputsBlock({
                   type="button"
                   onClick={() => onRemoveCustomItem(item.id)}
                   className="
-                    text-[10px] text-slate-400
-                    hover:text-red-500 underline-offset-2 hover:underline
+                    inline-flex items-center gap-1
+                    px-3 py-1 rounded-full
+                    border border-red-200
+                    text-[11px] font-medium
+                    text-red-600 bg-red-50
+                    hover:bg-red-100 hover:border-red-300
                     self-start sm:self-end
                   "
                 >
-                  削除
+                  <span>🗑</span>
+                  <span>削除</span>
                 </button>
               </div>
             </div>

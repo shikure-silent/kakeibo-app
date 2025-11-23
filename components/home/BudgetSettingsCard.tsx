@@ -36,7 +36,7 @@ export default function BudgetSettingsCard({
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
       <div className="flex items-center justify-between gap-2">
         <h2 className="text-sm lg:text-base font-semibold text-slate-800">
-          支出予算（今月の予算）
+          支出予算　(今月の予算)
         </h2>
         <p className="text-[11px] text-slate-400">
           選択した年代（{ageGroupLabel}）の全国データをもとにした初期値ですが、

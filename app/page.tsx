@@ -3,12 +3,16 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExpenseMedian } from "../data/prefectureData";
+import { AgeGroup, ageGroupLabels, ageGroupMedians } from "../data/ageGroupData";
+import { buildBudgetKey } from "../lib/const";
 import {
-  AgeGroup,
-  ageGroupLabels,
-  ageGroupMedians,
-} from "../data/ageGroupData";
-import { buildBudgetKey, STORAGE_KEYS } from "../lib/const";
+  buildExpenseInputs,
+  FixedExpenseKey,
+  fixedExpenseKeys,
+  loadFixedExpenses,
+  mergeFixedExpenses,
+  saveFixedExpense,
+} from "../lib/homeStorage";
 
 import SavingHighlightCard from "../components/home/SavingHighlightCard";
 import IncomeSettingsCard, {
@@ -16,36 +20,6 @@ import IncomeSettingsCard, {
 } from "../components/home/IncomeSettingsCard";
 import BudgetSettingsCard from "../components/home/BudgetSettingsCard";
 import { CustomExpenseItem } from "../types/budget";
-
-type FixedExpenseKey = "rent" | "subscription";
-type FixedExpenseStore = Partial<Record<FixedExpenseKey, number>>;
-
-const fixedExpenseKeys: FixedExpenseKey[] = ["rent", "subscription"];
-
-const loadFixedExpenses = (): FixedExpenseStore => {
-  if (typeof window === "undefined") return {};
-  const raw = window.localStorage.getItem(STORAGE_KEYS.FIXED_EXPENSES);
-  if (!raw) return {};
-  try {
-    const parsed = JSON.parse(raw) as FixedExpenseStore;
-    return parsed || {};
-  } catch {
-    return {};
-  }
-};
-
-const saveFixedExpense = (key: FixedExpenseKey, value: number) => {
-  if (typeof window === "undefined") return;
-  const prev = loadFixedExpenses();
-  const next: FixedExpenseStore = {
-    ...prev,
-    [key]: value,
-  };
-  window.localStorage.setItem(
-    STORAGE_KEYS.FIXED_EXPENSES,
-    JSON.stringify(next)
-  );
-};
 
 export default function HomePage() {
   const router = useRouter();
@@ -57,20 +31,10 @@ export default function HomePage() {
   const [expenseInputs, setExpenseInputs] = useState<
     Record<keyof ExpenseMedian, string>
   >(() => {
-    const base = ageGroupMedians["all"];
-    return {
-      food: String(base.food),
-      utilities: String(base.utilities),
-      dailyGoods: String(base.dailyGoods),
-      rent: String(base.rent),
-      transport: String(base.transport),
-      subscription: String(base.subscription),
-      entertainment: String(base.entertainment),
-      medicalInsurance: String(base.medicalInsurance),
-    };
+    return buildExpenseInputs("all");
   });
 
-  // カスタム支出項目（娯楽費以外の自由枠）
+  // カスタム支出項目
   const [customExpenseItems, setCustomExpenseItems] = useState<
     CustomExpenseItem[]
   >([]);
@@ -81,32 +45,24 @@ export default function HomePage() {
     { name: "本人", value: "" },
   ]);
 
+  // 「スタート前確認」モーダル
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   // 年代が変わったら、その年代の全国値をベースに支出予算をリセット
   // ＋ 家賃・サブスクは固定費ストアで上書き
   useEffect(() => {
-    const med = ageGroupMedians[ageGroup];
-    let baseInputs: Record<keyof ExpenseMedian, string> = {
-      food: String(med.food),
-      utilities: String(med.utilities),
-      dailyGoods: String(med.dailyGoods),
-      rent: String(med.rent),
-      transport: String(med.transport),
-      subscription: String(med.subscription),
-      entertainment: String(med.entertainment),
-      medicalInsurance: String(med.medicalInsurance),
-    };
-
-    const fixed = loadFixedExpenses();
-    fixedExpenseKeys.forEach((key) => {
-      const v = fixed[key];
-      if (typeof v === "number") {
-        baseInputs[key] = String(v);
-      }
-    });
-
-    setExpenseInputs(baseInputs);
+    const baseInputs = buildExpenseInputs(ageGroup);
+    const merged = mergeFixedExpenses(baseInputs, loadFixedExpenses());
+    setExpenseInputs(merged);
     // カスタム項目は「自分で決める部分」なのでそのまま維持
   }, [ageGroup]);
+
+  // 初回マウント時に固定費を反映（SSRとの不一致を避けるため）
+  useEffect(() => {
+    const fixed = loadFixedExpenses();
+    if (Object.keys(fixed).length === 0) return;
+    setExpenseInputs((prev) => mergeFixedExpenses(prev, fixed));
+  }, []);
 
   // 人数変更 → メンバー配列を増減
   useEffect(() => {
@@ -226,8 +182,17 @@ export default function HomePage() {
   const saving = totalIncome - totalExpense;
   const savingRate = totalIncome > 0 ? (saving / totalIncome) * 100 : null;
 
-  // 「この予算でスタート」→ 予算保存してカレンダーへ
-  const handleStartWithBudget = () => {
+  // 「この予算でスタート」クリック時 → まず確認モーダルを開く
+  const handleOpenConfirmModal = () => {
+    setIsConfirmOpen(true);
+  };
+
+  const handleCloseConfirmModal = () => {
+    setIsConfirmOpen(false);
+  };
+
+  // モーダルで「カレンダーへ進む」押下 → 実際に保存して遷移
+  const handleConfirmStart = () => {
     if (typeof window === "undefined") return;
 
     const today = new Date();
@@ -264,9 +229,13 @@ export default function HomePage() {
         month,
         totalBudget: totalExpense,
         items: detailItems,
+        // 将来カレンダーページで「スタート時点の貯金見込み」も表示できるように
+        totalIncome,
+        saving,
       })
     );
 
+    setIsConfirmOpen(false);
     router.push("/calendar");
   };
 
@@ -323,13 +292,13 @@ export default function HomePage() {
               onChangeCustomItemLabel={handleCustomExpenseLabelChange}
               onChangeCustomItemAmount={handleCustomExpenseValueChange}
               onRemoveCustomItem={handleRemoveCustomExpenseItem}
-              onStart={handleStartWithBudget}
+              onStart={handleOpenConfirmModal}
             />
           </section>
 
           {/* 右：使い方・説明 */}
           <aside className="space-y-4">
-            <div className="bg白 rounded-2xl shadow-sm border border-slate-100 px-4 py-4 text-xs lg:text-sm text-slate-700 space-y-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 text-xs lg:text-sm text-slate-700 space-y-2">
               <p className="font-medium">この画面でできること</p>
               <ul className="list-disc pl-4 space-y-1">
                 <li>
@@ -352,6 +321,86 @@ export default function HomePage() {
           </aside>
         </div>
       </div>
+
+      {/* ⭐ スタート前の確認モーダル */}
+      {isConfirmOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="relative max-w-md w-full bg-white rounded-2xl shadow-lg p-5 space-y-4">
+            {/* ✖︎ ボタン */}
+            <button
+              type="button"
+              onClick={handleCloseConfirmModal}
+              aria-label="閉じる"
+              className="
+          absolute top-2.5 right-2.5
+          text-slate-400 hover:text-slate-600
+          text-lg leading-none
+        "
+            >
+              ×
+            </button>
+
+            <h2 className="text-sm lg:text-base font-semibold text-slate-900">
+              この予算でスタートしますか？
+            </h2>
+            <p className="text-sm text-slate-700">
+              今の設定だと、
+              <span className="font-semibold">
+                {" "}
+                今月の貯金見込みは{" "}
+                <span
+                  className={saving >= 0 ? "text-emerald-600" : "text-red-500"}
+                >
+                  ¥{Math.abs(saving).toLocaleString()}
+                </span>
+              </span>
+              {saving >= 0
+                ? " です。一緒に貯金をがんばりましょう！"
+                : " の赤字になりそうです。予算を見直してからスタートしてもOKです。"}
+            </p>
+            {savingRate !== null && (
+              <p className="text-xs text-slate-500">
+                貯金率の目安:{" "}
+                <span
+                  className={
+                    saving >= 0
+                      ? "text-emerald-600 font-medium"
+                      : "text-red-500 font-medium"
+                  }
+                >
+                  {savingRate.toFixed(1)}%
+                </span>
+              </p>
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleCloseConfirmModal}
+                className="
+            px-3 py-1.5 rounded-full
+            text-[11px] font-medium
+            text-slate-600 bg-slate-100
+            hover:bg-slate-200
+          "
+              >
+                あとで変更する
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmStart}
+                className="
+            px-4 py-1.5 rounded-full
+            text-[11px] font-semibold
+            bg-emerald-600 text-white
+            hover:bg-emerald-700
+          "
+              >
+                カレンダーへ進む
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
