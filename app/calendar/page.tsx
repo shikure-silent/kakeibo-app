@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  buildBudgetKey,
-  WEEKDAY_LABELS,
-} from "../../lib/const";
+import { buildBudgetKey, WEEKDAY_LABELS } from "../../lib/const";
 import {
   calcDayTotals,
   loadAmountsFromStorage,
@@ -518,6 +515,11 @@ export default function CalendarPage() {
                           <p className="text-[10px] text-slate-500">
                             {rec.payFrom || "支出元なし"}
                           </p>
+                          {rec.shopName && (
+                            <p className="text-[10px] text-slate-500">
+                              店舗: {rec.shopName}
+                            </p>
+                          )}
                         </div>
                         <div className="ml-2 text-right font-semibold text-slate-900">
                           ¥{Number(rec.amount || 0).toLocaleString()}

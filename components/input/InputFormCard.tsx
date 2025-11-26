@@ -16,8 +16,12 @@ type Props = {
   onChangeDate: (value: string) => void;
   category: string;
   onChangeCategory: (value: string) => void;
+  customCategory: string;
+  onChangeCustomCategory: (value: string) => void;
   payFrom: string;
   onChangePayFrom: (value: string) => void;
+  shopName: string;
+  onChangeShopName: (value: string) => void;
   memo: string;
   onChangeMemo: (value: string) => void;
   amount: string;
@@ -32,8 +36,12 @@ export default function InputFormCard({
   onChangeDate,
   category,
   onChangeCategory,
+  customCategory,
+  onChangeCustomCategory,
   payFrom,
   onChangePayFrom,
+  shopName,
+  onChangeShopName,
   memo,
   onChangeMemo,
   amount,
@@ -71,8 +79,7 @@ export default function InputFormCard({
               type="button"
               onClick={() => onChangeMode("expense")}
               className={`
-                px-3 py-1.5 rounded-full
-                font-medium
+                px-3 py-1.5 rounded-full font-medium
                 ${
                   mode === "expense"
                     ? "bg-white text-emerald-700 shadow-sm"
@@ -86,8 +93,7 @@ export default function InputFormCard({
               type="button"
               onClick={() => onChangeMode("income")}
               className={`
-                px-3 py-1.5 rounded-full
-                font-medium
+                px-3 py-1.5 rounded-full font-medium
                 ${
                   mode === "income"
                     ? "bg-white text-emerald-700 shadow-sm"
@@ -100,7 +106,7 @@ export default function InputFormCard({
           </div>
         </div>
 
-        {/* 日付＋カテゴリ＋支出元 */}
+        {/* 日付＋カテゴリ＋支出元/入金元 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 日付 */}
           <div className="space-y-1.5">
@@ -120,7 +126,7 @@ export default function InputFormCard({
             />
           </div>
 
-          {/* カテゴリ */}
+          {/* カテゴリ ＋ 自由入力 */}
           <div className="space-y-1.5">
             <label className="block text-[11px] font-medium text-slate-600">
               カテゴリ
@@ -141,6 +147,23 @@ export default function InputFormCard({
                 </option>
               ))}
             </select>
+
+            {/* 自由入力カテゴリ（任意） */}
+            <input
+              type="text"
+              value={customCategory}
+              onChange={(e) => onChangeCustomCategory(e.target.value)}
+              className="
+                w-full border border-slate-200 rounded-full
+                px-3 py-1.5 text-xs text-slate-700
+                bg-white
+                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+              "
+              placeholder="例: コンビニ、飲み会 など"
+            />
+            <p className="text-[10px] text-slate-400">
+              何も入力しない場合は上のカテゴリ名がそのまま使われます。
+            </p>
           </div>
 
           {/* 支出元 / 入金元 */}
@@ -148,23 +171,70 @@ export default function InputFormCard({
             <label className="block text-[11px] font-medium text-slate-600">
               {mode === "expense" ? "支出元" : "入金元"}
             </label>
-            <select
-              value={payFrom}
-              onChange={(e) => onChangePayFrom(e.target.value)}
-              className="
-                w-full border border-slate-200 rounded-full
-                px-3 py-1.5 text-xs text-slate-700
-                bg-white
-                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-              "
-            >
-              {PAY_FROM_OPTIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+
+            {mode === "expense" ? (
+              <>
+                {/* 支出モード：選択式 */}
+                <select
+                  value={payFrom}
+                  onChange={(e) => onChangePayFrom(e.target.value)}
+                  className="
+                    w-full border border-slate-200 rounded-full
+                    px-3 py-1.5 text-xs text-slate-700
+                    bg-white
+                    focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                  "
+                >
+                  {PAY_FROM_OPTIONS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-400">
+                  現金・クレジットカード・電子決済など、支出に使った方法を選べます。
+                </p>
+              </>
+            ) : (
+              <>
+                {/* 収入モード：自由入力 */}
+                <input
+                  type="text"
+                  value={payFrom}
+                  onChange={(e) => onChangePayFrom(e.target.value)}
+                  className="
+                    w-full border border-slate-200 rounded-full
+                    px-3 py-1.5 text-xs text-slate-700
+                    bg-white
+                    focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                  "
+                  placeholder="例: 給与、〇〇銀行、フリマ売上 など"
+                />
+                <p className="text-[10px] text-slate-400">
+                  入金元を自由に入力できます。（会社名・銀行名・サービス名など）
+                </p>
+              </>
+            )}
           </div>
+        </div>
+
+        {/* 店舗名（任意） */}
+        <div className="space-y-1.5">
+          <label className="block text-[11px] font-medium text-slate-600">
+            店舗名（任意）
+          </label>
+          <input
+            type="text"
+            value={shopName}
+            onChange={(e) => onChangeShopName(e.target.value)}
+            className="
+              w-full border border-slate-200 rounded-2xl
+              px-3 py-2 text-xs text-slate-700
+              bg-white
+              focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+            "
+            placeholder="例: スーパーA、コンビニB など"
+          />
         </div>
 
         {/* メモ */}
@@ -183,7 +253,7 @@ export default function InputFormCard({
               focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
               resize-none
             "
-            placeholder="お店の名前や用途などをメモできます。"
+            placeholder="用途やメモを書き残せます。"
           />
         </div>
 
@@ -191,11 +261,14 @@ export default function InputFormCard({
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
           <div className="flex-1">
             <NumberInput
-              label="金額（半角数字）"
+              label="金額"
               value={amount}
               onChange={onChangeAmount}
-              placeholder="例: 3000"
+              placeholder="例: 3,000"
             />
+            <p className="mt-1 text-[10px] text-slate-400">
+              全角やカンマで入力しても、自動で半角数字に整えられます。
+            </p>
           </div>
           <div>
             <button

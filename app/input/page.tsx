@@ -31,6 +31,20 @@ const parseDateString = (dateStr: string) => {
 const getDaysInMonth = (year: number, month: number) =>
   new Date(year, month, 0).getDate();
 
+// 金額入力を保存用に正規化
+// ・全角 → 半角
+// ・カンマ削除
+// ・数字以外は削除
+const normalizeAmountInput = (raw: string): string => {
+  if (!raw) return "";
+  const zenkakuToHankaku = raw.replace(/[０-９]/g, (ch) =>
+    String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+  );
+  const noComma = zenkakuToHankaku.replace(/,/g, "");
+  const digitsOnly = noComma.replace(/[^0-9]/g, "");
+  return digitsOnly;
+};
+
 // ある日付の明細を読み込む
 const loadDetailsForDate = (dateStr: string): DetailRecord[] => {
   if (typeof window === "undefined") return [];
@@ -82,7 +96,8 @@ const saveDetailsForDate = (dateStr: string, records: DetailRecord[]) => {
   }
 
   const spendingKey = buildSpendingKey(year, month);
-  window.localStorage.setItem(spendingKey, JSON.stringify(amounts));
+  // ★ カレンダー側と同じ `{ amounts }` 形式で保存
+  window.localStorage.setItem(spendingKey, JSON.stringify({ amounts }));
 };
 
 export default function InputPage() {
@@ -95,6 +110,8 @@ export default function InputPage() {
   const [payFrom, setPayFrom] = useState<string>("現金");
   const [memo, setMemo] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string>("");
+  const [customCategory, setCustomCategory] = useState<string>("");
+  const [shopName, setShopName] = useState<string>("");
 
   // 選択日の明細
   const [dayRecords, setDayRecords] = useState<DetailRecord[]>([]);
@@ -116,8 +133,15 @@ export default function InputPage() {
 
   const handleChangeMode = (next: Mode) => {
     setMode(next);
-  };
 
+    if (next === "expense") {
+      // 支出に戻したら、とりあえず「現金」に戻す
+      setPayFrom("現金");
+    } else {
+      // 収入のときは空欄からスタート
+      setPayFrom("");
+    }
+  };
   const handleAddRecord = () => {
     if (!isClient) return;
 
@@ -126,24 +150,34 @@ export default function InputPage() {
       return;
     }
 
-    const trimmedAmount = amountInput.trim();
-    if (!trimmedAmount) {
+    const trimmed = amountInput.trim();
+    if (!trimmed) {
       alert("金額を入力してください。");
       return;
     }
 
-    const numeric = Number(trimmedAmount);
+    // ★ 全角・カンマなどを正規化してから数値化
+    const normalizedStr = normalizeAmountInput(trimmed);
+    if (!normalizedStr) {
+      alert("金額は0より大きい数字で入力してください。");
+      return;
+    }
+
+    const numeric = Number(normalizedStr);
     if (!Number.isFinite(numeric) || numeric <= 0) {
-      alert("金額は0より大きい半角数字で入力してください。");
+      alert("金額は0より大きい数字で入力してください。");
       return;
     }
 
     const now = new Date();
+    const categoryToSave =
+      customCategory.trim() !== "" ? customCategory.trim() : category;
     const newRecord: DetailRecord = {
       mode,
       amount: numeric,
-      category,
+      category: categoryToSave,
       payFrom,
+      shopName: shopName.trim(),
       memo: memo.trim(),
       date: dateStr,
       createdAt: now.toISOString(),
@@ -158,6 +192,8 @@ export default function InputPage() {
     // 入力欄は金額とメモだけリセット
     setAmountInput("");
     setMemo("");
+    setShopName("");
+    setCustomCategory("");
   };
 
   const handleDeleteRecord = (index: number) => {
@@ -198,9 +234,13 @@ export default function InputPage() {
               onChangeMode={handleChangeMode}
               dateStr={dateStr}
               onChangeDate={handleChangeDate}
+              customCategory={customCategory}
+              onChangeCustomCategory={setCustomCategory}
               category={category}
               onChangeCategory={setCategory}
               payFrom={payFrom}
+              shopName={shopName}
+              onChangeShopName={setShopName}
               onChangePayFrom={setPayFrom}
               memo={memo}
               onChangeMemo={setMemo}

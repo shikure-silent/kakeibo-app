@@ -46,6 +46,7 @@ export const EXPENSE_CATEGORIES = [
   "通信費",
   "交通費",
   "交際費",
+  "趣味・娯楽",
   "医療・美容",
   "教育・子ども",
   "サブスク",
@@ -66,9 +67,12 @@ export const CUSTOM_EXPENSE_TEMPLATES = [
 // 入力タブ：収入カテゴリ候補
 export const INCOME_CATEGORIES = [
   "給与・賞与",
-  "副業",
+  "事業・報酬",
+  "副業・臨時収入",
+  "投資・配当",
+  "年金",
+  "給付金・助成金・還付金",
   "お小遣い",
-  "臨時収入",
   "その他収入",
 ] as const;
 
@@ -76,9 +80,10 @@ export const INCOME_CATEGORIES = [
 export const PAY_FROM_OPTIONS = [
   "現金",
   "クレジットカード",
+  "デビットカード",
   "電子マネー",
+  "QRコード決済",
   "銀行口座",
   "その他",
 ] as const;
-
 export const APP_NAME = "無理なく貯金ができる家計簿アプリ" as const;
