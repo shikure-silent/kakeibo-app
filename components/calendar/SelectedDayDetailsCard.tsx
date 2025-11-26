@@ -26,8 +26,10 @@ const DEFAULT_CATEGORIES = [
 const DEFAULT_PAY_FROM = [
   "現金",
   "クレジットカード",
-  "電子決済",
-  "口座振替",
+  "デビットカード",
+  "電子マネー",
+  "QRコード決済",
+  "銀行口座",
   "その他",
 ];
 
@@ -388,6 +390,19 @@ export default function SelectedDayDetailsCard({
                 value={addDraft.category ?? ""}
                 onChange={(e) => handleChangeDraft("category", e.target.value)}
                 placeholder="例：食費 / 日用品 など"
+              />
+            </div>
+            {/* 店舗名（任意） */}
+            <div className="space-y-1">
+              <label className="block text-[11px] text-slate-500">
+                店舗名（任意）
+              </label>
+              <input
+                type="text"
+                className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                value={addDraft.shopName ?? ""}
+                onChange={(e) => handleChangeDraft("shopName", e.target.value)}
+                placeholder="例: スーパーA、コンビニB など"
               />
             </div>
 

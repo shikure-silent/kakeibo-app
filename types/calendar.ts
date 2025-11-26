@@ -7,6 +7,7 @@ export type DetailRecord = {
   amount: number;
   category: string;
   payFrom: string;
+  shopName?: string;
   memo: string;
   date: string; // YYYY-MM-DD
   createdAt: string; // ISO文字列など

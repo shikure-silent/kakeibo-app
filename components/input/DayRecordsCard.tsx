@@ -33,6 +33,8 @@ export default function DayRecordsCard({
     [records]
   );
 
+  const net = incomeTotal - expenseTotal;
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 space-y-3">
       <div className="flex items-center justify-between gap-2">
@@ -71,6 +73,18 @@ export default function DayRecordsCard({
                 </span>
               </p>
             )}
+            <p>
+              その日の収支:{" "}
+              <span
+                className={`font-semibold ${
+                  net < 0 ? "text-slate-900" : "text-emerald-700"
+                }`}
+              >
+                {net >= 0
+                  ? `+¥${net.toLocaleString()}`
+                  : `¥-${Math.abs(net).toLocaleString()}`}
+              </span>
+            </p>
           </div>
 
           <div className="space-y-2 max-h-64 overflow-auto pr-1">
@@ -105,6 +119,11 @@ export default function DayRecordsCard({
                     {rec.mode === "expense" ? "支出元" : "入金元"}:{" "}
                     {rec.payFrom}
                   </p>
+                  {rec.shopName && (
+                    <p className="text-[11px] text-slate-500">
+                      店舗: {rec.shopName}
+                    </p>
+                  )}
                   {rec.memo && (
                     <p className="text-[11px] text-slate-500 whitespace-pre-wrap break-words">
                       {rec.memo}
