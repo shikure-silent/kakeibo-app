@@ -8,3 +8,48 @@ body {
   font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo",
     "MS PGothic", sans-serif;
 }
+
+/* テーマ用のベースカラー */
+.theme-light {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+.theme-dark {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* テーマが付いたときに、固定色クラスを軽めに上書き */
+.theme-dark .bg-white {
+  background-color: #1f2937 !important;
+}
+.theme-dark .bg-slate-50,
+.theme-dark .bg-slate-100 {
+  background-color: #111827 !important;
+}
+.theme-dark .text-slate-900,
+.theme-dark .text-slate-800,
+.theme-dark .text-slate-700,
+.theme-dark .text-slate-600 {
+  color: #d1d5db !important;
+}
+.theme-dark .text-slate-500,
+.theme-dark .text-slate-400 {
+  color: #9ca3af !important;
+}
+.theme-dark .text-slate-300 {
+  color: #7c8799 !important;
+}
+.theme-dark .border-slate-100,
+.theme-dark .border-slate-200,
+.theme-dark .border-slate-300 {
+  border-color: #334155 !important;
+}
+.theme-dark input,
+.theme-dark textarea,
+.theme-dark select {
+  background-color: #1f2937;
+  color: #e2e8f0;
+  border-color: #334155;
+}

@@ -36,16 +36,15 @@ export const saveFixedExpense = (key: FixedExpenseKey, value: number) => {
 export const buildExpenseInputs = (
   ageGroup: AgeGroup
 ): Record<keyof ExpenseMedian, string> => {
-  const med = ageGroupMedians[ageGroup];
   return {
-    food: String(med.food),
-    utilities: String(med.utilities),
-    dailyGoods: String(med.dailyGoods),
-    rent: String(med.rent),
-    transport: String(med.transport),
-    subscription: String(med.subscription),
-    entertainment: String(med.entertainment),
-    medicalInsurance: String(med.medicalInsurance),
+    food: "",
+    utilities: "",
+    dailyGoods: "",
+    rent: "",
+    transport: "",
+    subscription: "",
+    entertainment: "",
+    medicalInsurance: "",
   };
 };
 
