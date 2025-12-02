@@ -66,24 +66,27 @@ export default function SettingsPage() {
     saveAppSettings(next);
   };
 
+  const reorderList = (list: string[], from: number, to: number) => {
+    if (from === to) return list;
+    const next = [...list];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    return next;
+  };
+
   const handleReorder = (
     list: string[],
     setList: (v: string[]) => void,
-    index: number,
-    direction: "up" | "down",
+    from: number,
+    to: number,
     kind: "expense" | "income" | "payfrom"
   ) => {
-    const newList = [...list];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= newList.length) return;
-    const tmp = newList[targetIndex];
-    newList[targetIndex] = newList[index];
-    newList[index] = tmp;
-    setList(newList);
+    const reordered = reorderList(list, from, to);
+    setList(reordered);
 
-    if (kind === "expense") saveExpenseCategories(newList);
-    if (kind === "income") saveIncomeCategories(newList);
-    if (kind === "payfrom") savePayFromPresets(newList);
+    if (kind === "expense") saveExpenseCategories(reordered);
+    if (kind === "income") saveIncomeCategories(reordered);
+    if (kind === "payfrom") savePayFromPresets(reordered);
   };
 
   const handleEditItem = (
@@ -133,20 +136,20 @@ export default function SettingsPage() {
 
   return (
     <main
-      className={`max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${themeClass}`}
+      className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${themeClass}`}
     >
-      <header className="space-y-1">
+      <header className="space-y-2">
         <h1 className="text-lg lg:text-xl font-semibold text-slate-900">
           設定
         </h1>
-        <p className="text-[12px] text-slate-500">
+        <p className="text-[12px] text-slate-500 leading-snug">
           アプリの表示やカテゴリ、集計方法などをカスタマイズできます。
         </p>
       </header>
 
       <div className="space-y-6">
         {/* 1. 表示・テーマ設定 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-4 lg:px-5 lg:py-5 space-y-4">
+        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
           <h2 className="text-sm font-semibold text-slate-800">テーマ設定</h2>
 
           {/* テーマ */}
@@ -179,7 +182,7 @@ export default function SettingsPage() {
         </section>
 
         {/* 2. カテゴリ・項目設定 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-4 lg:px-5 lg:py-5 space-y-4">
+        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
           <h2 className="text-sm font-semibold text-slate-800">
             カテゴリ・項目設定
           </h2>
@@ -209,23 +212,8 @@ export default function SettingsPage() {
                 "expense"
               )
             }
-            onMoveUp={(idx) =>
-              handleReorder(
-                expenseCategories,
-                setExpenseCategories,
-                idx,
-                "up",
-                "expense"
-              )
-            }
-            onMoveDown={(idx) =>
-              handleReorder(
-                expenseCategories,
-                setExpenseCategories,
-                idx,
-                "down",
-                "expense"
-              )
+            onReorder={(from, to) =>
+              handleReorder(expenseCategories, setExpenseCategories, from, to, "expense")
             }
           />
 
@@ -254,23 +242,8 @@ export default function SettingsPage() {
                 "income"
               )
             }
-            onMoveUp={(idx) =>
-              handleReorder(
-                incomeCategories,
-                setIncomeCategories,
-                idx,
-                "up",
-                "income"
-              )
-            }
-            onMoveDown={(idx) =>
-              handleReorder(
-                incomeCategories,
-                setIncomeCategories,
-                idx,
-                "down",
-                "income"
-              )
+            onReorder={(from, to) =>
+              handleReorder(incomeCategories, setIncomeCategories, from, to, "income")
             }
           />
 
@@ -299,23 +272,8 @@ export default function SettingsPage() {
                 "payfrom"
               )
             }
-            onMoveUp={(idx) =>
-              handleReorder(
-                payFromPresets,
-                setPayFromPresets,
-                idx,
-                "up",
-                "payfrom"
-              )
-            }
-            onMoveDown={(idx) =>
-              handleReorder(
-                payFromPresets,
-                setPayFromPresets,
-                idx,
-                "down",
-                "payfrom"
-              )
+            onReorder={(from, to) =>
+              handleReorder(payFromPresets, setPayFromPresets, from, to, "payfrom")
             }
           />
 
@@ -326,7 +284,7 @@ export default function SettingsPage() {
         </section>
 
         {/* 3. 集計・予算の設定 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-4 lg:px-5 lg:py-5 space-y-4">
+        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
           <h2 className="text-sm font-semibold text-slate-800">
             集計・予算の設定
           </h2>
@@ -336,13 +294,13 @@ export default function SettingsPage() {
             <p className="text-[11px] font-medium text-slate-600">
               集計開始日（給料日）
             </p>
-            <div className="flex items-center gap-2 text-[12px]">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-[12px]">
               <select
                 value={settings.payday}
                 onChange={(e) =>
                   handleChangeSetting("payday", Number(e.target.value) || 1)
                 }
-                className="border border-slate-300 rounded-full px-3 py-1.5 bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                className="border border-slate-300 rounded-full px-3 py-1.5 bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 w-full sm:w-auto"
               >
                 {Array.from({ length: 31 }).map((_, i) => {
                   const day = i + 1;
@@ -395,7 +353,7 @@ export default function SettingsPage() {
           </div>
         </section>
         {/* 4. データ管理 ★ここから追加 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-4 py-4 lg:px-5 lg:py-5 space-y-4">
+        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
           <h2 className="text-sm font-semibold text-slate-800">データ管理</h2>
 
           <div className="space-y-2">
@@ -432,8 +390,7 @@ function EditableListSection(props: {
   onEdit: (index: number, value: string) => void;
   onAdd: () => void;
   onRemove: (index: number) => void;
-  onMoveUp: (index: number) => void;
-  onMoveDown: (index: number) => void;
+  onReorder: (from: number, to: number) => void;
 }) {
   const {
     title,
@@ -442,61 +399,100 @@ function EditableListSection(props: {
     onEdit,
     onAdd,
     onRemove,
-    onMoveUp,
-    onMoveDown,
+    onReorder,
   } = props;
+
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number, e: React.DragEvent) => {
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    setDraggingIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (toIndex: number, e: React.DragEvent) => {
+    e.preventDefault();
+    const fromIndexStr = e.dataTransfer.getData("text/plain");
+    const fromIndex = Number(fromIndexStr);
+    if (Number.isNaN(fromIndex)) return;
+    onReorder(fromIndex, toIndex);
+    setDraggingIndex(null);
+  };
+
+  const handlePointerDown = (index: number) => {
+    setDraggingIndex(index);
+  };
+
+  const handlePointerEnter = (index: number) => {
+    if (draggingIndex === null || draggingIndex === index) return;
+    onReorder(draggingIndex, index);
+    setDraggingIndex(index);
+  };
+
+  const handlePointerUp = () => {
+    setDraggingIndex(null);
+  };
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
           <p className="text-[11px] font-medium text-slate-700">{title}</p>
-          <p className="text-[10px] text-slate-400">{description}</p>
+          <p className="text-[10px] text-slate-400 leading-snug">
+            {description}
+          </p>
         </div>
         <button
           type="button"
           onClick={onAdd}
-          className="text-[11px] rounded-full border border-emerald-400 px-3 py-1 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+          className="text-[11px] rounded-full border border-emerald-400 px-3 py-1 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 w-full sm:w-auto text-center"
         >
           ＋ 追加
         </button>
       </div>
 
-      <div className="space-y-1 max-h-40 overflow-auto pr-1">
+      <div className="space-y-1 max-h-64 overflow-auto pr-1">
         {items.map((item, index) => (
           <div
             key={index}
-            className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5"
+            className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 ${
+              draggingIndex === index ? "border-emerald-300 bg-emerald-50" : ""
+            }`}
+            draggable
+            onDragStart={(e) => handleDragStart(index, e)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(index, e)}
+            onPointerDown={() => handlePointerDown(index)}
+            onPointerEnter={() => handlePointerEnter(index)}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onPointerLeave={() => {
+              // no-op, keep state until pointer up
+            }}
           >
-            <div className="flex flex-col flex-1">
-              <input
-                type="text"
-                value={item}
-                onChange={(e) => onEdit(index, e.target.value)}
-                className="w-full bg-white rounded-lg border border-slate-300 px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                placeholder="名前を入力"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <button
-                type="button"
-                onClick={() => onMoveUp(index)}
-                className="text-[10px] text-slate-500 hover:text-slate-800"
-              >
-                ↑
-              </button>
-              <button
-                type="button"
-                onClick={() => onMoveDown(index)}
-                className="text-[10px] text-slate-500 hover:text-slate-800"
-              >
-                ↓
-              </button>
+            <div className="flex items-center gap-2 w-full">
+              <span className="text-[14px] text-slate-400 select-none cursor-grab">
+                ≡
+              </span>
+              <div className="flex flex-col flex-1 w-full">
+                <input
+                  type="text"
+                  value={item}
+                  onChange={(e) => onEdit(index, e.target.value)}
+                  className="w-full bg-white rounded-lg border border-slate-300 px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                  placeholder="名前を入力"
+                />
+              </div>
             </div>
             <button
               type="button"
               onClick={() => onRemove(index)}
-              className="text-[11px] text-red-500 hover:text-red-600"
+              className="text-[11px] text-red-500 hover:text-red-600 self-start sm:self-auto"
             >
               削除
             </button>

@@ -537,13 +537,13 @@ export default function CalendarPage() {
 
       {/* ▼ 選択日の内訳編集モーダル */}
       {isDetailModalOpen && selectedDay && (
-        <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/30 px-4 py-16">
-          <div className="relative w-full max-w-2xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/40 px-3 py-6 sm:px-4 sm:py-10 overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
             {/* 閉じるボタン */}
             <button
               type="button"
               onClick={handleCloseDetailModal}
-              className="absolute top-1.5 right-[10px] text-slate-400 hover:text-slate-600 text-xl leading-none"
+              className="absolute top-2 right-3 text-slate-400 hover:text-slate-600 text-xl leading-none"
               aria-label="閉じる"
             >
               ×
@@ -564,8 +564,8 @@ export default function CalendarPage() {
 
       {/* ▼ 棒グラフ拡大モーダル */}
       {isChartModalOpen && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-4">
-          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-slate-100 px-4 py-4 lg:px-6 lg:py-5">
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-3 py-6 sm:px-4 sm:py-8 overflow-y-auto">
+          <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
             <button
               type="button"
               onClick={handleCloseChartModal}

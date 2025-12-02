@@ -215,7 +215,7 @@ export default function SelectedDayDetailsCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-3 py-3 sm:px-4 sm:py-4 max-h-[80vh] overflow-y-auto">
       {/* ヘッダー */}
       <div className="flex items-center justify-between gap-2 mb-2">
         <div>
@@ -243,7 +243,7 @@ export default function SelectedDayDetailsCard({
       ) : (
         <>
           {/* 既存の明細リスト */}
-          <div className="space-y-3 max-h-80 overflow-auto pr-1">
+          <div className="space-y-3 max-h-[50vh] overflow-auto pr-1">
             {selectedDetails.map((rec, idx) => {
               const categoryOptionsForRow =
                 rec.mode === "income"

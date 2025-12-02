@@ -36,12 +36,12 @@ export default function DayRecordsCard({
   const net = incomeTotal - expenseTotal;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 space-y-3">
-      <div className="flex items-center justify-between gap-2">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-3">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <h2 className="text-sm font-semibold text-slate-800">
           選択した日の記録
         </h2>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-slate-500 lg:text-right leading-snug">
           日付を変更すると、その日の記録が表示されます。
         </p>
       </div>
@@ -87,14 +87,14 @@ export default function DayRecordsCard({
             </p>
           </div>
 
-          <div className="space-y-2 max-h-64 overflow-auto pr-1">
+          <div className="space-y-2 max-h-[55vh] overflow-auto pr-1">
             {records.map((rec, idx) => (
               <div
                 key={idx}
                 className="
                   rounded-xl border border-slate-200 bg-slate-50
                   px-3 py-2
-                  flex items-start justify-between gap-3
+                  flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2
                 "
               >
                 <div className="space-y-0.5">
@@ -130,7 +130,7 @@ export default function DayRecordsCard({
                     </p>
                   )}
                 </div>
-                <div className="flex flex-col items-end gap-1">
+                <div className="flex flex-col sm:items-end gap-1">
                   <p className="text-sm font-semibold text-slate-900">
                     ¥{rec.amount.toLocaleString()}
                   </p>
@@ -140,6 +140,7 @@ export default function DayRecordsCard({
                     className="
                       text-[10px] text-slate-400
                       hover:text-red-500 underline-offset-2 hover:underline
+                      self-start sm:self-end
                     "
                   >
                     削除

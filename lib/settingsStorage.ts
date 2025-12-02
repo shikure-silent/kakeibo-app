@@ -2,21 +2,42 @@
 
 export type ThemeOption = "system" | "light" | "dark";
 export type BudgetBaseOption = "nationalMedian" | "userAverage";
+export const EXPENSE_CATEGORY_KEYS = [
+  "food",
+  "utilities",
+  "dailyGoods",
+  "rent",
+  "transport",
+  "subscription",
+  "entertainment",
+  "medicalInsurance",
+] as const;
+export type ExpenseCategoryKey = (typeof EXPENSE_CATEGORY_KEYS)[number];
 
 export type AppSettings = {
   theme: ThemeOption;
   payday: number; // 集計開始日（給料日）
   budgetBase: BudgetBaseOption;
+  autoUpdateCategories?: Partial<Record<ExpenseCategoryKey, boolean>>; // 各カテゴリごとの自動更新フラグ
 };
 
 // ▼ アプリ全体の基本設定（フォント・テーマ・給料日など）
 
 const SETTINGS_KEY = "kakeibo_app_settings_v1";
 
+export const defaultAutoUpdateCategories: Record<
+  ExpenseCategoryKey,
+  boolean
+> = EXPENSE_CATEGORY_KEYS.reduce(
+  (acc, key) => ({ ...acc, [key]: true }),
+  {} as Record<ExpenseCategoryKey, boolean>
+);
+
 export const defaultSettings: AppSettings = {
   theme: "system",
   payday: 1,
   budgetBase: "nationalMedian",
+  autoUpdateCategories: defaultAutoUpdateCategories,
 };
 
 export function loadAppSettings(): AppSettings {
@@ -26,10 +47,18 @@ export function loadAppSettings(): AppSettings {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
     if (!raw) return defaultSettings;
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
+    const parsedAuto =
+      parsed.autoUpdateCategories && typeof parsed.autoUpdateCategories === "object"
+        ? parsed.autoUpdateCategories
+        : {};
 
     return {
       ...defaultSettings,
       ...parsed,
+      autoUpdateCategories: {
+        ...defaultAutoUpdateCategories,
+        ...parsedAuto,
+      },
     };
   } catch {
     return defaultSettings;
@@ -57,6 +86,15 @@ export function getThemeClasses(theme: ThemeOption): string {
       // ひとまず system = light として扱う
       return "theme-light bg-slate-50 text-slate-900";
   }
+}
+
+export function getAutoUpdateCategories(
+  settings: AppSettings
+): Record<ExpenseCategoryKey, boolean> {
+  return {
+    ...defaultAutoUpdateCategories,
+    ...(settings.autoUpdateCategories ?? {}),
+  };
 }
 
 // ▼ カテゴリ・支出元プリセットの保存用（string[]）
