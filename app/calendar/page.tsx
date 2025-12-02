@@ -537,7 +537,7 @@ export default function CalendarPage() {
 
       {/* ▼ 選択日の内訳編集モーダル */}
       {isDetailModalOpen && selectedDay && (
-        <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/40 px-3 py-6 sm:px-4 sm:py-10 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 px-3 py-6 pb-24 sm:px-4 sm:py-10 sm:pb-12 overflow-y-auto">
           <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
             {/* 閉じるボタン */}
             <button
@@ -564,7 +564,7 @@ export default function CalendarPage() {
 
       {/* ▼ 棒グラフ拡大モーダル */}
       {isChartModalOpen && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40 px-3 py-6 sm:px-4 sm:py-8 overflow-y-auto">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-3 py-6 pb-24 sm:px-4 sm:py-8 sm:pb-12 overflow-y-auto">
           <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
             <button
               type="button"
