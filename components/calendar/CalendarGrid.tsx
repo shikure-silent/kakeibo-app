@@ -79,7 +79,7 @@ export default function CalendarGrid({
               key={idx}
               type="button"
               onClick={() => onSelectDay(day)}
-              className={`relative flex flex-col items-start justify-between rounded-xl border px-1.5 py-1.5 lg:px-2 lg:py-2 text-left transition-colors ${
+              className={`relative flex flex-col items-start justify-between rounded-xl border px-1.5 py-1.5 lg:px-2 lg:py-2 text-left transition-colors h-[95px] lg:h-auto ${
                 isSelected
                   ? "border-emerald-500 bg-emerald-50"
                   : "border-slate-200 bg-slate-50 hover:bg-slate-100"
@@ -91,7 +91,7 @@ export default function CalendarGrid({
                   {day}
                 </span>
                 {isToday && (
-                  <span className="rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white">
+                  <span className="rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white whitespace-nowrap leading-none">
                     今日
                   </span>
                 )}
