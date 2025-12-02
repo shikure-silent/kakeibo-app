@@ -15,6 +15,8 @@ type Props = {
   onChangeCustomItemLabel: (id: string, label: string) => void;
   onChangeCustomItemAmount: (id: string, amount: string) => void;
   onRemoveCustomItem: (id: string) => void;
+  autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
+  onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
 };
 
 // デフォルト8項目
@@ -41,6 +43,8 @@ export default function ExpenseInputsBlock({
   onChangeCustomItemLabel,
   onChangeCustomItemAmount,
   onRemoveCustomItem,
+  autoUpdateMap,
+  onToggleAutoUpdateCategory,
 }: Props) {
   return (
     <div className="space-y-4">
@@ -58,7 +62,7 @@ export default function ExpenseInputsBlock({
                 space-y-1.5
               "
             >
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-1.5">
                   <p className="text-[11px] font-medium text-slate-700">
                     {item.label}
@@ -72,13 +76,31 @@ export default function ExpenseInputsBlock({
                         border border-emerald-100
                       "
                     >
-                      自動更新
+                      固定費
                     </span>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400">
-                  目安: ¥{median[item.key].toLocaleString()}
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-[10px] text-slate-400">
+                    目安: ¥{median[item.key].toLocaleString()}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => onToggleAutoUpdateCategory(item.key)}
+                    className="text-[10px] px-2 py-[4px] rounded-full border border-slate-200 text-slate-600 hover:bg-slate-100"
+                  >
+                    自動更新:{" "}
+                    <span
+                      className={
+                        autoUpdateMap[item.key]
+                          ? "text-emerald-600 font-semibold"
+                          : "text-slate-500"
+                      }
+                    >
+                      {autoUpdateMap[item.key] ? "オン" : "オフ"}
+                    </span>
+                  </button>
+                </div>
               </div>
               <NumberInput
                 label="予算額（半角数字）"

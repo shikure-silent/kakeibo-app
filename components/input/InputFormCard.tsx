@@ -89,14 +89,14 @@ export default function InputFormCard({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-3 py-3 sm:px-4 sm:py-4 lg:px-6 lg:py-5">
       <form className="space-y-4" onSubmit={handleSubmit}>
         {/* タイトル行 */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
           <h2 className="text-sm lg:text-base font-semibold text-slate-800">
             記録を追加
           </h2>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-500 leading-snug lg:text-right">
             支出・収入を選んで、日付やカテゴリを入力してください。
           </p>
         </div>
@@ -187,11 +187,11 @@ export default function InputFormCard({
               <button
                 type="button"
                 onClick={() => setShowCategorySuggestions((prev) => !prev)}
-                className="
-                  rounded-full border border-slate-300
-                  bg-slate-50 px-4 py-1.5 text-[12px]
-                  text-slate-700 hover:bg-slate-100
-                "
+                  className="
+                    rounded-full border border-slate-300
+                    bg-slate-50 px-4 py-1.5 text-[12px]
+                    text-slate-700 hover:bg-slate-100
+                  "
               >
                 候補から選ぶ
               </button>

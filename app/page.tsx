@@ -12,9 +12,7 @@ import { buildBudgetKey } from "../lib/const";
 import {
   buildExpenseInputs,
   FixedExpenseKey,
-  fixedExpenseKeys,
   loadFixedExpenses,
-  mergeFixedExpenses,
   saveFixedExpense,
 } from "../lib/homeStorage";
 import {
@@ -22,6 +20,8 @@ import {
   defaultSettings,
   loadAppSettings,
   getThemeClasses,
+  getAutoUpdateCategories,
+  saveAppSettings,
 } from "../lib/settingsStorage";
 
 import SavingHighlightCard from "../components/home/SavingHighlightCard";
@@ -70,17 +70,43 @@ export default function HomePage() {
   // ＋ 家賃・サブスクは固定費ストアで上書き
   useEffect(() => {
     const baseInputs = buildExpenseInputs(ageGroup);
-    const merged = mergeFixedExpenses(baseInputs, loadFixedExpenses());
-    setExpenseInputs(merged);
+    const autoMap = getAutoUpdateCategories(settings);
+    const fixed = loadFixedExpenses();
+
+    setExpenseInputs((prev) => {
+      const next = { ...prev };
+      (Object.keys(baseInputs) as (keyof ExpenseMedian)[]).forEach((key) => {
+        if (autoMap[key]) {
+          next[key] = baseInputs[key];
+        }
+      });
+      if (autoMap.rent && typeof fixed.rent === "number") {
+        next.rent = String(fixed.rent);
+      }
+      if (autoMap.subscription && typeof fixed.subscription === "number") {
+        next.subscription = String(fixed.subscription);
+      }
+      return next;
+    });
     // カスタム項目は「自分で決める部分」なのでそのまま維持
-  }, [ageGroup]);
+  }, [ageGroup, settings]);
 
   // 初回マウント時に固定費を反映（SSRとの不一致を避けるため）
   useEffect(() => {
     const fixed = loadFixedExpenses();
     if (Object.keys(fixed).length === 0) return;
-    setExpenseInputs((prev) => mergeFixedExpenses(prev, fixed));
-  }, []);
+    const autoMap = getAutoUpdateCategories(settings);
+    setExpenseInputs((prev) => {
+      const next = { ...prev };
+      if (autoMap.rent && typeof fixed.rent === "number") {
+        next.rent = String(fixed.rent);
+      }
+      if (autoMap.subscription && typeof fixed.subscription === "number") {
+        next.subscription = String(fixed.subscription);
+      }
+      return next;
+    });
+  }, [settings]);
 
   // 人数変更 → メンバー配列を増減
   useEffect(() => {
@@ -101,11 +127,6 @@ export default function HomePage() {
       return prev;
     });
   }, [memberCount]);
-
-  useEffect(() => {
-    const loaded = loadAppSettings();
-    setSettings(loaded);
-  }, []);
 
   // デフォルト8項目の入力変更（家賃・サブスクは固定費保存）
   const handleExpenseChange = (k: keyof ExpenseMedian, v: string) => {
@@ -155,6 +176,7 @@ export default function HomePage() {
 
   // 年代に応じた中央値を取得
   const medianForAge = ageGroupMedians[ageGroup];
+  const autoUpdateMap = getAutoUpdateCategories(settings);
 
   const handleMemberCountChange = (count: number) => {
     setMemberCount(count);
@@ -173,6 +195,16 @@ export default function HomePage() {
       const next = [...prev];
       next[index] = { ...next[index], value };
       return next;
+    });
+  };
+
+  const toggleAutoUpdateCategory = (key: keyof ExpenseMedian) => {
+    setSettings((prev) => {
+      const current = getAutoUpdateCategories(prev);
+      const nextAuto = { ...current, [key]: !current[key] };
+      const nextSettings = { ...prev, autoUpdateCategories: nextAuto };
+      saveAppSettings(nextSettings);
+      return nextSettings;
     });
   };
 
@@ -315,6 +347,8 @@ export default function HomePage() {
               onChangeCustomItemAmount={handleCustomExpenseValueChange}
               onRemoveCustomItem={handleRemoveCustomExpenseItem}
               onStart={handleOpenConfirmModal}
+              autoUpdateMap={autoUpdateMap}
+              onToggleAutoUpdateCategory={toggleAutoUpdateCategory}
             />
           </section>
 

@@ -32,11 +32,11 @@ export default function IncomeSettingsCard({
 }: Props) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <h2 className="text-sm lg:text-base font-semibold text-slate-800">
           収入の設定
         </h2>
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-slate-500 lg:text-right">
           世帯のメンバーごとの毎月の手取り収入を入力してください。
         </p>
       </div>
@@ -47,12 +47,12 @@ export default function IncomeSettingsCard({
           <label className="block text-[11px] font-medium text-slate-600">
             世帯主の年代（全国×年代別の参考データを使用）
           </label>
-          <div className="inline-flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <select
               value={ageGroup}
               onChange={(e) => onAgeGroupChange(e.target.value as AgeGroup)}
               className="
-                border border-slate-200 rounded-full
+                border border-slate-200 rounded-full w-full sm:w-auto
                 px-3 py-1.5 text-xs text-slate-700
                 bg-white
                 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
@@ -64,7 +64,7 @@ export default function IncomeSettingsCard({
                 </option>
               ))}
             </select>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-slate-500 leading-snug">
               選んだ年代に合わせて、支出予算の初期値が変わります。
             </span>
           </div>
@@ -75,7 +75,7 @@ export default function IncomeSettingsCard({
           <label className="block text-[11px] font-medium text-slate-600">
             収入を入力する人数
           </label>
-          <div className="inline-flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <select
               value={memberCount}
               onChange={(e) =>
@@ -84,7 +84,7 @@ export default function IncomeSettingsCard({
                 )
               }
               className="
-                border border-slate-200 rounded-full
+                border border-slate-200 rounded-full w-full sm:w-auto
                 px-3 py-1.5 text-xs text-slate-700
                 bg-white
                 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
@@ -96,7 +96,7 @@ export default function IncomeSettingsCard({
                 </option>
               ))}
             </select>
-            <span className="text-[11px] text-slate-500">
+            <span className="text-[11px] text-slate-500 leading-snug">
               夫婦＋子どもなど、収入がある人の人数を選んでください。
             </span>
           </div>
