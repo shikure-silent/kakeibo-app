@@ -9,6 +9,12 @@ import {
 import { DetailRecord, Mode } from "../../types/calendar";
 import InputFormCard from "../../components/input/InputFormCard";
 import DayRecordsCard from "../../components/input/DayRecordsCard";
+import {
+  AppSettings,
+  defaultSettings,
+  loadAppSettings,
+  getThemeClasses,
+} from "../../lib/settingsStorage";
 
 // 日付文字列を生成（YYYY-MM-DD）
 const getTodayDateString = () => {
@@ -103,11 +109,20 @@ const saveDetailsForDate = (dateStr: string, records: DetailRecord[]) => {
 export default function InputPage() {
   const [isClient, setIsClient] = useState(false);
 
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+
+  useEffect(() => {
+    const loaded = loadAppSettings();
+    setSettings(loaded);
+  }, []);
+
+  const themeClass = getThemeClasses(settings.theme);
+
   // 入力フォームの状態
   const [mode, setMode] = useState<Mode>("expense");
   const [dateStr, setDateStr] = useState<string>(getTodayDateString());
-  const [category, setCategory] = useState<string>("食費");
-  const [payFrom, setPayFrom] = useState<string>("現金");
+  const [category, setCategory] = useState<string>("");
+  const [payFrom, setPayFrom] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string>("");
   const [customCategory, setCustomCategory] = useState<string>("");
@@ -135,8 +150,7 @@ export default function InputPage() {
     setMode(next);
 
     if (next === "expense") {
-      // 支出に戻したら、とりあえず「現金」に戻す
-      setPayFrom("現金");
+      setPayFrom("");
     } else {
       // 収入のときは空欄からスタート
       setPayFrom("");
@@ -214,7 +228,7 @@ export default function InputPage() {
   }, [dateStr]);
 
   return (
-    <main>
+    <main className={`min-h-screen ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* ヘッダー */}
         <header className="space-y-2">

@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ExpenseMedian } from "../data/prefectureData";
-import { AgeGroup, ageGroupLabels, ageGroupMedians } from "../data/ageGroupData";
+import {
+  AgeGroup,
+  ageGroupLabels,
+  ageGroupMedians,
+} from "../data/ageGroupData";
 import { buildBudgetKey } from "../lib/const";
 import {
   buildExpenseInputs,
@@ -13,6 +17,12 @@ import {
   mergeFixedExpenses,
   saveFixedExpense,
 } from "../lib/homeStorage";
+import {
+  AppSettings,
+  defaultSettings,
+  loadAppSettings,
+  getThemeClasses,
+} from "../lib/settingsStorage";
 
 import SavingHighlightCard from "../components/home/SavingHighlightCard";
 import IncomeSettingsCard, {
@@ -23,6 +33,14 @@ import { CustomExpenseItem } from "../types/budget";
 
 export default function HomePage() {
   const router = useRouter();
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+
+  useEffect(() => {
+    const loaded = loadAppSettings();
+    setSettings(loaded);
+  }, []);
+
+  const themeClass = getThemeClasses(settings.theme);
 
   // 年代（全国×年代別のデフォルト予算に使う）
   const [ageGroup, setAgeGroup] = useState<AgeGroup>("all");
@@ -84,6 +102,11 @@ export default function HomePage() {
     });
   }, [memberCount]);
 
+  useEffect(() => {
+    const loaded = loadAppSettings();
+    setSettings(loaded);
+  }, []);
+
   // デフォルト8項目の入力変更（家賃・サブスクは固定費保存）
   const handleExpenseChange = (k: keyof ExpenseMedian, v: string) => {
     setExpenseInputs((prev) => ({ ...prev, [k]: v }));
@@ -129,6 +152,9 @@ export default function HomePage() {
   const handleAgeGroupChange = (next: AgeGroup) => {
     setAgeGroup(next);
   };
+
+  // 年代に応じた中央値を取得
+  const medianForAge = ageGroupMedians[ageGroup];
 
   const handleMemberCountChange = (count: number) => {
     setMemberCount(count);
@@ -229,7 +255,6 @@ export default function HomePage() {
         month,
         totalBudget: totalExpense,
         items: detailItems,
-        // 将来カレンダーページで「スタート時点の貯金見込み」も表示できるように
         totalIncome,
         saving,
       })
@@ -239,11 +264,8 @@ export default function HomePage() {
     router.push("/calendar");
   };
 
-  const ageGroupLabel = ageGroupLabels[ageGroup];
-  const medianForAge = ageGroupMedians[ageGroup];
-
   return (
-    <main>
+    <main className={`min-h-screen ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* ヘッダー */}
         <header className="space-y-2">
@@ -262,7 +284,7 @@ export default function HomePage() {
           totalExpense={totalExpense}
           saving={saving}
           savingRate={savingRate}
-          ageGroupLabel={ageGroupLabel}
+          ageGroupLabel={ageGroupLabels[ageGroup]}
         />
 
         {/* 左：カード群／右：説明 */}
@@ -282,7 +304,7 @@ export default function HomePage() {
 
             {/* 💸 支出予算カード */}
             <BudgetSettingsCard
-              ageGroupLabel={ageGroupLabel}
+              ageGroupLabel={ageGroupLabels[ageGroup]}
               median={medianForAge}
               inputs={expenseInputs}
               onChange={handleExpenseChange}

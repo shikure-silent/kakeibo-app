@@ -84,7 +84,7 @@ export default function ExpenseInputsBlock({
                 label="予算額（半角数字）"
                 value={inputs[item.key]}
                 onChange={(v) => onChange(item.key, v)}
-                placeholder="例: 30000"
+                placeholder={`例: ${median[item.key].toLocaleString()}`}
               />
             </div>
           );

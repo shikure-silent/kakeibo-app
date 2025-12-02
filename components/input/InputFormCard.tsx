@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import NumberInput from "../NumberInput";
 import { Mode } from "../../types/calendar";
 import {
@@ -8,16 +8,21 @@ import {
   INCOME_CATEGORIES,
   PAY_FROM_OPTIONS,
 } from "../../lib/const";
+import {
+  loadExpenseCategories,
+  loadIncomeCategories,
+  loadPayFromPresets,
+} from "../../lib/settingsStorage";
 
 type Props = {
   mode: Mode;
   onChangeMode: (mode: Mode) => void;
   dateStr: string;
   onChangeDate: (value: string) => void;
-  category: string;
-  onChangeCategory: (value: string) => void;
   customCategory: string;
   onChangeCustomCategory: (value: string) => void;
+  category: string;
+  onChangeCategory: (value: string) => void;
   payFrom: string;
   onChangePayFrom: (value: string) => void;
   shopName: string;
@@ -34,10 +39,10 @@ export default function InputFormCard({
   onChangeMode,
   dateStr,
   onChangeDate,
-  category,
-  onChangeCategory,
   customCategory,
   onChangeCustomCategory,
+  category,
+  onChangeCategory,
   payFrom,
   onChangePayFrom,
   shopName,
@@ -48,12 +53,39 @@ export default function InputFormCard({
   onChangeAmount,
   onSubmit,
 }: Props) {
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+
+  // ★ 設定に応じた候補リスト
+  const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<string[]>(
+    [...EXPENSE_CATEGORIES]
+  );
+  const [incomeCategoryOptions, setIncomeCategoryOptions] = useState<string[]>(
+    [...INCOME_CATEGORIES]
+  );
+  const [payFromOptions, setPayFromOptions] = useState<string[]>([
+    ...PAY_FROM_OPTIONS,
+  ]);
+
+  // マウント時に localStorage から読み込み
+  useEffect(() => {
+    setExpenseCategoryOptions(loadExpenseCategories([...EXPENSE_CATEGORIES]));
+    setIncomeCategoryOptions(loadIncomeCategories([...INCOME_CATEGORIES]));
+    setPayFromOptions(loadPayFromPresets([...PAY_FROM_OPTIONS]));
+  }, []);
+
+  // 今表示するカテゴリ候補（モードによって切り替え）
   const categoryOptions =
-    mode === "expense" ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+    mode === "expense" ? expenseCategoryOptions : incomeCategoryOptions;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit();
+  };
+
+  const handleSelectCategory = (value: string) => {
+    onChangeCategory(value);
+    onChangeCustomCategory("");
+    setShowCategorySuggestions(false);
   };
 
   return (
@@ -126,43 +158,77 @@ export default function InputFormCard({
             />
           </div>
 
-          {/* カテゴリ ＋ 自由入力 */}
+          {/* カテゴリ：入力欄の“真下”に候補から選ぶ */}
           <div className="space-y-1.5">
-            <label className="block text-[11px] font-medium text-slate-600">
-              カテゴリ
-            </label>
-            <select
-              value={category}
-              onChange={(e) => onChangeCategory(e.target.value)}
-              className="
-                w-full border border-slate-200 rounded-full
-                px-3 py-1.5 text-xs text-slate-700
-                bg-white
-                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-              "
-            >
-              {categoryOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <label className="block text-[11px] text-slate-500">カテゴリ</label>
 
-            {/* 自由入力カテゴリ（任意） */}
+            {/* 自由入力欄 */}
             <input
               type="text"
-              value={customCategory}
-              onChange={(e) => onChangeCustomCategory(e.target.value)}
               className="
-                w-full border border-slate-200 rounded-full
-                px-3 py-1.5 text-xs text-slate-700
-                bg-white
-                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                w-full rounded-lg border border-slate-300 bg-white
+                px-2 py-1 text-[12px] text-slate-800
+                focus:outline-none focus:ring-2 focus:ring-emerald-300
               "
-              placeholder="例: コンビニ、飲み会 など"
+              value={customCategory || category}
+              onChange={(e) => {
+                onChangeCategory(e.target.value);
+                onChangeCustomCategory(e.target.value);
+              }}
+              placeholder={
+                mode === "expense"
+                  ? "例：食費 / 日用品 など"
+                  : "例：給与 / ボーナス / 臨時収入 など"
+              }
             />
+
+            {/* 候補から選ぶボタン（入力欄の“真下”） */}
+            <div className="relative inline-block">
+              <button
+                type="button"
+                onClick={() => setShowCategorySuggestions((prev) => !prev)}
+                className="
+                  rounded-full border border-slate-300
+                  bg-slate-50 px-4 py-1.5 text-[12px]
+                  text-slate-700 hover:bg-slate-100
+                "
+              >
+                候補から選ぶ
+              </button>
+
+              {showCategorySuggestions && (
+                <div
+                  className="
+                    absolute z-20 mt-1
+                    max-h-40 w-44 overflow-auto
+                    rounded-lg border border-slate-200
+                    bg-white shadow-lg
+                  "
+                >
+                  {categoryOptions.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => handleSelectCategory(opt)}
+                      className={`
+                        w-full px-2 py-1 text-left text-[11px]
+                        hover:bg-emerald-50
+                        ${
+                          opt === category
+                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                            : "text-slate-700"
+                        }
+                      `}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <p className="text-[10px] text-slate-400">
-              何も入力しない場合は上のカテゴリ名がそのまま使われます。
+              直接入力してもOKです。「候補から選ぶ」を押すと、よく使うカテゴリ一覧から選べます。
             </p>
           </div>
 
@@ -185,7 +251,7 @@ export default function InputFormCard({
                     focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
                   "
                 >
-                  {PAY_FROM_OPTIONS.map((p) => (
+                  {payFromOptions.map((p) => (
                     <option key={p} value={p}>
                       {p}
                     </option>
@@ -218,24 +284,26 @@ export default function InputFormCard({
           </div>
         </div>
 
-        {/* 店舗名（任意） */}
-        <div className="space-y-1.5">
-          <label className="block text-[11px] font-medium text-slate-600">
-            店舗名（任意）
-          </label>
-          <input
-            type="text"
-            value={shopName}
-            onChange={(e) => onChangeShopName(e.target.value)}
-            className="
-              w-full border border-slate-200 rounded-2xl
-              px-3 py-2 text-xs text-slate-700
-              bg-white
-              focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-            "
-            placeholder="例: スーパーA、コンビニB など"
-          />
-        </div>
+        {/* 店舗名（任意）※支出のときだけ表示 */}
+        {mode === "expense" && (
+          <div className="space-y-1.5">
+            <label className="block text-[11px] font-medium text-slate-600">
+              店舗名（任意）
+            </label>
+            <input
+              type="text"
+              value={shopName}
+              onChange={(e) => onChangeShopName(e.target.value)}
+              className="
+                w-full border border-slate-200 rounded-2xl
+                px-3 py-2 text-xs text-slate-700
+                bg-white
+                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+              "
+              placeholder="例: スーパーA、コンビニB など"
+            />
+          </div>
+        )}
 
         {/* メモ */}
         <div className="space-y-1.5">

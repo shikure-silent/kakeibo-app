@@ -24,6 +24,13 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import {
+  AppSettings,
+  defaultSettings,
+  loadAppSettings,
+  getThemeClasses,
+} from "../../lib/settingsStorage";
+import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 
 type MonthlyBudgetData = {
   year: number;
@@ -39,6 +46,11 @@ type WeeklySummary = {
   endDay: number;
   total: number;
   average: number;
+};
+type PeriodDailyInfo = {
+  date: Date;
+  spending: number;
+  income: number;
 };
 
 export default function CalendarPage() {
@@ -66,6 +78,8 @@ export default function CalendarPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const [chartModalDay, setChartModalDay] = useState<number | null>(null);
+  const [periodInfos, setPeriodInfos] = useState<PeriodDailyInfo[]>([]);
+  const [periodLabel, setPeriodLabel] = useState<string>("");
 
   const daysInMonth = useMemo(
     () => new Date(currentYear, currentMonth, 0).getDate(),
@@ -386,8 +400,76 @@ export default function CalendarPage() {
     });
   };
 
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+
+  useEffect(() => {
+    const loaded = loadAppSettings();
+    setSettings(loaded);
+  }, []);
+
+  // ▼ 給料日サイクル（payday ベース）の日別集計
+  useEffect(() => {
+    if (!isClient) return;
+
+    const payday = settings.payday ?? 1;
+    const period = getPayPeriodForMonth(currentYear, currentMonth, payday);
+    const dates = listDatesInPeriod(period);
+
+    const infos: PeriodDailyInfo[] = [];
+
+    for (const d of dates) {
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+
+      // 各日の明細を localStorage から読み込み
+      const details = loadDetailsFromStorage(y, m, day);
+      const { spending, income } = calcDayTotals(details);
+
+      infos.push({
+        date: d,
+        spending,
+        income,
+      });
+    }
+
+    setPeriodInfos(infos);
+
+    const startLabel = `${
+      period.start.getMonth() + 1
+    }/${period.start.getDate()}`;
+    const endLabel = `${period.end.getMonth() + 1}/${period.end.getDate()}`;
+    setPeriodLabel(`${startLabel} 〜 ${endLabel}`);
+  }, [
+    isClient,
+    currentYear,
+    currentMonth,
+    settings.payday,
+    dailyDetails, // 明細が変わったときも再計算したいので依存に入れておく
+  ]);
+
+  // サイクル全体の支出合計
+  const hasPeriod = periodInfos.length > 0;
+
+  const periodTotal = useMemo(
+    () => periodInfos.reduce((sum, info) => sum + (info.spending || 0), 0),
+    [periodInfos]
+  );
+
+  const periodRemainingBudget = useMemo(() => {
+    if (!budget) return null;
+    return budget.totalBudget - periodTotal;
+  }, [budget, periodTotal]);
+
+  const periodBudgetUsagePercent = useMemo(() => {
+    if (!budget || budget.totalBudget <= 0) return null;
+    return Math.min(100, Math.max(0, (periodTotal / budget.totalBudget) * 100));
+  }, [budget, periodTotal]);
+
+  const themeClass = getThemeClasses(settings.theme);
+
   return (
-    <main>
+    <main className={`min-h-screen ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* ヘッダー（タイトル＋月送り） */}
         <CalendarHeader
@@ -395,6 +477,12 @@ export default function CalendarPage() {
           onPrev={handlePrevMonth}
           onNext={handleNextMonth}
         />
+        {hasPeriod && (
+          <p className="mt-1 text-[11px] text-slate-500">
+            集計期間：<span className="font-semibold">{periodLabel}</span>
+            <span className="ml-2">（{settings.payday}日締め）</span>
+          </p>
+        )}
 
         {/* 上段：左 カレンダー ＋ 右 サマリー */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
@@ -417,9 +505,18 @@ export default function CalendarPage() {
           <section className="space-y-4">
             <BudgetHighlightCard
               budget={budget}
-              monthlyTotal={monthlyTotal}
-              remainingBudget={remainingBudget}
-              budgetUsagePercent={budgetUsagePercent}
+              // ▼ 給料日サイクルが計算できていればそちらを優先
+              monthlyTotal={hasPeriod ? periodTotal : monthlyTotal}
+              remainingBudget={
+                hasPeriod && periodRemainingBudget !== null
+                  ? periodRemainingBudget
+                  : remainingBudget
+              }
+              budgetUsagePercent={
+                hasPeriod && periodBudgetUsagePercent !== null
+                  ? periodBudgetUsagePercent
+                  : budgetUsagePercent
+              }
               savingEstimate={savingEstimate}
             />
 
@@ -459,6 +556,7 @@ export default function CalendarPage() {
               onChangeRecord={handleUpdateDetail}
               onDeleteRecord={handleDeleteDetail}
               onAddRecord={handleAddDetail}
+              onCloseCalendar={handleCloseDetailModal}
             />
           </div>
         </div>
