@@ -23,35 +23,29 @@ import {
   PAY_FROM_OPTIONS,
 } from "../../lib/const";
 
+import { ThemeSettingsSection } from "../../components/settings/ThemeSettingsSection";
+import { InputQuickSettingsSection } from "../../components/settings/InputQuickSettingsSection";
+import { SavingSupportSection } from "../../components/settings/SavingSupportSection";
+import { CategorySettingsSection } from "../../components/settings/CategorySettingsSection";
+import { AggregationSettingsSection } from "../../components/settings/AggregationSettingsSection";
+import { AccountLoginSection } from "../../components/settings/AccountLoginSection";
+import { DataManagementSection } from "../../components/settings/DataManagementSection";
+import { AppInfoSection } from "../../components/settings/AppInfoSection";
+
+// バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
+const APP_VERSION = "0.3.0-beta";
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   const [incomeCategories, setIncomeCategories] = useState<string[]>([]);
   const [payFromPresets, setPayFromPresets] = useState<string[]>([]);
 
-  const handleResetKakeiboData = () => {
-    if (typeof window === "undefined") return;
-
-    const ok = window.confirm(
-      "ブラウザに保存されている家計簿データ（予算・日別の明細・固定費など）をすべて削除します。\n※ テーマやカテゴリなどの設定は残ります。\n\n本当に削除してよろしいですか？"
-    );
-    if (!ok) return;
-
-    clearAllKakeiboData({ includeSettings: false });
-
-    // 画面上の一部の state もリセットしておく（必要最低限でOK）
-    // 予算や明細は各ページで localStorage を読みに行くので、
-    // ここでは特に何もしなくてもよいが、念のため再描画のためにリロードしてもよい
-    window.alert("家計簿データを削除しました。");
-    window.location.reload();
-  };
-
   // 初期読み込み
   useEffect(() => {
     const loaded = loadAppSettings();
     setSettings(loaded);
 
-    // 設定されたカテゴリがあればそれを、なければデフォルトを使う
     setExpenseCategories(loadExpenseCategories([...EXPENSE_CATEGORIES]));
     setIncomeCategories(loadIncomeCategories([...INCOME_CATEGORIES]));
     setPayFromPresets(loadPayFromPresets([...PAY_FROM_OPTIONS]));
@@ -64,6 +58,65 @@ export default function SettingsPage() {
     const next = { ...settings, [key]: value };
     setSettings(next);
     saveAppSettings(next);
+  };
+
+  const handleResetKakeiboData = () => {
+    if (typeof window === "undefined") return;
+
+    const ok = window.confirm(
+      "ブラウザに保存されている家計簿データ（予算・日別の明細・固定費など）をすべて削除します。\n※ テーマやカテゴリなどの設定は残ります。\n\n本当に削除してよろしいですか？"
+    );
+    if (!ok) return;
+
+    clearAllKakeiboData({ includeSettings: false });
+
+    window.alert("家計簿データを削除しました。");
+    window.location.reload();
+  };
+
+  const handleResetExpenseCategoriesToDefault = () => {
+    if (typeof window === "undefined") return;
+
+    const ok = window.confirm(
+      "支出カテゴリを最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？"
+    );
+    if (!ok) return;
+
+    const next = [...EXPENSE_CATEGORIES];
+    setExpenseCategories(next);
+    saveExpenseCategories(next);
+
+    window.alert("支出カテゴリをデフォルトに戻しました。");
+  };
+
+  const handleResetIncomeCategoriesToDefault = () => {
+    if (typeof window === "undefined") return;
+
+    const ok = window.confirm(
+      "収入カテゴリを最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？"
+    );
+    if (!ok) return;
+
+    const next = [...INCOME_CATEGORIES];
+    setIncomeCategories(next);
+    saveIncomeCategories(next);
+
+    window.alert("収入カテゴリをデフォルトに戻しました。");
+  };
+
+  const handleResetPayFromPresetsToDefault = () => {
+    if (typeof window === "undefined") return;
+
+    const ok = window.confirm(
+      "支出元・入金元の候補を最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？"
+    );
+    if (!ok) return;
+
+    const next = [...PAY_FROM_OPTIONS];
+    setPayFromPresets(next);
+    savePayFromPresets(next);
+
+    window.alert("支出元・入金元の候補をデフォルトに戻しました。");
   };
 
   const reorderList = (list: string[], from: number, to: number) => {
@@ -124,6 +177,11 @@ export default function SettingsPage() {
     index: number,
     kind: "expense" | "income" | "payfrom"
   ) => {
+    if (typeof window !== "undefined") {
+      const ok = window.confirm("この項目を削除しますか？");
+      if (!ok) return;
+    }
+
     const newList = list.filter((_, i) => i !== index);
     setList(newList);
 
@@ -148,362 +206,155 @@ export default function SettingsPage() {
       </header>
 
       <div className="space-y-6">
-        {/* 1. 表示・テーマ設定 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-800">テーマ設定</h2>
+        <ThemeSettingsSection
+          theme={settings.theme}
+          onChangeTheme={(theme: ThemeOption) =>
+            handleChangeSetting("theme", theme)
+          }
+        />
 
-          {/* テーマ */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-slate-600">
-              テーマカラー
-            </p>
-            <div className="flex flex-wrap gap-2 text-[11px]">
-              {(["system", "light", "dark"] as ThemeOption[]).map((theme) => (
-                <button
-                  key={theme}
-                  type="button"
-                  onClick={() => handleChangeSetting("theme", theme)}
-                  className={`px-3 py-1.5 rounded-full border ${
-                    settings.theme === theme
-                      ? "bg-emerald-50 border-emerald-400 text-emerald-700"
-                      : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {theme === "system" && "端末の設定に合わせる"}
-                  {theme === "light" && "ライト"}
-                  {theme === "dark" && "ダーク"}
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] text-slate-400">
-              ※ テーマの切り替えは今後のアップデートで反映予定です。
-            </p>
-          </div>
-        </section>
+        <InputQuickSettingsSection
+          defaultInputMode={settings.defaultInputMode}
+          quickExpenseCategories={settings.quickExpenseCategories}
+          quickIncomeCategories={settings.quickIncomeCategories}
+          expenseCategories={expenseCategories}
+          incomeCategories={incomeCategories}
+          onChangeDefaultMode={(mode) =>
+            handleChangeSetting("defaultInputMode", mode)
+          }
+          onToggleQuickCategory={(kind, name) =>
+            handleToggleQuickCategory(kind, name)
+          }
+        />
 
-        {/* 2. カテゴリ・項目設定 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-800">
-            カテゴリ・項目設定
-          </h2>
+        <SavingSupportSection
+          settings={settings}
+          onChangeSetting={handleChangeSetting}
+        />
 
-          {/* 支出カテゴリ */}
-          <EditableListSection
-            title="支出カテゴリ"
-            description="入力タブやカレンダー編集モーダルで使う支出カテゴリの名前と並び順を変更できます。"
-            items={expenseCategories}
-            onEdit={(idx, val) =>
-              handleEditItem(
-                expenseCategories,
-                setExpenseCategories,
-                idx,
-                val,
-                "expense"
-              )
-            }
-            onAdd={() =>
-              handleAddItem(expenseCategories, setExpenseCategories, "expense")
-            }
-            onRemove={(idx) =>
-              handleRemoveItem(
-                expenseCategories,
-                setExpenseCategories,
-                idx,
-                "expense"
-              )
-            }
-            onReorder={(from, to) =>
-              handleReorder(expenseCategories, setExpenseCategories, from, to, "expense")
-            }
-          />
+        <CategorySettingsSection
+          expenseCategories={expenseCategories}
+          incomeCategories={incomeCategories}
+          payFromPresets={payFromPresets}
+          onEditExpenseCategory={(idx, val) =>
+            handleEditItem(
+              expenseCategories,
+              setExpenseCategories,
+              idx,
+              val,
+              "expense"
+            )
+          }
+          onAddExpenseCategory={() =>
+            handleAddItem(expenseCategories, setExpenseCategories, "expense")
+          }
+          onRemoveExpenseCategory={(idx) =>
+            handleRemoveItem(
+              expenseCategories,
+              setExpenseCategories,
+              idx,
+              "expense"
+            )
+          }
+          onReorderExpenseCategory={(from, to) =>
+            handleReorder(
+              expenseCategories,
+              setExpenseCategories,
+              from,
+              to,
+              "expense"
+            )
+          }
+          onEditIncomeCategory={(idx, val) =>
+            handleEditItem(
+              incomeCategories,
+              setIncomeCategories,
+              idx,
+              val,
+              "income"
+            )
+          }
+          onAddIncomeCategory={() =>
+            handleAddItem(incomeCategories, setIncomeCategories, "income")
+          }
+          onRemoveIncomeCategory={(idx) =>
+            handleRemoveItem(
+              incomeCategories,
+              setIncomeCategories,
+              idx,
+              "income"
+            )
+          }
+          onReorderIncomeCategory={(from, to) =>
+            handleReorder(
+              incomeCategories,
+              setIncomeCategories,
+              from,
+              to,
+              "income"
+            )
+          }
+          onEditPayFrom={(idx, val) =>
+            handleEditItem(
+              payFromPresets,
+              setPayFromPresets,
+              idx,
+              val,
+              "payfrom"
+            )
+          }
+          onAddPayFrom={() =>
+            handleAddItem(payFromPresets, setPayFromPresets, "payfrom")
+          }
+          onRemovePayFrom={(idx) =>
+            handleRemoveItem(payFromPresets, setPayFromPresets, idx, "payfrom")
+          }
+          onReorderPayFrom={(from, to) =>
+            handleReorder(
+              payFromPresets,
+              setPayFromPresets,
+              from,
+              to,
+              "payfrom"
+            )
+          }
+          onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
+          onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
+          onResetPayFromPresets={handleResetPayFromPresetsToDefault}
+        />
 
-          {/* 収入カテゴリ */}
-          <EditableListSection
-            title="収入カテゴリ"
-            description="ボーナスや臨時収入など、自分に合った収入カテゴリに編集できます。入力タブやカレンダー編集モーダルに反映されます。"
-            items={incomeCategories}
-            onEdit={(idx, val) =>
-              handleEditItem(
-                incomeCategories,
-                setIncomeCategories,
-                idx,
-                val,
-                "income"
-              )
-            }
-            onAdd={() =>
-              handleAddItem(incomeCategories, setIncomeCategories, "income")
-            }
-            onRemove={(idx) =>
-              handleRemoveItem(
-                incomeCategories,
-                setIncomeCategories,
-                idx,
-                "income"
-              )
-            }
-            onReorder={(from, to) =>
-              handleReorder(incomeCategories, setIncomeCategories, from, to, "income")
-            }
-          />
+        <AggregationSettingsSection
+          payday={settings.payday}
+          budgetBase={settings.budgetBase}
+          onChangePayday={(day) => handleChangeSetting("payday", day)}
+          onChangeBudgetBase={(base: BudgetBaseOption) =>
+            handleChangeSetting("budgetBase", base)
+          }
+        />
 
-          {/* 支出元 / 入金元プリセット */}
-          <EditableListSection
-            title="支出元・入金元の候補"
-            description="現金・クレジットカード・電子決済など、よく使う支出元や入金元の候補を編集できます。入力タブとカレンダー編集モーダルに反映されます。"
-            items={payFromPresets}
-            onEdit={(idx, val) =>
-              handleEditItem(
-                payFromPresets,
-                setPayFromPresets,
-                idx,
-                val,
-                "payfrom"
-              )
-            }
-            onAdd={() =>
-              handleAddItem(payFromPresets, setPayFromPresets, "payfrom")
-            }
-            onRemove={(idx) =>
-              handleRemoveItem(
-                payFromPresets,
-                setPayFromPresets,
-                idx,
-                "payfrom"
-              )
-            }
-            onReorder={(from, to) =>
-              handleReorder(payFromPresets, setPayFromPresets, from, to, "payfrom")
-            }
-          />
+        <AccountLoginSection />
 
-          <p className="text-[10px] text-slate-400">
-            ※ ここで編集した内容は、入力タブのカテゴリ候補や支出元候補、
-            カレンダーの内訳編集モーダルに反映されます。
-          </p>
-        </section>
+        <DataManagementSection onResetKakeiboData={handleResetKakeiboData} />
 
-        {/* 3. 集計・予算の設定 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-800">
-            集計・予算の設定
-          </h2>
-
-          {/* 集計開始日 */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-slate-600">
-              集計開始日（給料日）
-            </p>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-[12px]">
-              <select
-                value={settings.payday}
-                onChange={(e) =>
-                  handleChangeSetting("payday", Number(e.target.value) || 1)
-                }
-                className="border border-slate-300 rounded-full px-3 py-1.5 bg-white text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-300 w-full sm:w-auto"
-              >
-                {Array.from({ length: 31 }).map((_, i) => {
-                  const day = i + 1;
-                  return (
-                    <option key={day} value={day}>
-                      {day}日
-                    </option>
-                  );
-                })}
-              </select>
-              <span className="text-[11px] text-slate-500">
-                例：25日に給料日の場合は「25日」を選択
-              </span>
-            </div>
-          </div>
-
-          {/* 予算の基準 */}
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-medium text-slate-600">
-              予算の基準（将来のオプション）
-            </p>
-            <div className="flex flex-col gap-1 text-[11px]">
-              {(["nationalMedian", "userAverage"] as BudgetBaseOption[]).map(
-                (opt) => (
-                  <label
-                    key={opt}
-                    className="inline-flex items-center gap-2 cursor-pointer"
-                  >
-                    <input
-                      type="radio"
-                      name="budgetBase"
-                      value={opt}
-                      checked={settings.budgetBase === opt}
-                      onChange={() => handleChangeSetting("budgetBase", opt)}
-                      className="h-3 w-3"
-                    />
-                    <span className="text-slate-700">
-                      {opt === "nationalMedian" &&
-                        "全国×年代別の支出中央値をベースにする（現在使用中）"}
-                      {opt === "userAverage" &&
-                        "自分の過去数ヶ月の平均支出をベースにする（今後追加予定）"}
-                    </span>
-                  </label>
-                )
-              )}
-            </div>
-            <p className="text-[10px] text-slate-400">
-              ※ 「自分の平均から計算する」は今後のバージョンで実装予定です。
-            </p>
-          </div>
-        </section>
-        {/* 4. データ管理 ★ここから追加 */}
-        <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-800">データ管理</h2>
-
-          <div className="space-y-2">
-            <p className="text-[11px] font-medium text-slate-700">
-              家計簿データをリセット
-            </p>
-            <p className="text-[10px] text-slate-500">
-              この端末のブラウザに保存されている予算・日別の支出／収入明細・固定費などの
-              家計簿データをすべて削除します。テーマや給料日、カテゴリ・支出元プリセットの設定は残ります。
-            </p>
-            <button
-              type="button"
-              onClick={handleResetKakeiboData}
-              className="mt-1 inline-flex items-center rounded-full border border-red-400 bg-red-50 px-3 py-1.5 text-[11px] font-semibold text-red-700 hover:bg-red-100"
-            >
-              家計簿データをすべて削除する
-            </button>
-          </div>
-
-          <p className="text-[10px] text-slate-400">
-            ※ 誤って削除した場合、データを元に戻すことはできません。
-          </p>
-        </section>
+        <AppInfoSection version={APP_VERSION} />
       </div>
     </main>
   );
-}
 
-// 編集可能リスト（カテゴリ・支出元など共通）
-function EditableListSection(props: {
-  title: string;
-  description: string;
-  items: string[];
-  onEdit: (index: number, value: string) => void;
-  onAdd: () => void;
-  onRemove: (index: number) => void;
-  onReorder: (from: number, to: number) => void;
-}) {
-  const {
-    title,
-    description,
-    items,
-    onEdit,
-    onAdd,
-    onRemove,
-    onReorder,
-  } = props;
+  function handleToggleQuickCategory(kind: "expense" | "income", name: string) {
+    const key =
+      kind === "expense" ? "quickExpenseCategories" : "quickIncomeCategories";
 
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+    const current = (settings[key] ?? []) as string[];
+    const next = current.includes(name)
+      ? current.filter((v) => v !== name)
+      : [...current, name];
 
-  const handleDragStart = (index: number, e: React.DragEvent) => {
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(index));
-    setDraggingIndex(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (toIndex: number, e: React.DragEvent) => {
-    e.preventDefault();
-    const fromIndexStr = e.dataTransfer.getData("text/plain");
-    const fromIndex = Number(fromIndexStr);
-    if (Number.isNaN(fromIndex)) return;
-    onReorder(fromIndex, toIndex);
-    setDraggingIndex(null);
-  };
-
-  const handlePointerDown = (index: number) => {
-    setDraggingIndex(index);
-  };
-
-  const handlePointerEnter = (index: number) => {
-    if (draggingIndex === null || draggingIndex === index) return;
-    onReorder(draggingIndex, index);
-    setDraggingIndex(index);
-  };
-
-  const handlePointerUp = () => {
-    setDraggingIndex(null);
-  };
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <p className="text-[11px] font-medium text-slate-700">{title}</p>
-          <p className="text-[10px] text-slate-400 leading-snug">
-            {description}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onAdd}
-          className="text-[11px] rounded-full border border-emerald-400 px-3 py-1 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 w-full sm:w-auto text-center"
-        >
-          ＋ 追加
-        </button>
-      </div>
-
-      <div className="space-y-1 max-h-64 overflow-auto pr-1">
-        {items.map((item, index) => (
-          <div
-            key={index}
-            className={`flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 ${
-              draggingIndex === index ? "border-emerald-300 bg-emerald-50" : ""
-            }`}
-            draggable
-            onDragStart={(e) => handleDragStart(index, e)}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(index, e)}
-            onPointerDown={() => handlePointerDown(index)}
-            onPointerEnter={() => handlePointerEnter(index)}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-            onPointerLeave={() => {
-              // no-op, keep state until pointer up
-            }}
-          >
-            <div className="flex items-center gap-2 w-full">
-              <span className="text-[14px] text-slate-400 select-none cursor-grab">
-                ≡
-              </span>
-              <div className="flex flex-col flex-1 w-full">
-                <input
-                  type="text"
-                  value={item}
-                  onChange={(e) => onEdit(index, e.target.value)}
-                  className="w-full bg-white rounded-lg border border-slate-300 px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                  placeholder="名前を入力"
-                />
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => onRemove(index)}
-              className="text-[11px] text-red-500 hover:text-red-600 self-start sm:self-auto"
-            >
-              削除
-            </button>
-          </div>
-        ))}
-        {items.length === 0 && (
-          <p className="text-[11px] text-slate-400">
-            まだ項目がありません。「＋ 追加」から登録できます。
-          </p>
-        )}
-      </div>
-    </div>
-  );
+    const nextSettings: AppSettings = {
+      ...settings,
+      [key]: next,
+    };
+    setSettings(nextSettings);
+    saveAppSettings(nextSettings);
+  }
 }

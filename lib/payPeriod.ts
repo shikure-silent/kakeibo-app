@@ -1,59 +1,67 @@
-// lib/payPeriod.ts
-
 export type PayPeriod = {
-  start: Date; // 期間開始日（含む）
-  end: Date; // 期間終了日（含む）
+  start: Date;
+  end: Date;
 };
 
+const lastDayOfMonth = (y: number, m: number): number =>
+  new Date(y, m, 0).getDate();
+
 /**
- * 指定した year/month に対して、
- * 「その月の給料日を起点とする1サイクル」を返す。
+ * 指定された year/month に対して、
+ * 「その月で締める給料日サイクル」を返すヘルパー。
  *
- * 例）year=2025, month=4, payday=25
- *   → 2025/4/25 〜 2025/5/24
+ * 例）給料日=15 の場合
+ *  - 2025年12月 → 2025-11-15 〜 2025-12-14
+ *  - 2025年1月  → 2024-12-15 〜 2025-01-14
+ *
+ * 給料日=1 のときは「月初〜月末」（カレンダー月そのまま）とみなす。
  */
-export function getPayPeriodForMonth(
+export const getPayPeriodForMonth = (
   year: number,
-  month: number, // 1-12
+  month: number,
   payday: number
-): PayPeriod {
-  // payday が変な値でもとりあえず 1〜31 に丸める
-  const basePayday = Math.min(31, Math.max(1, Math.floor(payday || 1)));
+): PayPeriod | null => {
+  if (!payday) return null;
 
-  // その月の最終日
-  const lastDayThisMonth = new Date(year, month, 0).getDate();
-  const normalizedPayday = Math.min(basePayday, lastDayThisMonth);
+  const normalizedPayday = Math.min(31, Math.max(1, Math.floor(payday)));
 
-  // 開始日: 今の月の normalizedPayday 日
-  const start = new Date(year, month - 1, normalizedPayday);
+  // 月初〜月末サイクル（給料日=1 相当）
+  if (normalizedPayday === 1) {
+    const endDay = lastDayOfMonth(year, month);
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month - 1, endDay);
+    return { start, end };
+  }
 
-  // 翌月
-  const nextMonthYear = month === 12 ? year + 1 : year;
-  const nextMonth = month === 12 ? 1 : month + 1;
+  // 前月の同じ日を開始日、
+  // 当月の「給料日-1 日」を締め日とする
+  let prevMonth = month - 1;
+  let prevYear = year;
+  if (prevMonth === 0) {
+    prevMonth = 12;
+    prevYear -= 1;
+  }
 
-  // 翌月の給料日（その月の日数が少なくても収まるように調整）
-  const lastDayNextMonth = new Date(nextMonthYear, nextMonth, 0).getDate();
-  const nextMonthPayday = Math.min(basePayday, lastDayNextMonth);
+  const prevLastDay = lastDayOfMonth(prevYear, prevMonth);
+  const startDay = Math.min(normalizedPayday, prevLastDay);
+  const start = new Date(prevYear, prevMonth - 1, startDay);
 
-  // 「翌月の給料日 - 1日」が終了日
-  const endCandidate = new Date(nextMonthYear, nextMonth - 1, nextMonthPayday);
-  const end = new Date(endCandidate);
-  end.setDate(endCandidate.getDate() - 1);
+  const thisLastDay = lastDayOfMonth(year, month);
+  const endDay = Math.min(normalizedPayday - 1, thisLastDay);
+  const end = new Date(year, month - 1, endDay);
 
   return { start, end };
-}
+};
 
-/**
- * 期間に含まれるすべての日付を列挙
- */
-export function listDatesInPeriod(period: PayPeriod): Date[] {
-  const days: Date[] = [];
+// 期間内の日付配列
+export const listDatesInPeriod = (period: PayPeriod): Date[] => {
+  const dates: Date[] = [];
   const cur = new Date(period.start);
 
   while (cur <= period.end) {
-    days.push(new Date(cur));
+    dates.push(new Date(cur));
     cur.setDate(cur.getDate() + 1);
   }
 
-  return days;
-}
+  return dates;
+};

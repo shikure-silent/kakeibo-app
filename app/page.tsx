@@ -239,6 +239,11 @@ export default function HomePage() {
 
   const saving = totalIncome - totalExpense;
   const savingRate = totalIncome > 0 ? (saving / totalIncome) * 100 : null;
+  // 設定から貯金目標（0.1 = 10%）とメンタルサポート設定を取得
+  const targetSavingRatePercent =
+    settings.targetSavingRate != null ? settings.targetSavingRate * 100 : null;
+
+  const enableEncouragingMessages = settings.enableEncouragingMessages ?? true;
 
   // 「この予算でスタート」クリック時 → まず確認モーダルを開く
   const handleOpenConfirmModal = () => {
@@ -317,6 +322,8 @@ export default function HomePage() {
           saving={saving}
           savingRate={savingRate}
           ageGroupLabel={ageGroupLabels[ageGroup]}
+          targetSavingRatePercent={targetSavingRatePercent}
+          enableEncouragingMessages={enableEncouragingMessages}
         />
 
         {/* 左：カード群／右：説明 */}

@@ -55,12 +55,13 @@ export default function BudgetHighlightCard({
       : 0;
   const usagePercentText = totalBudget > 0 ? `${usagePercent.toFixed(1)}%` : "—";
 
-  const safeSaving = typeof savingEstimate === "number" ? savingEstimate : null;
+  const displaySaving =
+    typeof savingEstimate === "number" ? savingEstimate : null;
 
   const savingColor =
-    safeSaving === null
+    displaySaving === null
       ? "text-slate-500"
-      : safeSaving >= 0
+      : displaySaving >= 0
       ? "text-emerald-600"
       : "text-red-500";
 
@@ -81,19 +82,19 @@ export default function BudgetHighlightCard({
             今月の貯金見込み
           </p>
           <p className={`mt-1 text-lg lg:text-xl font-semibold ${savingColor}`}>
-            {safeSaving === null
+            {displaySaving === null
               ? "—"
-              : safeSaving >= 0
-              ? `${formatYen(safeSaving)} 貯金できそうです`
-              : `${formatYen(Math.abs(safeSaving))} の赤字になりそうです`}
+              : displaySaving >= 0
+              ? `${formatYen(displaySaving)} 貯金できそうです`
+              : `${formatYen(Math.abs(displaySaving))} の赤字になりそうです`}
           </p>
         </div>
-        {safeSaving !== null && (
+        {displaySaving !== null && (
           <span
             className={`
               text-[10px] px-2 py-[2px] rounded-full
               ${
-                safeSaving >= 0
+                displaySaving >= 0
                   ? "bg-emerald-50 text-emerald-700"
                   : "bg-red-50 text-red-500"
               }
