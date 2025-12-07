@@ -8,6 +8,11 @@ type Props = {
   saving: number;
   savingRate: number | null;
   ageGroupLabel: string;
+  /** 目標貯金率（%）。例: 10 = 10%、null のときは「目標なし」扱い */
+  targetSavingRatePercent?: number | null;
+
+  /** メンタルサポート文言を表示するかどうか */
+  enableEncouragingMessages?: boolean;
 };
 
 export default function SavingHighlightCard({
@@ -16,6 +21,8 @@ export default function SavingHighlightCard({
   saving,
   savingRate,
   ageGroupLabel,
+  targetSavingRatePercent,
+  enableEncouragingMessages = true,
 }: Props) {
   const noInput = totalIncome <= 0 && totalExpense <= 0;
 
@@ -43,6 +50,51 @@ export default function SavingHighlightCard({
 
   const savingRateColor =
     savingRate !== null && saving < 0 ? "text-slate-900" : "text-emerald-700";
+
+  // メンタルサポート用の一言メッセージ
+  let messageTitle = "";
+  let messageBody = "";
+
+  if (
+    enableEncouragingMessages &&
+    !noInput &&
+    savingRate !== null &&
+    totalIncome > 0
+  ) {
+    if (targetSavingRatePercent == null) {
+      // 目標なしモード：単純にプラスかマイナスかでコメント
+      if (saving > 0) {
+        messageTitle = "いいペースで貯金できています";
+        messageBody =
+          "この調子で続ければ、少しずつ余裕が増えていきそうです。無理のない範囲で続けていきましょう。";
+      } else if (saving === 0) {
+        messageTitle = "今月はちょうどトントンのペース";
+        messageBody =
+          "プラスでもマイナスでもない落ち着いたペースです。来月以降、少しだけ貯金を増やす作戦を考えてみるのも良いかもしれません。";
+      } else {
+        messageTitle = "今月はちょっとがんばりすぎかも…";
+        messageBody =
+          "赤字気味ですが、こうして見える化できているだけでも一歩前進です。次のサイクルで調整していく前提で、まずは「振り返り」だけでも十分です。";
+      }
+    } else {
+      // 目標ありモード：savingRate と targetSavingRatePercent を比較（どちらも % 単位）
+      const diff = savingRate - targetSavingRatePercent;
+
+      if (diff >= 2) {
+        messageTitle = "目標よりもいいペースです";
+        messageBody =
+          "今サイクルは目標の貯金率をしっかり上回っています。自分を褒めてあげてOKなペースです 🎉";
+      } else if (diff >= -2) {
+        messageTitle = "目標にだいたい届きそうです";
+        messageBody =
+          "ほぼ目標どおりのペースです。無理のない範囲で、残り期間で少しだけ支出を意識してみると、より安心して目標達成できそうです。";
+      } else {
+        messageTitle = "今月はちょっとゆったりペース";
+        messageBody =
+          "目標よりは少しゆっくりですが、落ち込む必要はありません。家計の状況が見えているだけでも十分大きな一歩なので、次のサイクルで少しずつ整えていきましょう。";
+      }
+    }
+  }
 
   return (
     <section className="bg-white rounded-2xl shadow-sm border border-emerald-100 px-4 py-4 lg:px-6 lg:py-5 flex flex-col gap-3">
@@ -80,6 +132,18 @@ export default function SavingHighlightCard({
           </p>
         </div>
       </div>
+
+      {/* メンタルサポート用の一言メッセージ */}
+      {enableEncouragingMessages && messageTitle && (
+        <div className="mt-2 rounded-xl bg-emerald-50 px-3 py-2">
+          <p className="text-[11px] font-semibold text-emerald-800">
+            {messageTitle}
+          </p>
+          <p className="mt-1 text-[11px] text-emerald-800 leading-snug">
+            {messageBody}
+          </p>
+        </div>
+      )}
 
       <p className="text-[11px] text-slate-400">
         ※

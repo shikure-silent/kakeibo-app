@@ -5,7 +5,7 @@ import { buildBudgetKey, WEEKDAY_LABELS } from "../../lib/const";
 import {
   calcDayTotals,
   loadAmountsFromStorage,
-  loadBudgetFromStorage,
+  loadBudgetWithFallback,
   loadDetailsFromStorage,
   saveAmountsToStorage,
   saveDetailsToStorage,
@@ -210,8 +210,8 @@ export default function CalendarPage() {
     setDailyDetails(allDetails);
     setIncomeAmounts(incomes);
 
-    // 予算情報
-    const loadedBudget = loadBudgetFromStorage(currentYear, currentMonth);
+    // 予算情報（なければ近い月の予算をフォールバック）
+    const loadedBudget = loadBudgetWithFallback(currentYear, currentMonth);
     setBudget(loadedBudget);
 
     // Home画面で保存した totalBudget / totalIncome / saving を反映
@@ -413,6 +413,11 @@ export default function CalendarPage() {
 
     const payday = settings.payday ?? 1;
     const period = getPayPeriodForMonth(currentYear, currentMonth, payday);
+    if (!period) {
+      setPeriodInfos([]);
+      setPeriodLabel("");
+      return;
+    }
     const dates = listDatesInPeriod(period);
 
     const infos: PeriodDailyInfo[] = [];
@@ -465,6 +470,29 @@ export default function CalendarPage() {
     if (!budget || budget.totalBudget <= 0) return null;
     return Math.min(100, Math.max(0, (periodTotal / budget.totalBudget) * 100));
   }, [budget, periodTotal]);
+
+  // ▼ 給料日サイクルの日数・1日あたり目安・直近7日のサマリー
+  const periodDaysCount = periodInfos.length;
+
+  const periodDailyTarget = useMemo(() => {
+    if (!budget || periodDaysCount === 0) return null;
+    return budget.totalBudget / periodDaysCount;
+  }, [budget, periodDaysCount]);
+
+  const periodWeeklySummary: WeeklySummary | null = useMemo(() => {
+    if (periodInfos.length === 0) return null;
+
+    const last7 = periodInfos.slice(-7);
+    const total = last7.reduce((sum, info) => sum + (info.spending || 0), 0);
+    const daysCount = last7.length || 1;
+
+    return {
+      startDay: 1,
+      endDay: daysCount,
+      total,
+      average: total / daysCount,
+    };
+  }, [periodInfos]);
 
   const themeClass = getThemeClasses(settings.theme);
 
@@ -521,14 +549,25 @@ export default function CalendarPage() {
             />
 
             <MonthlySummaryCard
-              monthlyTotal={monthlyTotal}
+              // 支出合計：給料日サイクルがあればそちらを優先
+              monthlyTotal={hasPeriod ? periodTotal : monthlyTotal}
               budget={budget}
-              remainingBudget={remainingBudget}
+              // 残り予算もサイクル優先
+              remainingBudget={
+                hasPeriod && periodRemainingBudget !== null
+                  ? periodRemainingBudget
+                  : remainingBudget
+              }
+              // ミニ棒グラフ自体はまだ「カレンダーの月」ベースでOK
               daysInMonth={daysInMonth}
               amounts={amounts}
               maxAmount={maxAmount}
-              dailyTarget={dailyTarget}
-              weeklySummary={weeklySummary}
+              // 1日あたりの目安：サイクル日数で割った値を優先
+              dailyTarget={hasPeriod ? periodDailyTarget : dailyTarget}
+              // 直近7日：サイクル内の直近7日を優先
+              weeklySummary={hasPeriod ? periodWeeklySummary : weeklySummary}
+              // ★ ここがポイント：サマリーカード用に periodLabel を渡す
+              periodLabel={hasPeriod ? periodLabel : undefined}
               onSelectDayFromChart={handleSelectDayFromChart}
             />
           </section>

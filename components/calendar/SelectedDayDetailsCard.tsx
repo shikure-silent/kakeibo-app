@@ -23,36 +23,6 @@ type Props = {
   onCloseCalendar?: () => void; // 追加後にカレンダー画面に戻したいとき用（任意）
 };
 
-const chipClass = (active: boolean) =>
-  `px-2 py-0.5 rounded-full border text-[10px] ${
-    active
-      ? "bg-emerald-500 border-emerald-500 text-white"
-      : "bg-white border-slate-300 text-slate-600 hover:bg-emerald-50"
-  }`;
-
-const OptionChips = ({
-  options,
-  selected,
-  onSelect,
-}: {
-  options: string[];
-  selected?: string | null;
-  onSelect: (value: string) => void;
-}) => (
-  <div className="flex flex-wrap gap-1 mb-1">
-    {options.map((opt) => (
-      <button
-        key={opt}
-        type="button"
-        onClick={() => onSelect(opt)}
-        className={chipClass(selected === opt)}
-      >
-        {opt}
-      </button>
-    ))}
-  </div>
-);
-
 // 全角数字を半角数字に変換
 const toHalfWidthNumber = (value: string) =>
   value.replace(/[０-９]/g, (ch) =>
@@ -262,20 +232,23 @@ export default function SelectedDayDetailsCard({
                       <label className="block text-[11px] text-slate-500">
                         カテゴリ
                       </label>
-
-                      {/* カテゴリ候補チップ（支出/収入で切り替え） */}
-                      <OptionChips
-                        options={categoryOptionsForRow}
-                        selected={rec.category}
-                        onSelect={(cat) =>
+                      <select
+                        value={rec.category ?? ""}
+                        onChange={(e) =>
                           onChangeRecord(idx, {
                             ...rec,
-                            category: cat,
+                            category: e.target.value,
                           } as DetailRecord)
                         }
-                      />
-
-                      {/* 自由入力 */}
+                        className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                      >
+                        <option value="">選択してください</option>
+                        {categoryOptionsForRow.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
                       <input
                         type="text"
                         className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -286,7 +259,7 @@ export default function SelectedDayDetailsCard({
                             category: e.target.value,
                           } as DetailRecord)
                         }
-                        placeholder="例：食費 / 日用品 など"
+                        placeholder="直接入力（例：食費 / 日用品 など）"
                       />
                     </div>
 
@@ -336,42 +309,35 @@ export default function SelectedDayDetailsCard({
                         <label className="block text-[11px] text-slate-500">
                           {rec.mode === "income" ? "入金元" : "支出元"}
                         </label>
-
-                        {/* 支出元プリセット */}
-                        <div className="flex flex-wrap gap-1 mb-1">
+                        <select
+                          value={rec.payFrom ?? ""}
+                          onChange={(e) =>
+                            onChangeRecord(idx, {
+                              ...rec,
+                              payFrom: e.target.value,
+                            } as DetailRecord)
+                          }
+                          className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                        >
+                          <option value="">選択してください</option>
                           {payFromOptions.map((src) => (
-                            <button
-                              key={src}
-                              type="button"
-                              onClick={() =>
-                                onChangeRecord(idx, {
-                                  ...rec,
-                                  payFrom: src,
-                                } as DetailRecord)
-                              }
-                              className={`px-2 py-0.5 rounded-full border text-[10px] ${
-                                rec.payFrom === src
-                                  ? "bg-emerald-500 border-emerald-500 text-white"
-                                  : "bg-white border-slate-300 text-slate-600 hover:bg-emerald-50"
-                              }`}
-                            >
+                            <option key={src} value={src}>
                               {src}
-                            </button>
+                            </option>
                           ))}
-                        </div>
+                        </select>
 
-                        {/* 支出元自由入力 */}
                         <input
                           type="text"
                           className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
                           value={rec.payFrom ?? ""}
                           onChange={(e) =>
-                          onChangeRecord(idx, {
-                            ...rec,
-                            payFrom: e.target.value,
-                          } as DetailRecord)
+                            onChangeRecord(idx, {
+                              ...rec,
+                              payFrom: e.target.value,
+                            } as DetailRecord)
                           }
-                          placeholder="例：現金 / クレジットカード / 電子決済 など"
+                          placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
                         />
                       </div>
 
@@ -499,27 +465,29 @@ export default function SelectedDayDetailsCard({
             {/* カテゴリ */}
             <div className="space-y-1">
               <label className="block text-[11px] text-slate-500">
-                カテゴリ（選択または自由入力）
+                カテゴリを選択
               </label>
-              {(() => {
-                const addCategoryOptions =
-                  addDraft.mode === "income"
-                    ? incomeCategoryOptions
-                    : expenseCategoryOptions;
-                return (
-                  <OptionChips
-                    options={addCategoryOptions}
-                    selected={addDraft.category}
-                    onSelect={(cat) => handleChangeDraft("category", cat)}
-                  />
-                );
-              })()}
+              <select
+                value={addDraft.category ?? ""}
+                onChange={(e) => handleChangeDraft("category", e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              >
+                <option value="">選択してください</option>
+                {(addDraft.mode === "income"
+                  ? incomeCategoryOptions
+                  : expenseCategoryOptions
+                ).map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
               <input
                 type="text"
                 className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
                 value={addDraft.category ?? ""}
                 onChange={(e) => handleChangeDraft("category", e.target.value)}
-                placeholder="例：食費 / 日用品 など"
+                placeholder="直接入力（例：食費 / 日用品 など）"
               />
             </div>
 
@@ -542,26 +510,20 @@ export default function SelectedDayDetailsCard({
             {/* 支出元 / 入金元 */}
             <div className="space-y-1">
               <label className="block text-[11px] text-slate-500">
-                {addDraft.mode === "income"
-                  ? "入金元（選択または自由入力）"
-                  : "支出元（選択または自由入力）"}
+                {addDraft.mode === "income" ? "入金元を選択" : "支出元を選択"}
               </label>
-              <OptionChips
-                options={payFromOptions}
-                selected={addDraft.payFrom}
-                onSelect={(src) => handleChangeDraft("payFrom", src)}
-              />
-              <input
-                type="text"
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              <select
                 value={addDraft.payFrom ?? ""}
                 onChange={(e) => handleChangeDraft("payFrom", e.target.value)}
-                placeholder={
-                  addDraft.mode === "income"
-                    ? "例：給与 / 銀行振込 / 手渡し など"
-                    : "例：現金 / クレジットカード / 電子決済 など"
-                }
-              />
+                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+              >
+                <option value="">選択してください</option>
+                {payFromOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* 金額（新規追加） */}

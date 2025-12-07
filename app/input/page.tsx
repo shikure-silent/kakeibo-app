@@ -14,6 +14,7 @@ import {
   defaultSettings,
   loadAppSettings,
   getThemeClasses,
+  saveAppSettings,
 } from "../../lib/settingsStorage";
 
 // 日付文字列を生成（YYYY-MM-DD）
@@ -114,6 +115,13 @@ export default function InputPage() {
   useEffect(() => {
     const loaded = loadAppSettings();
     setSettings(loaded);
+
+    // デフォルトの入力モードを反映（未設定なら支出スタート）
+    if (loaded.defaultInputMode === "income") {
+      setMode("income");
+    } else {
+      setMode("expense");
+    }
   }, []);
 
   const themeClass = getThemeClasses(settings.theme);
@@ -154,6 +162,37 @@ export default function InputPage() {
     } else {
       // 収入のときは空欄からスタート
       setPayFrom("");
+    }
+  };
+
+  const handleToggleQuickCategory = (
+    kind: "expense" | "income",
+    name: string
+  ) => {
+    if (kind === "expense") {
+      const current = settings.quickExpenseCategories ?? [];
+      const next = current.includes(name)
+        ? current.filter((v) => v !== name)
+        : [...current, name];
+
+      const nextSettings: AppSettings = {
+        ...settings,
+        quickExpenseCategories: next,
+      };
+      setSettings(nextSettings);
+      saveAppSettings(nextSettings);
+    } else {
+      const current = settings.quickIncomeCategories ?? [];
+      const next = current.includes(name)
+        ? current.filter((v) => v !== name)
+        : [...current, name];
+
+      const nextSettings: AppSettings = {
+        ...settings,
+        quickIncomeCategories: next,
+      };
+      setSettings(nextSettings);
+      saveAppSettings(nextSettings);
     }
   };
   const handleAddRecord = () => {
@@ -261,6 +300,8 @@ export default function InputPage() {
               amount={amountInput}
               onChangeAmount={setAmountInput}
               onSubmit={handleAddRecord}
+              quickExpenseCategories={settings.quickExpenseCategories}
+              quickIncomeCategories={settings.quickIncomeCategories}
             />
           </section>
 

@@ -64,22 +64,71 @@ export const saveDetailsToStorage = (
 };
 
 // localStorage に月次予算を保存／読込
+// 既存：
 export const loadBudgetFromStorage = (
   year: number,
   month: number
 ): MonthlyBudget | null => {
   if (typeof window === "undefined") return null;
-  const key = buildBudgetKey(year, month);
-  const raw = window.localStorage.getItem(key);
-  if (!raw) return null;
+
   try {
+    const key = buildBudgetKey(year, month);
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
     const parsed = JSON.parse(raw) as MonthlyBudget;
-    if (typeof parsed.totalBudget === "number") {
-      return parsed;
+    if (
+      typeof parsed.totalBudget !== "number" ||
+      !Array.isArray(parsed.items)
+    ) {
+      return null;
     }
-  } catch {
-    // noop
+    return parsed;
+  } catch (e) {
+    console.error("Failed to load budget from storage", e);
+    return null;
   }
+};
+
+/**
+ * その月に予算がなければ、近い月の予算をフォールバックして返す
+ *
+ * 探し方：
+ *  1. まず指定された (year, month)
+ *  2. それで見つからなければ、±1ヶ月, ±2ヶ月 ... と最大 maxOffsetヶ月ぶん探す
+ *     先に見つかった方を採用
+ */
+export const loadBudgetWithFallback = (
+  year: number,
+  month: number,
+  maxOffset = 12
+): MonthlyBudget | null => {
+  if (typeof window === "undefined") return null;
+
+  // まずその月
+  const direct = loadBudgetFromStorage(year, month);
+  if (direct) return direct;
+
+  const addMonth = (y: number, m: number, delta: number) => {
+    const base = y * 12 + (m - 1) + delta;
+    const newYear = Math.floor(base / 12);
+    let newMonth = base % 12;
+    if (newMonth < 0) {
+      newMonth += 12;
+    }
+    return { year: newYear, month: newMonth + 1 };
+  };
+
+  // 近い月から順に（-1, +1, -2, +2, ...）
+  for (let diff = 1; diff <= maxOffset; diff++) {
+    const prev = addMonth(year, month, -diff);
+    const prevBudget = loadBudgetFromStorage(prev.year, prev.month);
+    if (prevBudget) return prevBudget;
+
+    const next = addMonth(year, month, diff);
+    const nextBudget = loadBudgetFromStorage(next.year, next.month);
+    if (nextBudget) return nextBudget;
+  }
+
   return null;
 };
 

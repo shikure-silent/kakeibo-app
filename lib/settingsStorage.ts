@@ -1,5 +1,6 @@
-// ▼ 型定義ti
+// lib/settingsStorage.ts
 
+// ▼ 型定義
 export type ThemeOption = "system" | "light" | "dark";
 export type BudgetBaseOption = "nationalMedian" | "userAverage";
 export const EXPENSE_CATEGORY_KEYS = [
@@ -14,30 +15,77 @@ export const EXPENSE_CATEGORY_KEYS = [
 ] as const;
 export type ExpenseCategoryKey = (typeof EXPENSE_CATEGORY_KEYS)[number];
 
+// 追加：入力タブのデフォルトモード
+export type DefaultInputModeOption = "expense" | "income";
+
 export type AppSettings = {
   theme: ThemeOption;
   payday: number; // 集計開始日（給料日）
   budgetBase: BudgetBaseOption;
-  autoUpdateCategories?: Partial<Record<ExpenseCategoryKey, boolean>>; // 各カテゴリごとの自動更新フラグ
+  autoUpdateCategories?: Partial<Record<ExpenseCategoryKey, boolean>>;
+
+  // ★ 入力まわり
+  defaultInputMode?: DefaultInputModeOption; // 入力タブ初期モード
+  quickExpenseCategories?: string[]; // 支出のクイックカテゴリ
+  quickIncomeCategories?: string[]; // 収入のクイックカテゴリ
+
+  // --- A. 入力＆振り返りリマインド ---
+
+  /** 数日入力が空いたときにホーム画面で声かけするか */
+  enableInputGapReminder?: boolean;
+
+  /** 週に1回くらい「今週のふりかえりカード」を出すか */
+  enableWeeklySummaryReminder?: boolean;
+
+  /** 給料日サイクルの中間で「ペース確認カード」を出すか */
+  enableMidPeriodCheckReminder?: boolean;
+
+  /** サイクル終了前に「ふりかえりしようカード」を出すか */
+  enableCycleEndReviewReminder?: boolean;
+
+  /** 予算何％を超えたら「ちょっとペース早め」カードを出すか（0.7 = 70% など） */
+  budgetAlertRate?: number;
+
+  // --- C. 貯金目標・メンタルサポート ---
+
+  /** サイクルごとに目指したい貯金率（0.1 = 10%, 0.2 = 20% など） */
+  targetSavingRate?: number;
+
+  /** ポジティブな一言メッセージカードを出すかどうか */
+  enableEncouragingMessages?: boolean;
 };
 
 // ▼ アプリ全体の基本設定（フォント・テーマ・給料日など）
 
 const SETTINGS_KEY = "kakeibo_app_settings_v1";
 
-export const defaultAutoUpdateCategories: Record<
-  ExpenseCategoryKey,
-  boolean
-> = EXPENSE_CATEGORY_KEYS.reduce(
-  (acc, key) => ({ ...acc, [key]: true }),
-  {} as Record<ExpenseCategoryKey, boolean>
-);
+export const defaultAutoUpdateCategories: Record<ExpenseCategoryKey, boolean> =
+  EXPENSE_CATEGORY_KEYS.reduce(
+    (acc, key) => ({ ...acc, [key]: true }),
+    {} as Record<ExpenseCategoryKey, boolean>
+  );
 
+// ★ 新しい項目もここでデフォルト値を定義
 export const defaultSettings: AppSettings = {
   theme: "system",
   payday: 1,
   budgetBase: "nationalMedian",
   autoUpdateCategories: defaultAutoUpdateCategories,
+
+  // 入力タブ
+  defaultInputMode: "expense",
+  quickExpenseCategories: [],
+  quickIncomeCategories: [],
+
+  // 貯金サポート
+  enableInputGapReminder: true,
+  enableWeeklySummaryReminder: true,
+  enableMidPeriodCheckReminder: true,
+  enableCycleEndReviewReminder: true,
+  budgetAlertRate: 0.8, // 80%
+
+  targetSavingRate: 0.1, // 手取りの10%を目安（あとで変えてOK）
+  enableEncouragingMessages: true,
 };
 
 export function loadAppSettings(): AppSettings {
@@ -48,7 +96,8 @@ export function loadAppSettings(): AppSettings {
     if (!raw) return defaultSettings;
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
     const parsedAuto =
-      parsed.autoUpdateCategories && typeof parsed.autoUpdateCategories === "object"
+      parsed.autoUpdateCategories &&
+      typeof parsed.autoUpdateCategories === "object"
         ? parsed.autoUpdateCategories
         : {};
 

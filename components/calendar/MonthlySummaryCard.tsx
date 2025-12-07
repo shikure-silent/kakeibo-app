@@ -27,6 +27,7 @@ type Props = {
   maxAmount: number;
   dailyTarget: number | null;
   weeklySummary: WeeklySummary | null;
+  periodLabel?: string;
   onSelectDayFromChart?: (day: number) => void;
 };
 
@@ -41,6 +42,7 @@ export default function MonthlySummaryCard({
   amounts,
   dailyTarget,
   weeklySummary,
+  periodLabel,
   onSelectDayFromChart,
 }: Props) {
   const data = useMemo(
@@ -72,9 +74,15 @@ export default function MonthlySummaryCard({
           <h2 className="text-sm font-semibold text-slate-900">
             今月のサマリー
           </h2>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            支出の流れと予算の残りをざっくりチェックできます。
-          </p>
+          {periodLabel ? (
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              集計期間：{periodLabel}
+            </p>
+          ) : (
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              支出の流れと予算の残りをざっくりチェックできます。
+            </p>
+          )}
         </div>
         {dailyTargetBadge && (
           <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-[11px] font-medium text-amber-700">

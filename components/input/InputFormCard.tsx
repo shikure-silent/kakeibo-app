@@ -32,6 +32,8 @@ type Props = {
   amount: string;
   onChangeAmount: (value: string) => void;
   onSubmit: () => void;
+  quickExpenseCategories?: string[];
+  quickIncomeCategories?: string[];
 };
 
 export default function InputFormCard({
@@ -52,16 +54,18 @@ export default function InputFormCard({
   amount,
   onChangeAmount,
   onSubmit,
+  quickExpenseCategories,
+  quickIncomeCategories,
 }: Props) {
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
 
   // ★ 設定に応じた候補リスト
-  const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<string[]>(
-    [...EXPENSE_CATEGORIES]
-  );
-  const [incomeCategoryOptions, setIncomeCategoryOptions] = useState<string[]>(
-    [...INCOME_CATEGORIES]
-  );
+  const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<
+    string[]
+  >([...EXPENSE_CATEGORIES]);
+  const [incomeCategoryOptions, setIncomeCategoryOptions] = useState<string[]>([
+    ...INCOME_CATEGORIES,
+  ]);
   const [payFromOptions, setPayFromOptions] = useState<string[]>([
     ...PAY_FROM_OPTIONS,
   ]);
@@ -74,8 +78,19 @@ export default function InputFormCard({
   }, []);
 
   // 今表示するカテゴリ候補（モードによって切り替え）
+  // 今表示するカテゴリ候補（モードによって切り替え）
   const categoryOptions =
     mode === "expense" ? expenseCategoryOptions : incomeCategoryOptions;
+
+  // クイックカテゴリ（設定で選んだもの）を、実際の候補に存在するものだけに絞る
+  const quickCategories =
+    mode === "expense"
+      ? quickExpenseCategories ?? []
+      : quickIncomeCategories ?? [];
+
+  const activeQuickCategories = quickCategories.filter((name) =>
+    categoryOptions.includes(name)
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,6 +152,33 @@ export default function InputFormCard({
             </button>
           </div>
         </div>
+        {/* クイックカテゴリ（ここを新しく挿入） */}
+        {activeQuickCategories.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-slate-600">
+              クイックカテゴリ
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {activeQuickCategories.map((name) => (
+                <button
+                  key={name}
+                  type="button"
+                  onClick={() => handleSelectCategory(name)}
+                  className={`
+            px-2.5 py-0.5 rounded-full border text-[11px]
+            ${
+              name === category
+                ? "bg-emerald-50 border-emerald-400 text-emerald-700"
+                : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
+            }
+          `}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 日付＋カテゴリ＋支出元/入金元 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -158,7 +200,7 @@ export default function InputFormCard({
             />
           </div>
 
-          {/* カテゴリ：入力欄の“真下”に候補から選ぶ */}
+          {/* カテゴリ */}
           <div className="space-y-1.5">
             <label className="block text-[11px] text-slate-500">カテゴリ</label>
 
@@ -187,7 +229,7 @@ export default function InputFormCard({
               <button
                 type="button"
                 onClick={() => setShowCategorySuggestions((prev) => !prev)}
-                  className="
+                className="
                     rounded-full border border-slate-300
                     bg-slate-50 px-4 py-1.5 text-[12px]
                     text-slate-700 hover:bg-slate-100
