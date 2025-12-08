@@ -18,6 +18,10 @@ type Props = {
   onMemberNameChange: (index: number, name: string) => void;
   onMemberValueChange: (index: number, value: string) => void;
   totalIncome: number;
+
+  // 追加済みのやつ
+  mode: "setup" | "dashboard";
+  onRequestEdit?: () => void;
 };
 
 export default function IncomeSettingsCard({
@@ -29,7 +33,68 @@ export default function IncomeSettingsCard({
   onMemberNameChange,
   onMemberValueChange,
   totalIncome,
+  mode,
+  onRequestEdit,
 }: Props) {
+  // --------------------
+  // ダッシュボードモード
+  // --------------------
+  if (mode === "dashboard") {
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+          <h2 className="text-sm lg:text-base font-semibold text-slate-800">
+            収入の設定（今サイクルの計画）
+          </h2>
+          <p className="text-[11px] text-slate-500 lg:text-right">
+            このサイクルの貯金見込みは、ここで設定した収入合計と支出予算をもとに計算しています。
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-1 text-[11px] text-slate-600">
+            <p>
+              世帯主の年代:{" "}
+              <span className="font-semibold">{ageGroupLabels[ageGroup]}</span>
+            </p>
+            <p>
+              収入を入力している人数:{" "}
+              <span className="font-semibold">{memberCount}人</span>
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-[11px] font-medium text-slate-600">
+              世帯の収入合計（手取り／月）
+            </p>
+            <p className="text-sm font-semibold text-slate-900">
+              ¥{totalIncome.toLocaleString()}
+            </p>
+          </div>
+
+          <p className="text-[10px] text-slate-500">
+            メンバーごとの金額や名前の編集は、「収入設定を見直す」ボタンから行えます。
+          </p>
+        </div>
+
+        <div className="flex justify-end">
+          {onRequestEdit && (
+            <button
+              type="button"
+              onClick={onRequestEdit}
+              className="inline-flex items-center justify-center rounded-full border border-slate-300 px-3 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50"
+            >
+              収入設定を見直す
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // --------------------
+  // セットアップモード（従来どおりのフォーム）
+  // --------------------
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">

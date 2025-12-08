@@ -62,3 +62,54 @@ export const mergeFixedExpenses = (
   });
   return next;
 };
+
+// ▼ ホーム画面用：サイクルごとの「計画確定フラグ」
+
+export type HomeCycleConfirmState = {
+  year: number; // 「◯年◯月分」として扱う年
+  month: number; // 同上
+  confirmed: boolean;
+};
+
+const HOME_CYCLE_CONFIRM_PREFIX = "kakeibo_home_cycle_confirm";
+
+/**
+ * サイクル用のキーを生成
+ * 例: kakeibo_home_cycle_confirm_2024-12
+ */
+const buildHomeCycleConfirmKey = (year: number, month: number) =>
+  `${HOME_CYCLE_CONFIRM_PREFIX}_${year}-${String(month).padStart(2, "0")}`;
+
+/**
+ * このサイクルの計画が確定したことを保存
+ */
+export function saveHomeCycleConfirmed(
+  year: number,
+  month: number,
+  confirmed: boolean = true
+) {
+  if (typeof window === "undefined") return;
+  try {
+    const key = buildHomeCycleConfirmKey(year, month);
+    const state: HomeCycleConfirmState = { year, month, confirmed };
+    window.localStorage.setItem(key, JSON.stringify(state));
+  } catch {
+    // 失敗しても何もしない
+  }
+}
+
+/**
+ * このサイクルの計画が確定済みかどうかを取得
+ */
+export function isHomeCycleConfirmed(year: number, month: number): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const key = buildHomeCycleConfirmKey(year, month);
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as HomeCycleConfirmState;
+    return !!parsed.confirmed;
+  } catch {
+    return false;
+  }
+}

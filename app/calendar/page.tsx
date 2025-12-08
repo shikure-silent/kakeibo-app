@@ -18,7 +18,9 @@ import {
   getThemeClasses,
 } from "../../lib/settingsStorage";
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
-import { CalendarView } from "../../components/calendar/CalendarView";
+import CalendarView from "../../components/calendar/CalendarView";
+import { DetailOverviewModal } from "../../components/calendar/DetailOverviewModal";
+import { DetailEditModal } from "../../components/calendar/DetailEditModal";
 
 type MonthlyBudgetData = {
   year: number;
@@ -552,6 +554,8 @@ export default function CalendarPage() {
       onAddRecord={handleAddDetail}
       onCloseChart={handleCloseChartModal}
       onChartBarClick={handleChartBarClickInModal}
+      DetailOverviewModal={DetailOverviewModal}
+      DetailEditModal={DetailEditModal}
     />
   );
 }
