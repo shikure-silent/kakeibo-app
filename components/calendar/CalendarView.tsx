@@ -29,6 +29,7 @@ type Props = {
   currentMonth: number;
   budget: MonthlyBudget | null;
   monthlyTotal: number;
+  maxAmount: number;
   remainingBudget: number | null;
   budgetUsagePercent: number | null;
   daysInMonth: number;
@@ -77,49 +78,53 @@ type Props = {
 export default function CalendarView(props: Props) {
   const {
     themeClass,
-    calendarCells,
-    amounts,
-    incomeAmounts,
-    selectedDay,
-    onSelectDay,
-    today,
-    currentYear,
-    currentMonth,
-    budget,
-    monthlyTotal,
-    remainingBudget,
-    budgetUsagePercent,
-    daysInMonth,
-    dailyTarget,
-    weeklySummary,
-    dailyDetails,
+    // 表示系
     periodLabel,
     hasPeriod,
-    periodTotal,
-    periodRemainingBudget,
-    periodBudgetUsagePercent,
-    periodDailyTarget,
-    periodWeeklySummary,
-    savingEstimate,
+    selectedDay,
     selectedDateLabel,
-    selectedDetails,
-    onSelectDayFromChart,
     isOverviewModalOpen,
     isDetailModalOpen,
     isChartModalOpen,
     chartModalDay,
     chartDetailsForModal,
     chartData,
-  onCloseOverview,
-  onOpenDetailFromOverview,
-  onCloseDetail,
-  onChangeRecord,
-  onDeleteRecord,
-  onAddRecord,
+    // データ
+    calendarCells,
+    amounts,
+    incomeAmounts,
+    onSelectDay,
+    today,
+    currentYear,
+    currentMonth,
+    budget,
+    monthlyTotal,
+    maxAmount,
+    remainingBudget,
+    budgetUsagePercent,
+    daysInMonth,
+    dailyTarget,
+    weeklySummary,
+    dailyDetails,
+    periodTotal,
+    periodRemainingBudget,
+    periodBudgetUsagePercent,
+    periodDailyTarget,
+    periodWeeklySummary,
+    savingEstimate,
+    selectedDetails,
+    // ハンドラ
+    onSelectDayFromChart,
+    onCloseOverview,
+    onOpenDetailFromOverview,
+    onCloseDetail,
+    onChangeRecord,
+    onDeleteRecord,
+    onAddRecord,
     onPrevMonth,
     onNextMonth,
-  onCloseChart,
-  onChartBarClick,
+    onCloseChart,
+    onChartBarClick,
   } = props;
 
   const isDark = themeClass.includes("theme-dark");
@@ -191,6 +196,7 @@ export default function CalendarView(props: Props) {
             <MonthlySummaryCard
               monthlyTotal={hasPeriod ? periodTotal : monthlyTotal}
               budget={budget}
+              maxAmount={maxAmount}
               remainingBudget={
                 hasPeriod && periodRemainingBudget !== null
                   ? periodRemainingBudget
@@ -198,7 +204,6 @@ export default function CalendarView(props: Props) {
               }
               daysInMonth={daysInMonth}
               amounts={amounts}
-              maxAmount={Math.max(...amounts, 0)}
               dailyTarget={hasPeriod ? periodDailyTarget : dailyTarget}
               weeklySummary={hasPeriod ? periodWeeklySummary : weeklySummary}
               periodLabel={hasPeriod ? periodLabel : undefined}

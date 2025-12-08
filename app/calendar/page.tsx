@@ -19,8 +19,6 @@ import {
 } from "../../lib/settingsStorage";
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
-import { DetailOverviewModal } from "../../components/calendar/DetailOverviewModal";
-import { DetailEditModal } from "../../components/calendar/DetailEditModal";
 
 type MonthlyBudgetData = {
   year: number;
@@ -508,8 +506,6 @@ export default function CalendarPage() {
   return (
     <CalendarView
       themeClass={themeClass}
-      monthLabel={monthLabel}
-      payday={settings.payday}
       calendarCells={calendarCells}
       amounts={amounts}
       incomeAmounts={incomeAmounts}
@@ -554,8 +550,6 @@ export default function CalendarPage() {
       onAddRecord={handleAddDetail}
       onCloseChart={handleCloseChartModal}
       onChartBarClick={handleChartBarClickInModal}
-      DetailOverviewModal={DetailOverviewModal}
-      DetailEditModal={DetailEditModal}
     />
   );
 }
