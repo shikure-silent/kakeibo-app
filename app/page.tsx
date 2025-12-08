@@ -14,6 +14,8 @@ import {
   FixedExpenseKey,
   loadFixedExpenses,
   saveFixedExpense,
+  isHomeCycleConfirmed,
+  saveHomeCycleConfirmed,
 } from "../lib/homeStorage";
 import {
   AppSettings,
@@ -31,16 +33,16 @@ import IncomeSettingsCard, {
 import BudgetSettingsCard from "../components/home/BudgetSettingsCard";
 import { CustomExpenseItem } from "../types/budget";
 
+type HomeMode = "setup" | "dashboard";
+
 export default function HomePage() {
   const router = useRouter();
+
+  // アプリ全体設定（テーマ・オート更新カテゴリ・貯金サポート設定など）
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
 
-  useEffect(() => {
-    const loaded = loadAppSettings();
-    setSettings(loaded);
-  }, []);
-
-  const themeClass = getThemeClasses(settings.theme);
+  // ホーム画面のモード：初期はセットアップモード
+  const [homeMode, setHomeMode] = useState<HomeMode>("setup");
 
   // 年代（全国×年代別のデフォルト予算に使う）
   const [ageGroup, setAgeGroup] = useState<AgeGroup>("all");
@@ -48,9 +50,7 @@ export default function HomePage() {
   // デフォルト8項目ぶんの支出予算（年代別データ＋固定費上書き）
   const [expenseInputs, setExpenseInputs] = useState<
     Record<keyof ExpenseMedian, string>
-  >(() => {
-    return buildExpenseInputs("all");
-  });
+  >(() => buildExpenseInputs("all"));
 
   // カスタム支出項目
   const [customExpenseItems, setCustomExpenseItems] = useState<
@@ -63,8 +63,157 @@ export default function HomePage() {
     { name: "本人", value: "" },
   ]);
 
-  // 「スタート前確認」モーダル
+  // 「この予算でスタート」前の確認モーダル
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  type ConfirmedBudgetItem = {
+    label: string;
+    amount: number;
+  };
+
+  type ConfirmedBudget = {
+    year: number;
+    month: number;
+    totalIncome: number;
+    totalBudget: number;
+    saving: number;
+    items: ConfirmedBudgetItem[];
+  };
+
+  type PlanningState = {
+    ageGroup: AgeGroup;
+    memberCount: number;
+    incomeMembers: IncomeMember[];
+    expenseInputs: Record<keyof ExpenseMedian, string>;
+    customExpenseItems: CustomExpenseItem[];
+  };
+
+  // 保存しておいた計画状態をフォームに復元する
+  const restorePlanningFromStorage = () => {
+    if (typeof window === "undefined") return;
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const key = buildBudgetKey(year, month);
+
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return;
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        planningState?: PlanningState;
+      };
+
+      if (!parsed.planningState) return;
+      const p = parsed.planningState;
+
+      // 年代
+      if (p.ageGroup) {
+        setAgeGroup(p.ageGroup);
+      }
+
+      // メンバーと収入
+      if (Array.isArray(p.incomeMembers) && p.incomeMembers.length > 0) {
+        setIncomeMembers(
+          p.incomeMembers.map((m) => ({
+            name: m.name ?? "",
+            value: m.value ?? "",
+          }))
+        );
+        if (typeof p.memberCount === "number" && p.memberCount > 0) {
+          setMemberCount(p.memberCount);
+        } else {
+          setMemberCount(p.incomeMembers.length);
+        }
+      }
+
+      // 支出予算（8項目）
+      if (p.expenseInputs) {
+        setExpenseInputs((prev) => ({
+          ...prev,
+          ...p.expenseInputs,
+        }));
+      }
+
+      // カスタム項目
+      if (Array.isArray(p.customExpenseItems)) {
+        setCustomExpenseItems(
+          p.customExpenseItems.map((item, index) => ({
+            id: item.id ?? `restored-${index}`,
+            label: item.label ?? "",
+            value: item.value ?? "",
+          }))
+        );
+      }
+    } catch (e) {
+      console.error("ホームの計画復元に失敗しました", e);
+    }
+  };
+
+  const [confirmedBudget, setConfirmedBudget] =
+    useState<ConfirmedBudget | null>(null);
+
+  // 初回マウント時に設定と「今サイクルが確定済みか」を読み込み
+  useEffect(() => {
+    const loaded = loadAppSettings();
+    setSettings(loaded);
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+
+    if (isHomeCycleConfirmed(year, month)) {
+      setHomeMode("dashboard");
+      restorePlanningFromStorage();
+
+      if (typeof window !== "undefined") {
+        try {
+          const key = buildBudgetKey(year, month);
+          const raw = window.localStorage.getItem(key);
+          if (raw) {
+            const parsed = JSON.parse(raw) as {
+              year?: number;
+              month?: number;
+              totalIncome?: number;
+              totalBudget?: number;
+              saving?: number;
+              items?: { label: string; amount: number }[];
+            };
+
+            const totalIncome =
+              typeof parsed.totalIncome === "number" ? parsed.totalIncome : 0;
+            const totalBudget =
+              typeof parsed.totalBudget === "number" ? parsed.totalBudget : 0;
+
+            setConfirmedBudget({
+              year: parsed.year ?? year,
+              month: parsed.month ?? month,
+              totalIncome,
+              totalBudget,
+              saving:
+                typeof parsed.saving === "number"
+                  ? parsed.saving
+                  : totalIncome - totalBudget,
+              items: Array.isArray(parsed.items)
+                ? parsed.items.map((item) => ({
+                    label: item.label,
+                    amount: typeof item.amount === "number" ? item.amount : 0,
+                  }))
+                : [],
+            });
+          }
+        } catch (e) {
+          console.error("ホームの確定予算読み込みに失敗しました", e);
+        }
+      }
+    } else {
+      setHomeMode("setup");
+      setConfirmedBudget(null);
+    }
+  }, []);
+
+  const themeClass = getThemeClasses(settings.theme);
 
   // 年代が変わったら、その年代の全国値をベースに支出予算をリセット
   // ＋ 家賃・サブスクは固定費ストアで上書き
@@ -75,27 +224,31 @@ export default function HomePage() {
 
     setExpenseInputs((prev) => {
       const next = { ...prev };
+
       (Object.keys(baseInputs) as (keyof ExpenseMedian)[]).forEach((key) => {
         if (autoMap[key]) {
           next[key] = baseInputs[key];
         }
       });
+
       if (autoMap.rent && typeof fixed.rent === "number") {
         next.rent = String(fixed.rent);
       }
       if (autoMap.subscription && typeof fixed.subscription === "number") {
         next.subscription = String(fixed.subscription);
       }
+
       return next;
     });
     // カスタム項目は「自分で決める部分」なのでそのまま維持
-  }, [ageGroup, settings]);
+  }, [ageGroup]);
 
   // 初回マウント時に固定費を反映（SSRとの不一致を避けるため）
   useEffect(() => {
     const fixed = loadFixedExpenses();
     if (Object.keys(fixed).length === 0) return;
     const autoMap = getAutoUpdateCategories(settings);
+
     setExpenseInputs((prev) => {
       const next = { ...prev };
       if (autoMap.rent && typeof fixed.rent === "number") {
@@ -239,6 +392,31 @@ export default function HomePage() {
 
   const saving = totalIncome - totalExpense;
   const savingRate = totalIncome > 0 ? (saving / totalIncome) * 100 : null;
+
+  // セットアップ時の計算結果
+  const rawSaving = totalIncome - totalExpense;
+  const rawSavingRate =
+    totalIncome > 0 ? (rawSaving / totalIncome) * 100 : null;
+
+  // ダッシュボード表示用の値（確定済みデータがあればそっちを優先）
+  const displayTotalIncome =
+    homeMode === "dashboard" && confirmedBudget
+      ? confirmedBudget.totalIncome
+      : totalIncome;
+
+  const displayTotalExpense =
+    homeMode === "dashboard" && confirmedBudget
+      ? confirmedBudget.totalBudget
+      : totalExpense;
+
+  const displaySaving =
+    homeMode === "dashboard" && confirmedBudget
+      ? confirmedBudget.saving
+      : rawSaving;
+
+  const displaySavingRate =
+    displayTotalIncome > 0 ? (displaySaving / displayTotalIncome) * 100 : null;
+
   // 設定から貯金目標（0.1 = 10%）とメンタルサポート設定を取得
   const targetSavingRatePercent =
     settings.targetSavingRate != null ? settings.targetSavingRate * 100 : null;
@@ -294,11 +472,28 @@ export default function HomePage() {
         items: detailItems,
         totalIncome,
         saving,
+        planningState: {
+          ageGroup,
+          memberCount,
+          incomeMembers, // メンバー名＋金額
+          expenseInputs, // 食費〜医療・保険の8項目ぶん
+          customExpenseItems, // カスタム項目ぶん
+        }, // ★ ここに「フォームの状態」も一緒に保存
       })
     );
 
+    // このサイクルが「計画確定済み」であることを保存
+    saveHomeCycleConfirmed(year, month, true);
+
     setIsConfirmOpen(false);
     router.push("/calendar");
+  };
+
+  const handleEditPlan = () => {
+    // まず現在サイクルの計画をフォームに復元
+    restorePlanningFromStorage();
+    // その上でセットアップモードに戻す
+    setHomeMode("setup");
   };
 
   return (
@@ -317,13 +512,11 @@ export default function HomePage() {
 
         {/* 🌟 今月の貯金見込みカード */}
         <SavingHighlightCard
-          totalIncome={totalIncome}
-          totalExpense={totalExpense}
-          saving={saving}
-          savingRate={savingRate}
+          totalIncome={displayTotalIncome}
+          totalExpense={displayTotalExpense}
+          saving={displaySaving}
+          savingRate={displaySavingRate}
           ageGroupLabel={ageGroupLabels[ageGroup]}
-          targetSavingRatePercent={targetSavingRatePercent}
-          enableEncouragingMessages={enableEncouragingMessages}
         />
 
         {/* 左：カード群／右：説明 */}
@@ -338,7 +531,9 @@ export default function HomePage() {
               incomeMembers={incomeMembers}
               onMemberNameChange={handleMemberNameChange}
               onMemberValueChange={handleMemberValueChange}
-              totalIncome={totalIncome}
+              mode={homeMode}
+              onRequestEdit={handleEditPlan}
+              totalIncome={displayTotalIncome}
             />
 
             {/* 💸 支出予算カード */}
@@ -347,7 +542,6 @@ export default function HomePage() {
               median={medianForAge}
               inputs={expenseInputs}
               onChange={handleExpenseChange}
-              totalExpense={totalExpense}
               customItems={customExpenseItems}
               onAddCustomItem={handleAddCustomExpenseItem}
               onChangeCustomItemLabel={handleCustomExpenseLabelChange}
@@ -356,6 +550,10 @@ export default function HomePage() {
               onStart={handleOpenConfirmModal}
               autoUpdateMap={autoUpdateMap}
               onToggleAutoUpdateCategory={toggleAutoUpdateCategory}
+              mode={homeMode}
+              onRequestEdit={handleEditPlan}
+              totalExpense={displayTotalExpense}
+              confirmedItems={confirmedBudget?.items ?? null}
             />
           </section>
 
@@ -395,10 +593,10 @@ export default function HomePage() {
               onClick={handleCloseConfirmModal}
               aria-label="閉じる"
               className="
-          absolute top-2.5 right-2.5
-          text-slate-400 hover:text-slate-600
-          text-lg leading-none
-        "
+                absolute top-2.5 right-2.5
+                text-slate-400 hover:text-slate-600
+                text-lg leading-none
+              "
             >
               ×
             </button>
@@ -440,11 +638,11 @@ export default function HomePage() {
                 type="button"
                 onClick={handleCloseConfirmModal}
                 className="
-            px-3 py-1.5 rounded-full
-            text-[11px] font-medium
-            text-slate-600 bg-slate-100
-            hover:bg-slate-200
-          "
+                  px-3 py-1.5 rounded-full
+                  text-[11px] font-medium
+                  text-slate-600 bg-slate-100
+                  hover:bg-slate-200
+                "
               >
                 あとで変更する
               </button>
@@ -452,11 +650,11 @@ export default function HomePage() {
                 type="button"
                 onClick={handleConfirmStart}
                 className="
-            px-4 py-1.5 rounded-full
-            text-[11px] font-semibold
-            bg-emerald-600 text-white
-            hover:bg-emerald-700
-          "
+                  px-4 py-1.5 rounded-full
+                  text-[11px] font-semibold
+                  bg-emerald-600 text-white
+                  hover:bg-emerald-700
+                "
               >
                 カレンダーへ進む
               </button>

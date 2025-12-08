@@ -29,6 +29,7 @@ type Props = {
   weeklySummary: WeeklySummary | null;
   periodLabel?: string;
   onSelectDayFromChart?: (day: number) => void;
+  isDark?: boolean;
 };
 
 const formatYen = (value: number | null | undefined) =>
@@ -44,6 +45,7 @@ export default function MonthlySummaryCard({
   weeklySummary,
   periodLabel,
   onSelectDayFromChart,
+  isDark = false,
 }: Props) {
   const data = useMemo(
     () =>
@@ -67,19 +69,34 @@ export default function MonthlySummaryCard({
       ? `💡 約${Math.round(dailyTarget).toLocaleString()}円 / 日`
       : null;
 
+  const cardBase = isDark
+    ? "bg-slate-900 border-slate-700 text-slate-50"
+    : "bg-white border-slate-100 text-slate-900";
+
+  const axisTickColor = isDark ? "#cbd5f5" : "#64748b";
+  const axisLineColor = isDark ? "#475569" : "#cbd5f5";
+
   return (
-    <section className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
+    <section
+      className={`rounded-2xl shadow-sm border p-4 space-y-3 ${cardBase}`}
+    >
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">
-            今月のサマリー
-          </h2>
+          <h2 className="text-sm font-semibold">今月のサマリー</h2>
           {periodLabel ? (
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p
+              className={`text-[11px] mt-0.5 ${
+                isDark ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
               集計期間：{periodLabel}
             </p>
           ) : (
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p
+              className={`text-[11px] mt-0.5 ${
+                isDark ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
               支出の流れと予算の残りをざっくりチェックできます。
             </p>
           )}
@@ -94,12 +111,16 @@ export default function MonthlySummaryCard({
       {/* 数値サマリー */}
       <div className="grid grid-cols-2 gap-3 text-[12px]">
         <div className="space-y-0.5">
-          <p className="text-slate-500">今月の支出合計</p>
-          <p className="text-base font-semibold text-slate-900">
-            {formatYen(monthlyTotal)}
+          <p className={isDark ? "text-slate-300" : "text-slate-500"}>
+            今月の支出合計
           </p>
+          <p className="text-base font-semibold">{formatYen(monthlyTotal)}</p>
           {weeklySummary && (
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p
+              className={`text-[11px] mt-1 ${
+                isDark ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
               直近7日間：{formatYen(weeklySummary.total)}（
               {formatYen(Math.round(weeklySummary.average))}/日）
             </p>
@@ -107,71 +128,64 @@ export default function MonthlySummaryCard({
         </div>
 
         <div className="space-y-0.5 text-right">
-          <p className="text-slate-500">残り予算</p>
+          <p className={isDark ? "text-slate-300" : "text-slate-500"}>
+            予算の残り
+          </p>
           <p
             className={`text-base font-semibold ${
               remainingBudget != null && remainingBudget < 0
-                ? "text-red-500"
-                : "text-emerald-600"
+                ? "text-red-400"
+                : "text-emerald-400"
             }`}
           >
-            {remainingBudget != null ? formatYen(remainingBudget) : "未設定"}
+            {remainingBudget != null ? formatYen(remainingBudget) : "—"}
           </p>
           {budget && (
-            <p className="text-[11px] text-slate-500 mt-1">
-              予算：{formatYen(budget.totalBudget)}
+            <p
+              className={`text-[11px] ${
+                isDark ? "text-slate-300" : "text-slate-500"
+              }`}
+            >
+              今月の予算: {formatYen(budget.totalBudget)}
             </p>
           )}
         </div>
       </div>
 
       {/* 棒グラフ */}
-      <div className="mt-2">
-        {daysInMonth === 0 ? (
-          <p className="text-[12px] text-slate-400">
-            今月のカレンダー情報が見つかりません。
-          </p>
-        ) : monthlyTotal === 0 ? (
-          <p className="text-[12px] text-slate-400">
-            まだ今月の支出は登録されていません。カレンダーか入力タブから支出を追加してみましょう。
-          </p>
-        ) : (
-          <div className="h-44">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 10, fill: "#64748b" }}
-                  axisLine={{ stroke: "#e2e8f0" }}
-                  tickLine={false}
-                />
-                <Tooltip
-                  formatter={(value: any, name: any) => {
-                    const v = Number(value || 0);
-                    // [表示したい値, 表示したいラベル] を返す
-                    return [`¥${v.toLocaleString()}`, "支出合計"];
-                  }}
-                  labelFormatter={(label: any) => `${label}日`}
-                />
-                {dailyTarget && (
-                  <ReferenceLine
-                    y={dailyTarget}
-                    stroke="#f97316"
-                    strokeDasharray="4 4"
-                  />
-                )}
-                <Bar
-                  dataKey="amount"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={18}
-                  fill="#22c55e"
-                  cursor={onSelectDayFromChart ? "pointer" : "default"}
-                  onClick={handleBarClick}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+      <div className="h-40">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data}>
+            <XAxis
+              dataKey="day"
+              tick={{ fontSize: 10, fill: axisTickColor }}
+              axisLine={{ stroke: axisLineColor }}
+              tickLine={false}
+            />
+            <Tooltip
+              formatter={(value: any) => {
+                const v = Number(value || 0);
+                return [`¥${v.toLocaleString()}`, "支出合計"];
+              }}
+              labelFormatter={(label: any) => `${label}日`}
+            />
+            {dailyTarget && (
+              <ReferenceLine
+                y={dailyTarget}
+                stroke="#f97316"
+                strokeDasharray="4 4"
+              />
+            )}
+            <Bar
+              dataKey="amount"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={18}
+              fill="#22c55e"
+              cursor="pointer"
+              onClick={handleBarClick}
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </section>
   );

@@ -18,7 +18,7 @@ import {
   getThemeClasses,
 } from "../../lib/settingsStorage";
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
-import { CalendarView } from "../../components/calendar/CalendarView";
+import CalendarView from "../../components/calendar/CalendarView";
 
 type MonthlyBudgetData = {
   year: number;
@@ -506,8 +506,6 @@ export default function CalendarPage() {
   return (
     <CalendarView
       themeClass={themeClass}
-      monthLabel={monthLabel}
-      payday={settings.payday}
       calendarCells={calendarCells}
       amounts={amounts}
       incomeAmounts={incomeAmounts}
