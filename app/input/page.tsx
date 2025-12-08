@@ -267,7 +267,7 @@ export default function InputPage() {
   }, [dateStr]);
 
   return (
-    <main className={`min-h-screen ${themeClass}`}>
+    <main className={`min-h-screen overflow-x-hidden ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* ヘッダー */}
         <header className="space-y-2">
