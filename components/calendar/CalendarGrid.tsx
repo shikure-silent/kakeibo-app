@@ -103,14 +103,10 @@ export default function CalendarGrid({
                 isSelected ? selectedCellClass : normalCellClass
               }`}
             >
-              {/* ▼ スマホ表示（〜639px）：日付＝左上、「今日」は横表示で上 */}
+              {/* ▼ スマホ表示（〜639px）：日付 → 今日 → 金額/内訳なし */}
               <div className="flex h-full min-h-[60px] flex-col justify-between px-1.5 py-1.5 sm:hidden">
+                {/* 上：日付＋「今日」バッジ（縦に並べて左上寄せ） */}
                 <div className="flex flex-col items-start">
-                  {isToday && (
-                    <span className="mb-0.5 rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white whitespace-nowrap leading-none">
-                      今日
-                    </span>
-                  )}
                   <span
                     className={`text-[11px] font-semibold leading-none ${
                       isDark ? "text-slate-50" : "text-slate-800"
@@ -118,9 +114,14 @@ export default function CalendarGrid({
                   >
                     {day}
                   </span>
+                  {isToday && (
+                    <span className="mt-0.5 rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white whitespace-nowrap leading-none">
+                      今日
+                    </span>
+                  )}
                 </div>
 
-                {/* 合計金額 or 収入 or 内訳なし */}
+                {/* 下：合計金額 or 収入 or 内訳なし */}
                 <div className="mt-0.5 w-full">
                   {spending > 0 ? (
                     <p
