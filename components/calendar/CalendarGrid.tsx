@@ -14,7 +14,6 @@ type Props = {
   currentYear: number;
   currentMonth: number;
   dailyDetails: DetailRecord[][];
-  /** ダークテーマかどうか（CalendarView から渡される） */
   isDark?: boolean;
 };
 
@@ -38,6 +37,16 @@ export default function CalendarGrid({
     ? "bg-slate-900 border-slate-700"
     : "bg-white border-slate-100";
 
+  // スマホ用：金額を少し短くする（万表記）
+  const formatMobileAmount = (value: number) => {
+    if (value >= 10000) {
+      const man = value / 10000;
+      const formatted = man >= 10 ? man.toFixed(0) : man.toFixed(1);
+      return `${formatted}万`;
+    }
+    return value.toLocaleString();
+  };
+
   return (
     <section
       className={`rounded-2xl shadow-sm border px-2.5 py-2.5 sm:px-3 sm:py-3 lg:px-4 lg:py-4 ${cardBaseClass}`}
@@ -60,7 +69,6 @@ export default function CalendarGrid({
       <div className="grid grid-cols-7 gap-1 sm:gap-1.5 lg:gap-2">
         {calendarCells.map((day, index) => {
           if (!day) {
-            // 前月/翌月用の空マス
             return (
               <div
                 key={index}
@@ -103,10 +111,10 @@ export default function CalendarGrid({
                 isSelected ? selectedCellClass : normalCellClass
               }`}
             >
-              {/* ▼ スマホ表示（〜639px）：日付 → 今日 → 金額/内訳なし */}
-              <div className="flex h-full min-h-[60px] flex-col justify-between px-1.5 py-1.5 sm:hidden">
-                {/* 上：日付＋「今日」バッジ（縦に並べて左上寄せ） */}
-                <div className="flex flex-col items-start">
+              {/* ▼ スマホ表示（〜639px） */}
+              <div className="flex h-full min-h-[64px] flex-col px-1.5 py-1.5 sm:hidden">
+                {/* 1行目：日付 + 今日バッジ（縦並び・中央寄せ） */}
+                <div className="flex flex-col items-center">
                   <span
                     className={`text-[11px] font-semibold leading-none ${
                       isDark ? "text-slate-50" : "text-slate-800"
@@ -115,29 +123,44 @@ export default function CalendarGrid({
                     {day}
                   </span>
                   {isToday && (
-                    <span className="mt-0.5 rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white whitespace-nowrap leading-none">
+                    <span className="mt-0.5 inline-flex min-w-[22px] justify-center items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-[1px] text-[8px] font-semibold text-emerald-600 leading-none whitespace-nowrap">
                       今日
                     </span>
                   )}
                 </div>
 
-                {/* 下：合計金額 or 収入 or 内訳なし */}
+                {/* 2行目：金額（PCと同じく金額が先） */}
                 <div className="mt-0.5 w-full">
                   {spending > 0 ? (
                     <p
-                      className={`text-[10px] font-semibold leading-tight truncate ${
+                      className={`text-[9px] font-semibold leading-tight ${
                         isDark ? "text-slate-50" : "text-slate-800"
                       }`}
                     >
-                      ¥{spending.toLocaleString()}
+                      ¥{formatMobileAmount(spending)}
                     </p>
                   ) : income > 0 ? (
-                    <p className="text-[9px] leading-tight text-emerald-500 truncate">
-                      ＋¥{income.toLocaleString()}
+                    <p className="text-[8px] leading-tight text-emerald-500">
+                      ＋¥{formatMobileAmount(income)}
+                    </p>
+                  ) : null}
+                </div>
+
+                {/* 3行目：カテゴリ（or 内訳なし） */}
+                <div className="mt-0.5 w-full">
+                  {hasDetails ? (
+                    <p
+                      className={`text-[8px] leading-tight truncate ${
+                        isDark ? "text-slate-400" : "text-slate-400"
+                      }`}
+                    >
+                      {dayDetails[0]?.category || "未分類"}
+                      {dayDetails.length > 1 &&
+                        ` ほか${dayDetails.length - 1}件`}
                     </p>
                   ) : (
                     <p
-                      className={`text-[9px] leading-tight ${
+                      className={`text-[8px] leading-tight ${
                         isDark ? "text-slate-500" : "text-slate-400"
                       }`}
                     >
@@ -147,10 +170,10 @@ export default function CalendarGrid({
                 </div>
               </div>
 
-              {/* ▼ PC / タブレット表示（sm以上）：従来のリッチ版 */}
-              <div className="hidden h-full min-h-[80px] w-full flex-col sm:flex sm:items-start sm:justify-between sm:px-2 sm:py-2 lg:min-h-[96px]">
-                {/* 上段：日付＋今日ラベル */}
-                <div className="flex w-full items-center justify-between mb-0.5">
+              {/* ▼ PC / タブレット表示（従来どおり） */}
+              <div className="hidden h-full min-h-[80px] w-full sm:flex sm:flex-col sm:items-start sm:px-2 sm:py-2 lg:min-h-[96px]">
+                {/* 上：日付＋今日 */}
+                <div className="flex w-full items-center justify-between mb-1">
                   <span
                     className={`text-xs lg:text-sm font-semibold leading-none ${
                       isDark ? "text-slate-50" : "text-slate-800"
@@ -159,14 +182,14 @@ export default function CalendarGrid({
                     {day}
                   </span>
                   {isToday && (
-                    <span className="rounded-full bg-emerald-500 px-1.5 py-[1px] text-[9px] font-medium text-white whitespace-nowrap leading-none">
+                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-[1px] text-[9px] font-semibold text-emerald-600 leading-none">
                       今日
                     </span>
                   )}
                 </div>
 
-                {/* 中段：支出合計・収入 */}
-                <div className="mt-1 w-full space-y-0.5">
+                {/* 中：合計金額 */}
+                <div className="w-full space-y-0.5">
                   {spending > 0 ? (
                     <p
                       className={`text-xs font-semibold ${
@@ -192,7 +215,7 @@ export default function CalendarGrid({
                   )}
                 </div>
 
-                {/* 下段：カテゴリ＋金額（最大2件＋「ほか◯件」） */}
+                {/* 下：内訳リスト */}
                 <div className="mt-1 w-full space-y-0.5">
                   {hasDetails ? (
                     <>

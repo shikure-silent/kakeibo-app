@@ -183,7 +183,7 @@ export default function InputFormCard({
         {/* 日付＋カテゴリ＋支出元/入金元 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 日付 */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="block text-[11px] font-medium text-slate-600">
               日付
             </label>
@@ -192,7 +192,7 @@ export default function InputFormCard({
               value={dateStr}
               onChange={(e) => onChangeDate(e.target.value)}
               className="
-                w-full border border-slate-200 rounded-full
+                w-full max-w-full border border-slate-200 rounded-full
                 px-3 py-1.5 text-xs text-slate-700
                 bg-white
                 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
@@ -201,7 +201,7 @@ export default function InputFormCard({
           </div>
 
           {/* カテゴリ */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 min-w-0">
             <label className="block text-[11px] text-slate-500">カテゴリ</label>
 
             {/* 自由入力欄 */}
