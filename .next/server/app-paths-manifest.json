@@ -1,5 +1,11 @@
 {
-  "/not-found": "app/not-found.js",
+  "/_not-found": "app/_not-found.js",
+  "/auth/confirm/route": "app/auth/confirm/route.js",
+  "/input/page": "app/input/page.js",
+  "/login/page": "app/login/page.js",
+  "/page": "app/page.js",
+  "/error/page": "app/error/page.js",
   "/settings/page": "app/settings/page.js",
+  "/signup/page": "app/signup/page.js",
   "/calendar/page": "app/calendar/page.js"
 }

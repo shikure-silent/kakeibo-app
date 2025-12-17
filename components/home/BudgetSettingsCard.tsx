@@ -35,6 +35,7 @@ type Props = {
   onStart?: () => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
+  customTemplates?: string[];
 
   // ホーム側から渡しているやつ
   mode: "setup" | "dashboard";
@@ -59,6 +60,7 @@ export default function BudgetSettingsCard({
   mode,
   onRequestEdit,
   confirmedItems,
+  customTemplates,
 }: Props) {
   // --------------------
   // ダッシュボードモード
@@ -180,6 +182,7 @@ export default function BudgetSettingsCard({
         onRemoveCustomItem={onRemoveCustomItem}
         autoUpdateMap={autoUpdateMap}
         onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
+        customTemplates={customTemplates}
       />
 
       <div className="mt-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">

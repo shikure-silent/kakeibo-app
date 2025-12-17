@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import NumberInput from "./NumberInput";
 import { ExpenseMedian } from "../data/prefectureData";
 import { CustomExpenseItem } from "../types/budget";
@@ -17,6 +17,7 @@ type Props = {
   onRemoveCustomItem: (id: string) => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
+  customTemplates?: string[];
 };
 
 // デフォルト8項目
@@ -45,7 +46,13 @@ export default function ExpenseInputsBlock({
   onRemoveCustomItem,
   autoUpdateMap,
   onToggleAutoUpdateCategory,
+  customTemplates,
 }: Props) {
+  const [openTemplateFor, setOpenTemplateFor] = useState<string | null>(null);
+  const templateOptions = customTemplates && customTemplates.length > 0
+    ? customTemplates
+    : CUSTOM_EXPENSE_TEMPLATES;
+
   return (
     <div className="space-y-4">
       {/* デフォルト8項目 */}
@@ -157,44 +164,71 @@ export default function ExpenseInputsBlock({
                 <label className="block text-[11px] font-medium text-slate-600">
                   項目名
                 </label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="text"
-                    value={item.label}
-                    onChange={(e) =>
-                      onChangeCustomItemLabel(item.id, e.target.value)
+                <input
+                  type="text"
+                  value={item.label}
+                  onChange={(e) =>
+                    onChangeCustomItemLabel(item.id, e.target.value)
+                  }
+                  placeholder="例: 教育費 / ペット費 / 推し活 など"
+                  className="
+                    w-full border border-slate-200 rounded-lg
+                    px-3 py-1.5 text-[12px] text-slate-700
+                    bg-white
+                    focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
+                  "
+                />
+                <div className="relative inline-block">
+                  <button
+                    type="button"
+                    className="
+                      rounded-full border border-slate-300
+                      bg-slate-50 px-4 py-1.5 text-[12px]
+                      text-slate-700 hover:bg-slate-100
+                    "
+                    onClick={() =>
+                      setOpenTemplateFor((prev) =>
+                        prev === item.id ? null : item.id
+                      )
                     }
-                    placeholder="例: 教育費 / ペット費 / 推し活 など"
-                    className="
-                      flex-1 border border-slate-200 rounded-full
-                      px-3 py-1.5 text-xs text-slate-700
-                      bg-white
-                      focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-                    "
-                  />
-                  <select
-                    defaultValue=""
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (v) {
-                        onChangeCustomItemLabel(item.id, v);
-                      }
-                    }}
-                    className="
-                      w-full sm:w-48 border border-slate-200 rounded-full
-                      px-3 py-1.5 text-[11px] text-slate-700
-                      bg-white
-                      focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-                    "
                   >
-                    <option value="">候補から選ぶ</option>
-                    {CUSTOM_EXPENSE_TEMPLATES.map((label) => (
-                      <option key={label} value={label}>
+                    候補から選ぶ
+                  </button>
+                  <div
+                    className={`
+                      absolute z-20 mt-1
+                      max-h-40 w-48 overflow-auto
+                      rounded-lg border border-slate-200
+                      bg-white shadow-lg
+                      ${openTemplateFor === item.id ? "" : "hidden"}
+                    `}
+                  >
+                    {templateOptions.map((label) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => {
+                          onChangeCustomItemLabel(item.id, label);
+                          setOpenTemplateFor(null);
+                        }}
+                        className={`
+                          w-full px-3 py-1.5 text-left text-[11px]
+                          hover:bg-emerald-50
+                          ${
+                            label === item.label
+                              ? "bg-emerald-50 text-emerald-700 font-semibold"
+                              : "text-slate-700"
+                          }
+                        `}
+                      >
                         {label}
-                      </option>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
+                <p className="text-[10px] text-slate-400">
+                  直接入力してもOKです。「候補から選ぶ」を押すと、よく使う項目から選べます。
+                </p>
               </div>
 
               {/* 金額＋削除ボタン */}

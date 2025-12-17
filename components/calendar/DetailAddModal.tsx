@@ -55,6 +55,8 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
     } as DetailRecord;
   });
   const [amountText, setAmountText] = useState("");
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
 
   const handleChangeDraft = <K extends keyof DetailRecord>(
     key: K,
@@ -142,21 +144,7 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
           <label className="block text-[11px] text-slate-500">
             カテゴリを選択
           </label>
-          <select
-            value={draft.category ?? ""}
-            onChange={(e) => handleChangeDraft("category", e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          >
-            <option value="">選択してください</option>
-            {(draft.mode === "income"
-              ? incomeCategoryOptions
-              : expenseCategoryOptions
-            ).map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
+
           <input
             type="text"
             className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -164,6 +152,59 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
             onChange={(e) => handleChangeDraft("category", e.target.value)}
             placeholder="直接入力（例：食費 / 日用品 など）"
           />
+
+          <div className="relative inline-block">
+            <button
+              type="button"
+              onClick={() => setShowCategorySuggestions((prev) => !prev)}
+              className="
+                rounded-full border border-slate-300
+                bg-slate-50 px-4 py-1.5 text-[12px]
+                text-slate-700 hover:bg-slate-100
+              "
+            >
+              候補から選ぶ
+            </button>
+
+            {showCategorySuggestions && (
+              <div
+                className="
+                  absolute z-20 mt-1
+                  max-h-40 w-44 overflow-auto
+                  rounded-lg border border-slate-200
+                  bg-white shadow-lg
+                "
+              >
+                {(draft.mode === "income"
+                  ? incomeCategoryOptions
+                  : expenseCategoryOptions
+                ).map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      handleChangeDraft("category", cat);
+                      setShowCategorySuggestions(false);
+                    }}
+                    className={`
+                      w-full px-2 py-1 text-left text-[11px]
+                      hover:bg-emerald-50
+                      ${
+                        cat === draft.category
+                          ? "bg-emerald-50 text-emerald-700 font-semibold"
+                          : "text-slate-700"
+                      }
+                    `}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-400">
+            直接入力してもOKです。「候補から選ぶ」を押すと、よく使うカテゴリ一覧から選べます。
+          </p>
         </div>
 
         {/* 店舗名（支出のみ表示） */}
@@ -187,18 +228,63 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
           <label className="block text-[11px] text-slate-500">
             {draft.mode === "income" ? "入金元を選択" : "支出元を選択"}
           </label>
-          <select
+          <input
+            type="text"
+            className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
             value={draft.payFrom ?? ""}
             onChange={(e) => handleChangeDraft("payFrom", e.target.value)}
-            className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          >
-            <option value="">選択してください</option>
-            {payFromOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
+            placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
+          />
+
+          <div className="relative inline-block">
+            <button
+              type="button"
+              onClick={() => setShowPayFromSuggestions((prev) => !prev)}
+              className="
+                rounded-full border border-slate-300
+                bg-slate-50 px-4 py-1.5 text-[12px]
+                text-slate-700 hover:bg-slate-100
+              "
+            >
+              候補から選ぶ
+            </button>
+
+            {showPayFromSuggestions && (
+              <div
+                className="
+                  absolute z-20 mt-1
+                  max-h-40 w-44 overflow-auto
+                  rounded-lg border border-slate-200
+                  bg-white shadow-lg
+                "
+              >
+                {payFromOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      handleChangeDraft("payFrom", opt);
+                      setShowPayFromSuggestions(false);
+                    }}
+                    className={`
+                      w-full px-2 py-1 text-left text-[11px]
+                      hover:bg-emerald-50
+                      ${
+                        opt === draft.payFrom
+                          ? "bg-emerald-50 text-emerald-700 font-semibold"
+                          : "text-slate-700"
+                      }
+                    `}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-400">
+            直接入力してもOKです。「候補から選ぶ」を押すと、よく使う支出元・入金元から選べます。
+          </p>
         </div>
 
         {/* 金額（新規追加） */}

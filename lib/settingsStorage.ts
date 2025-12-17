@@ -18,52 +18,59 @@ export type ExpenseCategoryKey = (typeof EXPENSE_CATEGORY_KEYS)[number];
 // 追加：入力タブのデフォルトモード
 export type DefaultInputModeOption = "expense" | "income";
 
-export type AppSettings = {
-  theme: ThemeOption;
-  payday: number; // 集計開始日（給料日）
-  budgetBase: BudgetBaseOption;
-  autoUpdateCategories?: Partial<Record<ExpenseCategoryKey, boolean>>;
-
-  // ★ 入力まわり
-  defaultInputMode?: DefaultInputModeOption; // 入力タブ初期モード
-  quickExpenseCategories?: string[]; // 支出のクイックカテゴリ
-  quickIncomeCategories?: string[]; // 収入のクイックカテゴリ
-
-  // --- A. 入力＆振り返りリマインド ---
-
-  /** 数日入力が空いたときにホーム画面で声かけするか */
-  enableInputGapReminder?: boolean;
-
-  /** 週に1回くらい「今週のふりかえりカード」を出すか */
-  enableWeeklySummaryReminder?: boolean;
-
-  /** 給料日サイクルの中間で「ペース確認カード」を出すか */
-  enableMidPeriodCheckReminder?: boolean;
-
-  /** サイクル終了前に「ふりかえりしようカード」を出すか */
-  enableCycleEndReviewReminder?: boolean;
-
-  /** 予算何％を超えたら「ちょっとペース早め」カードを出すか（0.7 = 70% など） */
-  budgetAlertRate?: number;
-
-  // --- C. 貯金目標・メンタルサポート ---
-
-  /** サイクルごとに目指したい貯金率（0.1 = 10%, 0.2 = 20% など） */
-  targetSavingRate?: number;
-
-  /** ポジティブな一言メッセージカードを出すかどうか */
-  enableEncouragingMessages?: boolean;
-};
-
-// ▼ アプリ全体の基本設定（フォント・テーマ・給料日など）
-
+// 設定の保存キー
 const SETTINGS_KEY = "kakeibo_app_settings_v1";
 
+// autoUpdateCategories のデフォルト（全カテゴリ true）
 export const defaultAutoUpdateCategories: Record<ExpenseCategoryKey, boolean> =
   EXPENSE_CATEGORY_KEYS.reduce(
     (acc, key) => ({ ...acc, [key]: true }),
     {} as Record<ExpenseCategoryKey, boolean>
   );
+
+export type AppSettings = {
+  theme: ThemeOption;
+  payday: number;
+  budgetBase: BudgetBaseOption;
+  autoUpdateCategories?: Partial<Record<ExpenseCategoryKey, boolean>>;
+
+  // ★ 入力まわり
+  defaultInputMode?: DefaultInputModeOption;
+  quickExpenseCategories?: string[];
+  quickIncomeCategories?: string[];
+
+  // --- A. 入力＆振り返りリマインド ---
+  enableInputGapReminder?: boolean;
+  enableWeeklySummaryReminder?: boolean;
+  enableMidPeriodCheckReminder?: boolean;
+  enableCycleEndReviewReminder?: boolean;
+
+  /** 予算何％を超えたら…（0.8=80%） */
+  budgetAlertRate?: number;
+
+  // ✅ 追加：リマインド詳細
+  /** 「入力が空いた」判定のしきい値（日） */
+  inputGapDays?: number; // 例：2
+
+  /** 週1ふりかえり：曜日（0=日, 1=月 ... 6=土） */
+  weeklySummaryWeekday?: number;
+
+  /** 通知タイミング（アプリ内想定の時刻） */
+  reminderTime?: string; // "21:00" など
+
+  /** 中間チェック：サイクル開始から何日後に出すか */
+  midPeriodOffsetDays?: number;
+
+  /** サイクル終了前：何日前に出すか */
+  cycleEndReviewDaysBefore?: number;
+
+  /** Webでも試しにブラウザ通知を出す（タブが開いてる間だけ） */
+  enableBrowserNotifications?: boolean;
+
+  // --- C. 貯金目標・メンタルサポート ---
+  targetSavingRate?: number;
+  enableEncouragingMessages?: boolean;
+};
 
 // ★ 新しい項目もここでデフォルト値を定義
 export const defaultSettings: AppSettings = {
@@ -72,7 +79,6 @@ export const defaultSettings: AppSettings = {
   budgetBase: "nationalMedian",
   autoUpdateCategories: defaultAutoUpdateCategories,
 
-  // 入力タブ
   defaultInputMode: "expense",
   quickExpenseCategories: [],
   quickIncomeCategories: [],
@@ -82,9 +88,17 @@ export const defaultSettings: AppSettings = {
   enableWeeklySummaryReminder: true,
   enableMidPeriodCheckReminder: true,
   enableCycleEndReviewReminder: true,
-  budgetAlertRate: 0.8, // 80%
+  budgetAlertRate: 0.8,
 
-  targetSavingRate: 0.1, // 手取りの10%を目安（あとで変えてOK）
+  // ✅ 追加デフォルト
+  inputGapDays: 2,
+  weeklySummaryWeekday: 0, // 日曜
+  reminderTime: "21:00",
+  midPeriodOffsetDays: 14,
+  cycleEndReviewDaysBefore: 2,
+  enableBrowserNotifications: false,
+
+  targetSavingRate: 0.1,
   enableEncouragingMessages: true,
 };
 
