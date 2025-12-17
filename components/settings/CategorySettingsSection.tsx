@@ -19,6 +19,7 @@ type Props = {
   onResetExpenseCategories: () => void;
   onResetIncomeCategories: () => void;
   onResetPayFromPresets: () => void;
+  isDark?: boolean;
 };
 
 export function CategorySettingsSection({
@@ -40,10 +41,21 @@ export function CategorySettingsSection({
   onResetExpenseCategories,
   onResetIncomeCategories,
   onResetPayFromPresets,
+  isDark = false,
 }: Props) {
   return (
-    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
-      <h2 className="text-sm font-semibold text-slate-800">
+    <section
+      className={`rounded-2xl border shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4 ${
+        isDark
+          ? "bg-slate-900 border-slate-700 text-slate-100"
+          : "bg-white border-slate-100 text-slate-900"
+      }`}
+    >
+      <h2
+        className={`text-sm font-semibold ${
+          isDark ? "text-slate-100" : "text-slate-800"
+        }`}
+      >
         カテゴリ・項目設定
       </h2>
 
@@ -57,6 +69,7 @@ export function CategorySettingsSection({
           onAdd={onAddExpenseCategory}
           onRemove={onRemoveExpenseCategory}
           onReorder={onReorderExpenseCategory}
+          isDark={isDark}
         />
         <div className="flex justify-end">
           <button
@@ -64,10 +77,14 @@ export function CategorySettingsSection({
             onClick={onResetExpenseCategories}
             className="
               inline-flex items-center gap-1.5
-              rounded-full border border-slate-200 bg-slate-50
-              px-3 py-1.5 text-[11px] font-medium text-slate-700
-              shadow-sm hover:bg-slate-100 hover:border-slate-300
+              rounded-full border px-3 py-1.5 text-[11px] font-medium
+              shadow-sm
             "
+            style={{
+              borderColor: isDark ? "#475569" : "#e2e8f0",
+              backgroundColor: isDark ? "#0f172a" : "#f8fafc",
+              color: isDark ? "#e2e8f0" : "#334155",
+            }}
           >
             支出カテゴリをデフォルトに戻す
           </button>
@@ -84,6 +101,7 @@ export function CategorySettingsSection({
           onAdd={onAddIncomeCategory}
           onRemove={onRemoveIncomeCategory}
           onReorder={onReorderIncomeCategory}
+          isDark={isDark}
         />
         <div className="flex justify-end">
           <button
@@ -91,10 +109,14 @@ export function CategorySettingsSection({
             onClick={onResetIncomeCategories}
             className="
               inline-flex items-center gap-1.5
-              rounded-full border border-slate-200 bg-slate-50
-              px-3 py-1.5 text-[11px] font-medium text-slate-700
-              shadow-sm hover:bg-slate-100 hover:border-slate-300
+              rounded-full border px-3 py-1.5 text-[11px] font-medium
+              shadow-sm
             "
+            style={{
+              borderColor: isDark ? "#475569" : "#e2e8f0",
+              backgroundColor: isDark ? "#0f172a" : "#f8fafc",
+              color: isDark ? "#e2e8f0" : "#334155",
+            }}
           >
             収入カテゴリをデフォルトに戻す
           </button>
@@ -111,6 +133,7 @@ export function CategorySettingsSection({
           onAdd={onAddPayFrom}
           onRemove={onRemovePayFrom}
           onReorder={onReorderPayFrom}
+          isDark={isDark}
         />
         <div className="flex justify-end">
           <button
@@ -118,17 +141,21 @@ export function CategorySettingsSection({
             onClick={onResetPayFromPresets}
             className="
               inline-flex items-center gap-1.5
-              rounded-full border border-slate-200 bg-slate-50
-              px-3 py-1.5 text-[11px] font-medium text-slate-700
-              shadow-sm hover:bg-slate-100 hover:border-slate-300
+              rounded-full border px-3 py-1.5 text-[11px] font-medium
+              shadow-sm
             "
+            style={{
+              borderColor: isDark ? "#475569" : "#e2e8f0",
+              backgroundColor: isDark ? "#0f172a" : "#f8fafc",
+              color: isDark ? "#e2e8f0" : "#334155",
+            }}
           >
             支出元・入金元の候補をデフォルトに戻す
           </button>
         </div>
       </div>
 
-      <p className="text-[10px] text-slate-400">
+      <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
         ※ ここで編集した内容は、入力タブのカテゴリ候補や支出元候補、
         カレンダーの内訳編集モーダルに反映されます。
       </p>

@@ -16,6 +16,8 @@ import {
   savePayFromPresets,
   getThemeClasses,
   clearAllKakeiboData,
+  getAutoUpdateCategories,
+  ExpenseCategoryKey,
 } from "../../lib/settingsStorage";
 import {
   EXPENSE_CATEGORIES,
@@ -24,7 +26,6 @@ import {
 } from "../../lib/const";
 
 import { ThemeSettingsSection } from "../../components/settings/ThemeSettingsSection";
-import { InputQuickSettingsSection } from "../../components/settings/InputQuickSettingsSection";
 import { SavingSupportSection } from "../../components/settings/SavingSupportSection";
 import { CategorySettingsSection } from "../../components/settings/CategorySettingsSection";
 import { AggregationSettingsSection } from "../../components/settings/AggregationSettingsSection";
@@ -32,6 +33,7 @@ import { AccountLoginSection } from "../../components/settings/AccountLoginSecti
 import { DataManagementSection } from "../../components/settings/DataManagementSection";
 import { AppInfoSection } from "../../components/settings/AppInfoSection";
 import { CloudSyncSection } from "../../components/settings/CloudSyncSection";
+import { AutoUpdateSettingsSection } from "../../components/settings/AutoUpdateSettingsSection";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
 const APP_VERSION = "0.3.0-beta";
@@ -192,48 +194,105 @@ export default function SettingsPage() {
   };
 
   const themeClass = getThemeClasses(settings.theme);
+  const isDark = themeClass.includes("theme-dark");
+  const containerClass = isDark ? `${themeClass} dark` : themeClass;
+  const autoUpdateMap = getAutoUpdateCategories(settings);
   const sectionLinks = [
-    { id: "theme", label: "テーマ設定" },
-    { id: "input", label: "入力設定・クイック" },
-    { id: "saving", label: "貯金サポート" },
-    { id: "category", label: "カテゴリ・項目" },
-    { id: "aggregation", label: "集計・予算" },
     { id: "account", label: "アカウント" },
     { id: "cloud", label: "クラウド同期" },
+    { id: "theme", label: "テーマ設定" },
+    { id: "saving", label: "貯金サポート" },
+    { id: "category", label: "カテゴリ・項目" },
+    { id: "autoupdate", label: "自動更新の設定" },
+    { id: "aggregation", label: "集計・予算" },
     { id: "data", label: "データ管理" },
     { id: "appinfo", label: "アプリ情報" },
   ];
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // 設定ページに遷移したら必ず先頭から表示する
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // ブラウザのスクロール位置復元を無効化し、常に先頭から表示
+    const { history } = window;
+    const prevRestoration = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+    // ハッシュが残っていたら削除（前回のセクション位置を引き継がない）
+    if (window.location.hash) {
+      history.replaceState(null, "", window.location.pathname);
+    }
+    window.scrollTo({ top: 0, behavior: "auto" });
+
+    return () => {
+      history.scrollRestoration = prevRestoration || "auto";
+    };
+  }, []);
+
+  const handleToggleAutoUpdate = (key: ExpenseCategoryKey) => {
+    setSettings((prev) => {
+      const current = getAutoUpdateCategories(prev);
+      const nextMap = { ...current, [key]: !current[key] };
+      const nextSettings = { ...prev, autoUpdateCategories: nextMap };
+      saveAppSettings(nextSettings);
+      return nextSettings;
+    });
+  };
+
   return (
     <main
-      className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${themeClass}`}
+      className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${containerClass}`}
     >
       <header className="space-y-2 relative">
-        <h1 className="text-lg lg:text-xl font-semibold text-slate-900">
+        <h1
+          className={`text-lg lg:text-xl font-semibold ${
+            isDark ? "text-slate-100" : "text-slate-900"
+          }`}
+        >
           設定
         </h1>
-        <p className="text-[12px] text-slate-500 leading-snug">
+        <p
+          className={`text-[12px] leading-snug ${
+            isDark ? "text-slate-300" : "text-slate-500"
+          }`}
+        >
           アプリの表示やカテゴリ、集計方法などをカスタマイズできます。
         </p>
         <div className="absolute right-0 top-0">
           <button
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            className="inline-flex items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold shadow-sm"
+            style={{
+              borderColor: isDark ? "#475569" : "#e2e8f0",
+              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+              color: isDark ? "#e2e8f0" : "#334155",
+            }}
             aria-label="設定メニューを開く"
           >
             &#9776;
           </button>
         </div>
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-lg z-10">
-            <ul className="divide-y divide-slate-100 text-sm">
+          <div
+            className="absolute right-0 mt-2 w-48 rounded-xl border shadow-lg z-10"
+            style={{
+              borderColor: isDark ? "#475569" : "#e2e8f0",
+              backgroundColor: isDark ? "#0f172a" : "#ffffff",
+            }}
+          >
+            <ul
+              className={`divide-y text-sm ${
+                isDark ? "divide-slate-700" : "divide-slate-100"
+              }`}
+            >
               {sectionLinks.map((s) => (
                 <li key={s.id}>
                   <a
                     href={`#${s.id}`}
-                    className="block px-3 py-2 text-slate-700 hover:bg-emerald-50"
+                    className="block px-3 py-2 hover:bg-emerald-50"
+                    style={{
+                      color: isDark ? "#e2e8f0" : "#334155",
+                    }}
                     onClick={() => setMenuOpen(false)}
                   >
                     {s.label}
@@ -246,28 +305,21 @@ export default function SettingsPage() {
       </header>
 
       <div className="space-y-6">
+        <section id="account">
+          <AccountLoginSection />
+        </section>
+
+        <section id="cloud">
+          <CloudSyncSection />
+        </section>
+
         <section id="theme">
           <ThemeSettingsSection
           theme={settings.theme}
           onChangeTheme={(theme: ThemeOption) =>
             handleChangeSetting("theme", theme)
           }
-        />
-        </section>
-
-        <section id="input">
-          <InputQuickSettingsSection
-          defaultInputMode={settings.defaultInputMode}
-          quickExpenseCategories={settings.quickExpenseCategories}
-          quickIncomeCategories={settings.quickIncomeCategories}
-          expenseCategories={expenseCategories}
-          incomeCategories={incomeCategories}
-          onChangeDefaultMode={(mode) =>
-            handleChangeSetting("defaultInputMode", mode)
-          }
-          onToggleQuickCategory={(kind, name) =>
-            handleToggleQuickCategory(kind, name)
-          }
+          isDark={isDark}
         />
         </section>
 
@@ -368,7 +420,25 @@ export default function SettingsPage() {
           onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
           onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
           onResetPayFromPresets={handleResetPayFromPresetsToDefault}
+          isDark={isDark}
         />
+        </section>
+
+        <section id="autoupdate">
+          <AutoUpdateSettingsSection
+            autoUpdateMap={autoUpdateMap}
+            onToggle={handleToggleAutoUpdate}
+            copyCustomExpenseFromPrevious={
+              settings.copyCustomExpenseFromPrevious ?? true
+            }
+            onToggleCopyCustom={() =>
+              handleChangeSetting(
+                "copyCustomExpenseFromPrevious",
+                !(settings.copyCustomExpenseFromPrevious ?? true)
+              )
+            }
+            isDark={isDark}
+          />
         </section>
 
         <section id="aggregation">
@@ -379,23 +449,16 @@ export default function SettingsPage() {
           onChangeBudgetBase={(base: BudgetBaseOption) =>
             handleChangeSetting("budgetBase", base)
           }
+          isDark={isDark}
         />
         </section>
 
-        <section id="account">
-          <AccountLoginSection />
-        </section>
-
-        <section id="cloud">
-          <CloudSyncSection />
-        </section>
-
         <section id="data">
-          <DataManagementSection onResetKakeiboData={handleResetKakeiboData} />
+          <DataManagementSection onResetKakeiboData={handleResetKakeiboData} isDark={isDark} />
         </section>
 
         <section id="appinfo">
-          <AppInfoSection version={APP_VERSION} />
+          <AppInfoSection version={APP_VERSION} isDark={isDark} />
         </section>
       </div>
     </main>

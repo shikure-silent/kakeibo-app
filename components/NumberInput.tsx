@@ -7,6 +7,7 @@ type Props = {
   value: string; // 親からは「カンマなしの数字文字列」が来る想定
   onChange: (value: string) => void;
   placeholder?: string;
+  isDark?: boolean;
 };
 
 // 全角数字 → 半角数字、数字以外は除去（カンマも削除）
@@ -30,6 +31,7 @@ export default function NumberInput({
   value,
   onChange,
   placeholder,
+  isDark = false,
 }: Props) {
   const [showWarning, setShowWarning] = useState(false);
 
@@ -38,7 +40,11 @@ export default function NumberInput({
 
   return (
     <div className="space-y-1.5">
-      <label className="block text-[11px] font-medium text-slate-600">
+      <label
+        className={`block text-[11px] font-medium ${
+          isDark ? "text-slate-200" : "text-slate-600"
+        }`}
+      >
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -48,13 +54,17 @@ export default function NumberInput({
           // カンマ付き表示を許容
           pattern="[0-9,]*"
           className="
-            flex-1 rounded-xl border border-slate-200 bg-white
+            flex-1 rounded-xl border
             px-3 py-2 text-sm
-            text-right text-slate-600
+            text-right
             shadow-sm
-            placeholder:text-slate-300
             focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-400
           "
+          style={{
+            backgroundColor: isDark ? "#0f172a" : "#ffffff",
+            color: isDark ? "#e2e8f0" : "#475569",
+            borderColor: isDark ? "#475569" : "#e2e8f0",
+          }}
           value={displayValue}
           onChange={(e) => {
             const raw = e.target.value;
@@ -71,7 +81,9 @@ export default function NumberInput({
           }}
           placeholder={placeholder}
         />
-        <span className="text-xs text-slate-500">円 / 月</span>
+        <span className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+          円 / 月
+        </span>
       </div>
       {showWarning && (
         <p className="text-[11px] text-amber-600">

@@ -6,14 +6,13 @@ import { usePathname } from "next/navigation";
 type NavItem = {
   href: string;
   label: string;
-  icon: string;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "ホーム", icon: "🏠" },
-  { href: "/calendar", label: "カレンダー", icon: "📅" },
-  { href: "/input", label: "入力", icon: "✍️" },
-  { href: "/settings", label: "設定", icon: "⚙️" },
+  { href: "/", label: "ホーム" },
+  { href: "/calendar", label: "カレンダー" },
+  { href: "/input", label: "入力" },
+  { href: "/settings", label: "設定" },
 ];
 
 export default function BottomNav() {
@@ -29,8 +28,8 @@ export default function BottomNav() {
         lg:hidden
       "
     >
-      <div className="max-w-6xl mx-auto px-3 py-1.5">
-        <div className="flex justify-between">
+      <div className="max-w-6xl mx-auto px-3 py-2">
+        <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-900 w-full justify-between">
           {NAV_ITEMS.map((item) => {
             const isActive =
               item.href === "/"
@@ -42,26 +41,15 @@ export default function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex-1 flex flex-col items-center justify-center
-                  py-1.5 gap-0.5
-                  text-[10px] font-medium
+                  flex-1 text-center rounded-full px-3 py-2 text-sm font-medium transition
                   ${
                     isActive
-                      ? "text-emerald-600"
-                      : "text-slate-400 hover:text-slate-700"
+                      ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-950 dark:text-emerald-200"
+                      : "text-slate-600 hover:bg-slate-200/70 dark:text-slate-300 dark:hover:bg-slate-800"
                   }
                 `}
               >
-                <div
-                  className={`
-                    w-9 h-9 rounded-full flex items-center justify-center mb-0.5
-                    text-base
-                    ${isActive ? "bg-emerald-50" : "bg-slate-50"}
-                  `}
-                >
-                  <span>{item.icon}</span>
-                </div>
-                <span>{item.label}</span>
+                {item.label}
               </Link>
             );
           })}

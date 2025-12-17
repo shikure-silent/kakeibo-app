@@ -36,6 +36,8 @@ type Props = {
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
   customTemplates?: string[];
+  isDark?: boolean;
+  copyCustomFromPrevious?: boolean;
 
   // ホーム側から渡しているやつ
   mode: "setup" | "dashboard";
@@ -61,6 +63,8 @@ export default function BudgetSettingsCard({
   onRequestEdit,
   confirmedItems,
   customTemplates,
+  isDark = false,
+  copyCustomFromPrevious = true,
 }: Props) {
   // --------------------
   // ダッシュボードモード
@@ -88,12 +92,26 @@ export default function BudgetSettingsCard({
     }
 
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
+      <div
+        className={`rounded-2xl shadow-sm border px-4 py-4 lg:px-6 lg:py-5 space-y-4 ${
+          isDark
+            ? "bg-slate-900 border-slate-700 text-slate-100"
+            : "bg-white border-slate-100 text-slate-900"
+        }`}
+      >
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-          <h2 className="text-sm lg:text-base font-semibold text-slate-800">
+          <h2
+            className={`text-sm lg:text-base font-semibold ${
+              isDark ? "text-slate-100" : "text-slate-800"
+            }`}
+          >
             支出予算（今サイクルの計画）
           </h2>
-          <p className="text-[11px] text-slate-500 leading-snug lg:text-right">
+          <p
+            className={`text-[11px] leading-snug lg:text-right ${
+              isDark ? "text-slate-300" : "text-slate-500"
+            }`}
+          >
             選択した年代（{ageGroupLabel}
             ）の全国データをベースに、現在の支出予算を設定しています。
           </p>
@@ -103,7 +121,11 @@ export default function BudgetSettingsCard({
           <p className="text-[11px] font-medium text-slate-600">
             支出予算の合計
           </p>
-          <p className="text-sm font-semibold text-slate-800">
+          <p
+            className={`text-sm font-semibold ${
+              isDark ? "text-slate-100" : "text-slate-800"
+            }`}
+          >
             合計:{" "}
             <span className="text-emerald-700">
               ¥{totalExpense.toLocaleString()}
@@ -142,11 +164,15 @@ export default function BudgetSettingsCard({
               className="
                 inline-flex items-center justify-center gap-2
                 rounded-full
-                border border-slate-300
-                text-[11px] font-medium text-slate-700
+                border
+                text-[11px] font-medium
                 px-3 py-1.5
-                hover:bg-slate-50
               "
+              style={{
+                borderColor: isDark ? "#475569" : "#cbd5e1",
+                color: isDark ? "#e2e8f0" : "#334155",
+                backgroundColor: isDark ? "transparent" : "white",
+              }}
             >
               <span>予算を見直す</span>
             </button>
@@ -160,12 +186,26 @@ export default function BudgetSettingsCard({
   // セットアップモード（従来のフォーム）
   // --------------------
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 lg:px-6 lg:py-5 space-y-4">
+    <div
+      className={`rounded-2xl shadow-sm border px-4 py-4 lg:px-6 lg:py-5 space-y-4 ${
+        isDark
+          ? "bg-slate-900 border-slate-700 text-slate-100"
+          : "bg-white border-slate-100 text-slate-900"
+      }`}
+    >
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-        <h2 className="text-sm lg:text-base font-semibold text-slate-800">
+        <h2
+          className={`text-sm lg:text-base font-semibold ${
+            isDark ? "text-slate-100" : "text-slate-800"
+          }`}
+        >
           支出予算　(今月の予算)
         </h2>
-        <p className="text-[11px] text-slate-500 leading-snug lg:text-right">
+        <p
+          className={`text-[11px] leading-snug lg:text-right ${
+            isDark ? "text-slate-300" : "text-slate-500"
+          }`}
+        >
           選択した年代（{ageGroupLabel}
           ）の全国データをもとにした初期値ですが、自由に編集・項目追加できます。
         </p>
@@ -183,10 +223,16 @@ export default function BudgetSettingsCard({
         autoUpdateMap={autoUpdateMap}
         onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
         customTemplates={customTemplates}
+        isDark={isDark}
+        copyCustomFromPrevious={copyCustomFromPrevious}
       />
 
       <div className="mt-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
-        <p className="text-sm font-semibold text-slate-800">
+        <p
+          className={`text-sm font-semibold ${
+            isDark ? "text-slate-100" : "text-slate-800"
+          }`}
+        >
           支出予算の合計:{" "}
           <span className="text-emerald-700">
             ¥{totalExpense.toLocaleString()}

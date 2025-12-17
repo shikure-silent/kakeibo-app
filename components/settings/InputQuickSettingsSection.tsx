@@ -8,6 +8,7 @@ type Props = {
   incomeCategories: string[];
   onChangeDefaultMode: (mode: AppSettings["defaultInputMode"]) => void;
   onToggleQuickCategory: (kind: "expense" | "income", name: string) => void;
+  isDark?: boolean;
 };
 
 export function InputQuickSettingsSection({
@@ -18,16 +19,31 @@ export function InputQuickSettingsSection({
   incomeCategories,
   onChangeDefaultMode,
   onToggleQuickCategory,
+  isDark = false,
 }: Props) {
   return (
-    <section className="bg-white rounded-2xl border border-slate-100 shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4">
-      <h2 className="text-sm font-semibold text-slate-800">
+    <section
+      className={`rounded-2xl border shadow-sm px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-5 space-y-4 ${
+        isDark
+          ? "bg-slate-900 border-slate-700 text-slate-100"
+          : "bg-white border-slate-100 text-slate-900"
+      }`}
+    >
+      <h2
+        className={`text-sm font-semibold ${
+          isDark ? "text-slate-100" : "text-slate-800"
+        }`}
+      >
         入力の基本設定・クイック入力
       </h2>
 
       {/* デフォルトの入力モード */}
       <div className="space-y-1.5">
-        <p className="text-[11px] font-medium text-slate-600">
+        <p
+          className={`text-[11px] font-medium ${
+            isDark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
           入力タブを開いたときの初期モード
         </p>
         <div className="flex flex-wrap gap-2 text-[11px]">
@@ -39,14 +55,18 @@ export function InputQuickSettingsSection({
               key={opt.value}
               type="button"
               onClick={() =>
-                onChangeDefaultMode(
-                  opt.value as AppSettings["defaultInputMode"]
-                )
-              }
+              onChangeDefaultMode(
+                opt.value as AppSettings["defaultInputMode"]
+              )
+            }
               className={`px-3 py-1.5 rounded-full border ${
                 defaultInputMode === opt.value ||
                 (!defaultInputMode && opt.value === "expense")
-                  ? "bg-emerald-50 border-emerald-400 text-emerald-700"
+                  ? isDark
+                    ? "bg-emerald-900/40 border-emerald-400 text-emerald-100"
+                    : "bg-emerald-50 border-emerald-400 text-emerald-700"
+                  : isDark
+                  ? "bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
                   : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
               }`}
             >
@@ -54,23 +74,34 @@ export function InputQuickSettingsSection({
             </button>
           ))}
         </div>
-        <p className="text-[10px] text-slate-400">
+        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
           ※ 何も選ばれていない場合は「支出」から始まります。
         </p>
       </div>
 
       {/* クイックカテゴリ */}
-      <div className="space-y-2 pt-3 border-t border-dashed border-slate-200">
-        <p className="text-[11px] font-medium text-slate-600">
+      <div
+        className="space-y-2 pt-3 border-t border-dashed"
+        style={{ borderColor: isDark ? "#475569" : "#e2e8f0" }}
+      >
+        <p
+          className={`text-[11px] font-medium ${
+            isDark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
           クイックカテゴリ
         </p>
-        <p className="text-[10px] text-slate-500">
+        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
           よく使うカテゴリを選んでおくと、入力タブのカテゴリ欄の上部にチップとして表示されます。
         </p>
 
         {/* 支出クイックカテゴリ */}
         <div className="space-y-1.5">
-          <p className="text-[11px] font-medium text-slate-600">
+          <p
+            className={`text-[11px] font-medium ${
+              isDark ? "text-slate-200" : "text-slate-600"
+            }`}
+          >
             支出のクイックカテゴリ
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -83,7 +114,11 @@ export function InputQuickSettingsSection({
                   onClick={() => onToggleQuickCategory("expense", name)}
                   className={`px-2.5 py-1 rounded-full border text-[11px] ${
                     isActive
-                      ? "bg-emerald-50 border-emerald-400 text-emerald-700"
+                      ? isDark
+                        ? "bg-emerald-900/40 border-emerald-400 text-emerald-100"
+                        : "bg-emerald-50 border-emerald-400 text-emerald-700"
+                      : isDark
+                      ? "bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
                       : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
@@ -96,7 +131,11 @@ export function InputQuickSettingsSection({
 
         {/* 収入クイックカテゴリ */}
         <div className="space-y-1.5">
-          <p className="text-[11px] font-medium text-slate-600">
+          <p
+            className={`text-[11px] font-medium ${
+              isDark ? "text-slate-200" : "text-slate-600"
+            }`}
+          >
             収入のクイックカテゴリ
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -109,7 +148,11 @@ export function InputQuickSettingsSection({
                   onClick={() => onToggleQuickCategory("income", name)}
                   className={`px-2.5 py-1 rounded-full border text-[11px] ${
                     isActive
-                      ? "bg-emerald-50 border-emerald-400 text-emerald-700"
+                      ? isDark
+                        ? "bg-emerald-900/40 border-emerald-400 text-emerald-100"
+                        : "bg-emerald-50 border-emerald-400 text-emerald-700"
+                      : isDark
+                      ? "bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
                       : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
