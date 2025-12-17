@@ -125,6 +125,7 @@ export default function InputPage() {
   }, []);
 
   const themeClass = getThemeClasses(settings.theme);
+  const isDark = themeClass.includes("theme-dark");
 
   // 入力フォームの状態
   const [mode, setMode] = useState<Mode>("expense");
@@ -274,7 +275,11 @@ export default function InputPage() {
           <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">
             入力
           </h1>
-          <p className="text-xs lg:text-sm text-slate-500">
+          <p
+            className={`text-xs lg:text-sm ${
+              isDark ? "text-slate-300" : "text-slate-500"
+            }`}
+          >
             毎日の支出や収入を記録する画面です。入力した内容はカレンダーページにも反映されます。
           </p>
         </header>
@@ -302,6 +307,7 @@ export default function InputPage() {
               onSubmit={handleAddRecord}
               quickExpenseCategories={settings.quickExpenseCategories}
               quickIncomeCategories={settings.quickIncomeCategories}
+              isDark={isDark}
             />
           </section>
 
@@ -311,6 +317,7 @@ export default function InputPage() {
               dateLabel={selectedDateLabel}
               records={dayRecords}
               onDeleteRecord={handleDeleteRecord}
+              isDark={isDark}
             />
           </section>
         </div>

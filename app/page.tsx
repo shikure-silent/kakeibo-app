@@ -61,6 +61,8 @@ export default function HomePage() {
   const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<string[]>(
     [...EXPENSE_CATEGORIES]
   );
+  const [copiedCustomFromPrev, setCopiedCustomFromPrev] = useState(false);
+  const [copiedDefaultsFromPrev, setCopiedDefaultsFromPrev] = useState(false);
 
   // 収入：人数＋メンバーごとの収入
   const [memberCount, setMemberCount] = useState<number>(1);
@@ -502,6 +504,101 @@ export default function HomePage() {
     setHomeMode("setup");
   };
 
+  // デフォルト8項目を前月からコピー（自動更新オンの項目のみ）
+  useEffect(() => {
+    if (copiedDefaultsFromPrev) return;
+    if (homeMode !== "setup") return;
+    if (typeof window === "undefined") return;
+
+    const autoMap = getAutoUpdateCategories(settings);
+
+    // 前月のキーを取得
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth(); // 前月 (0-index)
+    if (month === 0) {
+      year -= 1;
+      month = 12;
+    }
+    const key = buildBudgetKey(year, month);
+
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        planningState?: {
+          expenseInputs?: Record<keyof ExpenseMedian, string>;
+        };
+      };
+      const prevInputs = parsed.planningState?.expenseInputs;
+      if (!prevInputs) return;
+
+      setExpenseInputs((prev) => {
+        const next = { ...prev };
+        (Object.keys(prevInputs) as (keyof ExpenseMedian)[]).forEach((k) => {
+          if (autoMap[k]) {
+            const val = prevInputs[k];
+            if (typeof val === "string") {
+              next[k] = val;
+            }
+          }
+        });
+        return next;
+      });
+      setCopiedDefaultsFromPrev(true);
+    } catch {
+      // noop
+    }
+  }, [
+    copiedDefaultsFromPrev,
+    homeMode,
+    settings,
+  ]);
+
+  // カスタム項目を前月からコピー（設定がオンかつ未コピーのとき）
+  useEffect(() => {
+    if (copiedCustomFromPrev) return;
+    if (!(settings.copyCustomExpenseFromPrevious ?? true)) return;
+    if (customExpenseItems.length > 0) return;
+    if (homeMode !== "setup") return;
+    if (typeof window === "undefined") return;
+
+    const today = new Date();
+    let year = today.getFullYear();
+    let month = today.getMonth(); // 前月 (0-index)
+    if (month === 0) {
+      year -= 1;
+      month = 12;
+    }
+    const key = buildBudgetKey(year, month);
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        planningState?: {
+          customExpenseItems?: CustomExpenseItem[];
+        };
+      };
+      const prevItems = parsed.planningState?.customExpenseItems;
+      if (!Array.isArray(prevItems) || prevItems.length === 0) return;
+
+      const mapped = prevItems.map((item, idx) => ({
+        id: item.id ?? `copied-${idx}`,
+        label: item.label ?? "",
+        value: item.value ?? "",
+      }));
+      setCustomExpenseItems(mapped);
+      setCopiedCustomFromPrev(true);
+    } catch {
+      // noop
+    }
+  }, [
+    copiedCustomFromPrev,
+    customExpenseItems.length,
+    homeMode,
+    settings.copyCustomExpenseFromPrevious,
+  ]);
+
   return (
     <HomePageView
       themeClass={themeClass}
@@ -537,6 +634,7 @@ export default function HomePage() {
       saving={saving}
       savingRate={savingRate}
       customTemplates={expenseCategoryOptions}
+      copyCustomFromPrevious={settings.copyCustomExpenseFromPrevious ?? true}
     />
   );
 }

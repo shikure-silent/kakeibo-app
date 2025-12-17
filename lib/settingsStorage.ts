@@ -33,6 +33,7 @@ export type AppSettings = {
   payday: number;
   budgetBase: BudgetBaseOption;
   autoUpdateCategories?: Partial<Record<ExpenseCategoryKey, boolean>>;
+  copyCustomExpenseFromPrevious?: boolean;
 
   // ★ 入力まわり
   defaultInputMode?: DefaultInputModeOption;
@@ -78,6 +79,7 @@ export const defaultSettings: AppSettings = {
   payday: 1,
   budgetBase: "nationalMedian",
   autoUpdateCategories: defaultAutoUpdateCategories,
+  copyCustomExpenseFromPrevious: true,
 
   defaultInputMode: "expense",
   quickExpenseCategories: [],

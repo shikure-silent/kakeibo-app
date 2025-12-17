@@ -44,6 +44,7 @@ type Props = {
   saving: number;
   savingRate: number | null;
   customTemplates: string[];
+  copyCustomFromPrevious?: boolean;
 };
 
 export function HomePageView({
@@ -80,7 +81,10 @@ export function HomePageView({
   saving,
   savingRate,
   customTemplates,
+  copyCustomFromPrevious = true,
 }: Props) {
+  const isDark = themeClass.includes("theme-dark");
+
   return (
     <main className={`min-h-screen ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
@@ -89,7 +93,11 @@ export function HomePageView({
           <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">
             ホーム
           </h1>
-          <p className="text-xs lg:text-sm text-slate-500">
+          <p
+            className={`text-xs lg:text-sm ${
+              isDark ? "text-slate-300" : "text-slate-500"
+            }`}
+          >
             今月の収入と支出予算を設定して、貯金の見込みを確認できます。
             カレンダーや入力タブと連動して、日々のお金の動きも管理できます。
           </p>
@@ -102,6 +110,7 @@ export function HomePageView({
           saving={displaySaving}
           savingRate={displaySavingRate}
           ageGroupLabel={ageGroupLabels[ageGroup]}
+          isDark={isDark}
         />
 
         {/* 左：カード群／右：説明 */}
@@ -119,6 +128,7 @@ export function HomePageView({
               mode={homeMode}
               onRequestEdit={onRequestEditPlan}
               totalIncome={displayTotalIncome}
+              isDark={isDark}
             />
 
             {/* 💸 支出予算カード */}
@@ -140,12 +150,20 @@ export function HomePageView({
               totalExpense={displayTotalExpense}
               confirmedItems={confirmedItems}
               customTemplates={customTemplates}
+              isDark={isDark}
+              copyCustomFromPrevious={copyCustomFromPrevious}
             />
           </section>
 
           {/* 右：使い方・説明 */}
           <aside className="space-y-4">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-4 py-4 text-xs lg:text-sm text-slate-700 space-y-2">
+            <div
+              className={`rounded-2xl shadow-sm border px-4 py-4 text-xs lg:text-sm space-y-2 ${
+                isDark
+                  ? "bg-slate-900 border-slate-700 text-slate-200"
+                  : "bg-white border-slate-100 text-slate-700"
+              }`}
+            >
               <p className="font-medium">この画面でできること</p>
               <ul className="list-disc pl-4 space-y-1">
                 <li>
