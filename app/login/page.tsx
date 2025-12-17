@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../lib/supabaseClient";
 import { getActiveUserId, setActiveUserId } from "../../lib/accountScope";
 import { clearKakeiboKeys, importKakeiboDump } from "../../lib/cloudSync";
@@ -15,7 +15,7 @@ function safeNext(next: string | null) {
   return next.startsWith("/") ? next : "/";
 }
 
-export default function LoginPage() {
+function LoginPageInner() {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -164,5 +164,19 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[calc(100vh-72px)] flex items-center justify-center p-4">
+          <div className="text-sm text-slate-500">読み込み中...</div>
+        </main>
+      }
+    >
+      <LoginPageInner />
+    </Suspense>
   );
 }
