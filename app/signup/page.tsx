@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../lib/supabaseClient";
 
 function safeNext(next: string | null) {
@@ -10,7 +10,7 @@ function safeNext(next: string | null) {
   return next.startsWith("/") ? next : "/";
 }
 
-export default function SignupPage() {
+function SignupPageInner() {
   const router = useRouter();
   const sp = useSearchParams();
 
@@ -159,5 +159,19 @@ export default function SignupPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-[calc(100vh-72px)] flex items-center justify-center p-4">
+          <div className="text-sm text-slate-500">読み込み中...</div>
+        </main>
+      }
+    >
+      <SignupPageInner />
+    </Suspense>
   );
 }
