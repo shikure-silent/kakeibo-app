@@ -31,6 +31,7 @@ import { AggregationSettingsSection } from "../../components/settings/Aggregatio
 import { AccountLoginSection } from "../../components/settings/AccountLoginSection";
 import { DataManagementSection } from "../../components/settings/DataManagementSection";
 import { AppInfoSection } from "../../components/settings/AppInfoSection";
+import { CloudSyncSection } from "../../components/settings/CloudSyncSection";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
 const APP_VERSION = "0.3.0-beta";
@@ -191,29 +192,71 @@ export default function SettingsPage() {
   };
 
   const themeClass = getThemeClasses(settings.theme);
+  const sectionLinks = [
+    { id: "theme", label: "テーマ設定" },
+    { id: "input", label: "入力設定・クイック" },
+    { id: "saving", label: "貯金サポート" },
+    { id: "category", label: "カテゴリ・項目" },
+    { id: "aggregation", label: "集計・予算" },
+    { id: "account", label: "アカウント" },
+    { id: "cloud", label: "クラウド同期" },
+    { id: "data", label: "データ管理" },
+    { id: "appinfo", label: "アプリ情報" },
+  ];
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <main
       className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${themeClass}`}
     >
-      <header className="space-y-2">
+      <header className="space-y-2 relative">
         <h1 className="text-lg lg:text-xl font-semibold text-slate-900">
           設定
         </h1>
         <p className="text-[12px] text-slate-500 leading-snug">
           アプリの表示やカテゴリ、集計方法などをカスタマイズできます。
         </p>
+        <div className="absolute right-0 top-0">
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+            aria-label="設定メニューを開く"
+          >
+            &#9776;
+          </button>
+        </div>
+        {menuOpen && (
+          <div className="absolute right-0 mt-2 w-48 rounded-xl border border-slate-200 bg-white shadow-lg z-10">
+            <ul className="divide-y divide-slate-100 text-sm">
+              {sectionLinks.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`#${s.id}`}
+                    className="block px-3 py-2 text-slate-700 hover:bg-emerald-50"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {s.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </header>
 
       <div className="space-y-6">
-        <ThemeSettingsSection
+        <section id="theme">
+          <ThemeSettingsSection
           theme={settings.theme}
           onChangeTheme={(theme: ThemeOption) =>
             handleChangeSetting("theme", theme)
           }
         />
+        </section>
 
-        <InputQuickSettingsSection
+        <section id="input">
+          <InputQuickSettingsSection
           defaultInputMode={settings.defaultInputMode}
           quickExpenseCategories={settings.quickExpenseCategories}
           quickIncomeCategories={settings.quickIncomeCategories}
@@ -226,13 +269,17 @@ export default function SettingsPage() {
             handleToggleQuickCategory(kind, name)
           }
         />
+        </section>
 
-        <SavingSupportSection
+        <section id="saving">
+          <SavingSupportSection
           settings={settings}
           onChangeSetting={handleChangeSetting}
         />
+        </section>
 
-        <CategorySettingsSection
+        <section id="category">
+          <CategorySettingsSection
           expenseCategories={expenseCategories}
           incomeCategories={incomeCategories}
           payFromPresets={payFromPresets}
@@ -322,8 +369,10 @@ export default function SettingsPage() {
           onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
           onResetPayFromPresets={handleResetPayFromPresetsToDefault}
         />
+        </section>
 
-        <AggregationSettingsSection
+        <section id="aggregation">
+          <AggregationSettingsSection
           payday={settings.payday}
           budgetBase={settings.budgetBase}
           onChangePayday={(day) => handleChangeSetting("payday", day)}
@@ -331,12 +380,23 @@ export default function SettingsPage() {
             handleChangeSetting("budgetBase", base)
           }
         />
+        </section>
 
-        <AccountLoginSection />
+        <section id="account">
+          <AccountLoginSection />
+        </section>
 
-        <DataManagementSection onResetKakeiboData={handleResetKakeiboData} />
+        <section id="cloud">
+          <CloudSyncSection />
+        </section>
 
-        <AppInfoSection version={APP_VERSION} />
+        <section id="data">
+          <DataManagementSection onResetKakeiboData={handleResetKakeiboData} />
+        </section>
+
+        <section id="appinfo">
+          <AppInfoSection version={APP_VERSION} />
+        </section>
       </div>
     </main>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { DetailRecord } from "../../types/calendar";
 import {
   EXPENSE_CATEGORIES,
@@ -40,6 +40,8 @@ export function DetailListItem({
 }: Props) {
   const categoryOptionsForRow =
     record.mode === "income" ? incomeCategoryOptions : expenseCategoryOptions;
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 space-y-2">
@@ -48,23 +50,6 @@ export function DetailListItem({
         {/* カテゴリ */}
         <div className="flex-1 space-y-1">
           <label className="block text-[11px] text-slate-500">カテゴリ</label>
-          <select
-            value={record.category ?? ""}
-            onChange={(e) =>
-              onChange(index, {
-                ...record,
-                category: e.target.value,
-              } as DetailRecord)
-            }
-            className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-          >
-            <option value="">選択してください</option>
-            {categoryOptionsForRow.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
           <input
             type="text"
             className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -77,6 +62,58 @@ export function DetailListItem({
             }
             placeholder="直接入力（例：食費 / 日用品 など）"
           />
+          <div className="relative inline-block">
+            <button
+              type="button"
+              onClick={() => setShowCategorySuggestions((prev) => !prev)}
+              className="
+                rounded-full border border-slate-300
+                bg-slate-50 px-4 py-1.5 text-[12px]
+                text-slate-700 hover:bg-slate-100
+              "
+            >
+              候補から選ぶ
+            </button>
+
+            {showCategorySuggestions && (
+              <div
+                className="
+                  absolute z-20 mt-1
+                  max-h-40 w-44 overflow-auto
+                  rounded-lg border border-slate-200
+                  bg-white shadow-lg
+                "
+              >
+                {categoryOptionsForRow.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => {
+                      onChange(
+                        index,
+                        { ...record, category: opt } as DetailRecord
+                      );
+                      setShowCategorySuggestions(false);
+                    }}
+                    className={`
+                      w-full px-2 py-1 text-left text-[11px]
+                      hover:bg-emerald-50
+                      ${
+                        opt === record.category
+                          ? "bg-emerald-50 text-emerald-700 font-semibold"
+                          : "text-slate-700"
+                      }
+                    `}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p className="text-[10px] text-slate-400">
+            直接入力してもOKです。「候補から選ぶ」を押すと、よく使うカテゴリ一覧から選べます。
+          </p>
         </div>
 
         {/* 金額（既存行） */}
@@ -124,24 +161,6 @@ export function DetailListItem({
             <label className="block text-[11px] text-slate-500">
               {record.mode === "income" ? "入金元" : "支出元"}
             </label>
-            <select
-              value={record.payFrom ?? ""}
-              onChange={(e) =>
-                onChange(index, {
-                  ...record,
-                  payFrom: e.target.value,
-                } as DetailRecord)
-              }
-              className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-            >
-              <option value="">選択してください</option>
-              {payFromOptions.map((src) => (
-                <option key={src} value={src}>
-                  {src}
-                </option>
-              ))}
-            </select>
-
             <input
               type="text"
               className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
@@ -154,6 +173,59 @@ export function DetailListItem({
               }
               placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
             />
+
+            <div className="relative inline-block">
+              <button
+                type="button"
+                onClick={() => setShowPayFromSuggestions((prev) => !prev)}
+                className="
+                  rounded-full border border-slate-300
+                  bg-slate-50 px-4 py-1.5 text-[12px]
+                  text-slate-700 hover:bg-slate-100
+                "
+              >
+                候補から選ぶ
+              </button>
+
+              {showPayFromSuggestions && (
+                <div
+                  className="
+                    absolute z-20 mt-1
+                    max-h-40 w-44 overflow-auto
+                    rounded-lg border border-slate-200
+                    bg-white shadow-lg
+                  "
+                >
+                  {payFromOptions.map((src) => (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => {
+                        onChange(
+                          index,
+                          { ...record, payFrom: src } as DetailRecord
+                        );
+                        setShowPayFromSuggestions(false);
+                      }}
+                      className={`
+                        w-full px-2 py-1 text-left text-[11px]
+                        hover:bg-emerald-50
+                        ${
+                          src === record.payFrom
+                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                            : "text-slate-700"
+                        }
+                      `}
+                    >
+                      {src}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p className="text-[10px] text-slate-400">
+              直接入力してもOKです。「候補から選ぶ」を押すと、よく使う支出元・入金元から選べます。
+            </p>
           </div>
 
           {/* 店舗名（支出のみ表示） */}

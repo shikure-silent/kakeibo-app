@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type EditableListSectionProps = {
   title: string;
@@ -22,6 +22,8 @@ export function EditableListSection({
   onReorder,
 }: EditableListSectionProps) {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const prevLengthRef = useRef<number>(items.length);
 
   const handleDragStart = (index: number, e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = "move";
@@ -42,6 +44,20 @@ export function EditableListSection({
     onReorder(fromIndex, toIndex);
     setDraggingIndex(null);
   };
+
+  useEffect(() => {
+    // 追加されたときだけ、末尾の入力までスクロール＆フォーカス
+    if (items.length > prevLengthRef.current) {
+      const inputs = listRef.current?.querySelectorAll("input");
+      const lastInput =
+        inputs && inputs.length > 0 ? inputs[inputs.length - 1] : null;
+      if (lastInput) {
+        lastInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        lastInput.focus();
+      }
+    }
+    prevLengthRef.current = items.length;
+  }, [items]);
 
   const handlePointerDown = (index: number) => {
     setDraggingIndex(index);
@@ -75,7 +91,7 @@ export function EditableListSection({
         </button>
       </div>
 
-      <div className="space-y-1 max-h-64 overflow-auto pr-1">
+      <div className="space-y-1 max-h-64 overflow-auto pr-1" ref={listRef}>
         {items.map((item, index) => (
           <div
             key={index}
