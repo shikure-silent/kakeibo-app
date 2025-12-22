@@ -1,11 +1,11 @@
 {
   "/_not-found": "app/_not-found.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/input/page": "app/input/page.js",
-  "/auth/confirm/route": "app/auth/confirm/route.js",
-  "/page": "app/page.js",
   "/error/page": "app/error/page.js",
-  "/settings/page": "app/settings/page.js",
+  "/input/page": "app/input/page.js",
+  "/page": "app/page.js",
   "/login/page": "app/login/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/auth/confirm/route": "app/auth/confirm/route.js",
+  "/calendar/page": "app/calendar/page.js",
   "/signup/page": "app/signup/page.js"
 }

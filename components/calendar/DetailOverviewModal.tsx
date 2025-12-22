@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { DetailRecord } from "../../types/calendar";
 
 type Props = {
@@ -21,6 +21,18 @@ export function DetailOverviewModal({
   onEdit,
 }: Props) {
   if (!open || !selectedDay) return null;
+
+  const payFromSummary = useMemo(() => {
+    const totals = new Map<string, number>();
+    selectedDetails.forEach((rec) => {
+      if (rec.mode !== "expense") return;
+      const label = rec.payFrom?.trim() ? rec.payFrom : "支出元なし";
+      totals.set(label, (totals.get(label) || 0) + Number(rec.amount || 0));
+    });
+    return Array.from(totals.entries())
+      .map(([label, amount]) => ({ label, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [selectedDetails]);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 px-3 py-6 pb-24 sm:px-4 sm:py-10 sm:pb-12 overflow-y-auto">
@@ -46,31 +58,56 @@ export function DetailOverviewModal({
             この日はまだ内訳が登録されていません。
           </p>
         ) : (
-          <div className="space-y-2 max-h-72 overflow-auto pr-1">
-            {selectedDetails.map((rec, idx) => (
-              <div
-                key={idx}
-                className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 flex items-center justify-between gap-3"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold text-slate-800 truncate">
-                    {rec.category || "未分類"}
-                  </p>
-                  <p className="text-[10px] text-slate-500 truncate">
-                    {rec.payFrom ||
-                      (rec.mode === "income" ? "入金元なし" : "支出元なし")}
-                  </p>
-                  {rec.memo && (
-                    <p className="text-[10px] text-slate-400 line-clamp-2">
-                      {rec.memo}
+          <div className="space-y-2">
+            <div className="space-y-2 max-h-72 overflow-auto pr-1">
+              {selectedDetails.map((rec, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-slate-800 truncate">
+                      {rec.category || "未分類"}
                     </p>
-                  )}
+                    <p className="text-[10px] text-slate-500 truncate">
+                      {rec.payFrom ||
+                        (rec.mode === "income" ? "入金元なし" : "支出元なし")}
+                    </p>
+                    {rec.memo && (
+                      <p className="text-[10px] text-slate-400 line-clamp-2">
+                        {rec.memo}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right text-[12px] font-semibold text-slate-900 whitespace-nowrap">
+                    ¥{Number(rec.amount || 0).toLocaleString()}
+                  </div>
                 </div>
-                <div className="text-right text-[12px] font-semibold text-slate-900 whitespace-nowrap">
-                  ¥{Number(rec.amount || 0).toLocaleString()}
+              ))}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-[11px] text-slate-500">支出元別の合計</p>
+              {payFromSummary.length === 0 ? (
+                <p className="text-[11px] text-slate-400">
+                  支出の記録がありません。
+                </p>
+              ) : (
+                <div className="mt-1 space-y-1 max-h-28 overflow-auto pr-1">
+                  {payFromSummary.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-center justify-between text-[11px] text-slate-700"
+                    >
+                      <span className="truncate">{item.label}</span>
+                      <span className="font-semibold">
+                        ¥{Number(item.amount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
         )}
 
