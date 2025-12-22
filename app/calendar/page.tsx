@@ -19,6 +19,7 @@ import {
 } from "../../lib/settingsStorage";
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
+import { buildSavingSupportState } from "../../lib/savingSupport";
 
 type MonthlyBudgetData = {
   year: number;
@@ -42,9 +43,13 @@ type PeriodDailyInfo = {
 };
 
 export default function CalendarPage() {
-  const today = useMemo(() => new Date(), []);
+  const [now, setNow] = useState(() => new Date());
+  const today = now;
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1);
+  const isViewingThisMonth =
+    currentYear === today.getFullYear() &&
+    currentMonth === today.getMonth() + 1;
 
   // 日別の支出合計（予算消化に使う）
   const [amounts, setAmounts] = useState<number[]>([]);
@@ -69,6 +74,10 @@ export default function CalendarPage() {
   const [chartModalDay, setChartModalDay] = useState<number | null>(null);
   const [periodInfos, setPeriodInfos] = useState<PeriodDailyInfo[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
+  const [periodRange, setPeriodRange] = useState<{
+    start: Date;
+    end: Date;
+  } | null>(null);
 
   const daysInMonth = useMemo(
     () => new Date(currentYear, currentMonth, 0).getDate(),
@@ -171,6 +180,13 @@ export default function CalendarPage() {
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 60 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   // 月変更時：日別明細＆支出合計＆収入合計＆予算情報を読み込み
@@ -414,17 +430,52 @@ export default function CalendarPage() {
     setSettings(loaded);
   }, []);
 
+  const periodAnchor = useMemo(() => {
+    if (!isViewingThisMonth) {
+      return { year: currentYear, month: currentMonth };
+    }
+    const payday = settings.payday ?? 1;
+    if (payday <= 1) {
+      return { year: currentYear, month: currentMonth };
+    }
+    const todayDay = today.getDate();
+    if (todayDay < payday) {
+      return { year: currentYear, month: currentMonth };
+    }
+    let nextMonth = today.getMonth() + 2;
+    let nextYear = today.getFullYear();
+    if (nextMonth === 13) {
+      nextMonth = 1;
+      nextYear += 1;
+    }
+    return { year: nextYear, month: nextMonth };
+  }, [
+    isViewingThisMonth,
+    currentYear,
+    currentMonth,
+    settings.payday,
+    today,
+  ]);
+
   // ▼ 給料日サイクル（payday ベース）の日別集計
   useEffect(() => {
     if (!isClient) return;
 
     const payday = settings.payday ?? 1;
-    const period = getPayPeriodForMonth(currentYear, currentMonth, payday);
+    const period = getPayPeriodForMonth(
+      periodAnchor.year,
+      periodAnchor.month,
+      payday
+    );
     if (!period) {
       setPeriodInfos([]);
       setPeriodLabel("");
+      setPeriodRange(null);
       return;
     }
+
+    setPeriodRange({ start: period.start, end: period.end });
+
     const dates = listDatesInPeriod(period);
 
     const infos: PeriodDailyInfo[] = [];
@@ -457,6 +508,8 @@ export default function CalendarPage() {
     currentYear,
     currentMonth,
     settings.payday,
+    periodAnchor.year,
+    periodAnchor.month,
     dailyDetails, // 明細が変わったときも再計算したいので依存に入れておく
   ]);
 
@@ -477,6 +530,79 @@ export default function CalendarPage() {
     if (!budget || budget.totalBudget <= 0) return null;
     return Math.min(100, Math.max(0, (periodTotal / budget.totalBudget) * 100));
   }, [budget, periodTotal]);
+
+  const supportCards = useMemo(() => {
+    if (!isClient) return [];
+    if (!isViewingThisMonth) return [];
+
+    // 「今月（＝今日の月）」を見てる時だけ出す（好みで外してOK）
+    const viewingThisMonth =
+      today.getFullYear() === currentYear &&
+      today.getMonth() + 1 === currentMonth;
+    if (!viewingThisMonth) return [];
+
+    if (!periodRange || periodInfos.length === 0) return [];
+
+    const totalIncomeInPeriod = periodInfos.reduce(
+      (sum, info) => sum + (info.income || 0),
+      0
+    );
+
+    // 最終入力日（支出 or 収入があれば入力あり扱い）
+    const lastInputDate = (() => {
+      const t = new Date(today);
+      t.setHours(23, 59, 59, 999);
+      for (let i = periodInfos.length - 1; i >= 0; i--) {
+        const info = periodInfos[i];
+        if (info.date.getTime() > t.getTime()) continue;
+        if ((info.spending || 0) > 0 || (info.income || 0) > 0)
+          return info.date;
+      }
+      return null;
+    })();
+
+    // 今週（直近7日）に1件でも入力あるか
+    const hasRecordsThisWeek = (() => {
+      const start = new Date(today);
+      start.setHours(0, 0, 0, 0);
+      start.setDate(start.getDate() - 6);
+
+      const end = new Date(today);
+      end.setHours(23, 59, 59, 999);
+
+      return periodInfos.some((info) => {
+        const ts = info.date.getTime();
+        if (ts < start.getTime() || ts > end.getTime()) return false;
+        return (info.spending || 0) > 0 || (info.income || 0) > 0;
+      });
+    })();
+
+    const state = buildSavingSupportState({
+      today,
+      settings,
+      periodLabel: periodLabel || "今月",
+      periodStart: periodRange.start,
+      periodEnd: periodRange.end,
+      totalIncomeInPeriod,
+      totalBudgetForPeriod: budget?.totalBudget ?? 0,
+      totalSpendingInPeriod: periodTotal,
+      lastInputDate,
+      hasRecordsThisWeek,
+    });
+
+    return state.cards;
+  }, [
+    isClient,
+    today,
+    currentYear,
+    currentMonth,
+    settings,
+    periodInfos,
+    periodLabel,
+    periodRange,
+    budget?.totalBudget,
+    periodTotal,
+  ]);
 
   // ▼ 給料日サイクルの日数・1日あたり目安・直近7日のサマリー
   const periodDaysCount = periodInfos.length;
@@ -550,6 +676,7 @@ export default function CalendarPage() {
       onAddRecord={handleAddDetail}
       onCloseChart={handleCloseChartModal}
       onChartBarClick={handleChartBarClickInModal}
+      supportCards={supportCards}
     />
   );
 }

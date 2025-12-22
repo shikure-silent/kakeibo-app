@@ -28,6 +28,7 @@ type Props = {
   dailyTarget: number | null;
   weeklySummary: WeeklySummary | null;
   periodLabel?: string;
+  payFromSummary?: { label: string; amount: number }[];
   onSelectDayFromChart?: (day: number) => void;
   isDark?: boolean;
 };
@@ -44,6 +45,7 @@ export default function MonthlySummaryCard({
   dailyTarget,
   weeklySummary,
   periodLabel,
+  payFromSummary,
   onSelectDayFromChart,
   isDark = false,
 }: Props) {
@@ -151,6 +153,36 @@ export default function MonthlySummaryCard({
           )}
         </div>
       </div>
+
+      {/* 支出元別サマリー */}
+      {payFromSummary && (
+        <div className="space-y-1">
+          <p className={isDark ? "text-slate-300 text-[11px]" : "text-slate-500 text-[11px]"}>
+            支出元別の合計
+          </p>
+          {payFromSummary.length === 0 ? (
+            <p className={isDark ? "text-slate-400 text-[11px]" : "text-slate-400 text-[11px]"}>
+              支出元の記録がありません。
+            </p>
+          ) : (
+            <div className="max-h-28 overflow-auto space-y-1 pr-1">
+              {payFromSummary.map((item) => (
+                <div
+                  key={item.label}
+                  className={`flex items-center justify-between text-[11px] ${
+                    isDark ? "text-slate-200" : "text-slate-700"
+                  }`}
+                >
+                  <span className="truncate">{item.label}</span>
+                  <span className="font-semibold">
+                    {formatYen(item.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 棒グラフ */}
       <div className="h-40">
