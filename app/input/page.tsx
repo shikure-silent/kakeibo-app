@@ -14,8 +14,8 @@ import {
   defaultSettings,
   loadAppSettings,
   getThemeClasses,
-  saveAppSettings,
 } from "../../lib/settingsStorage";
+import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 
 // 日付文字列を生成（YYYY-MM-DD）
 const getTodayDateString = () => {
@@ -109,6 +109,7 @@ const saveDetailsForDate = (dateStr: string, records: DetailRecord[]) => {
 
 export default function InputPage() {
   const [isClient, setIsClient] = useState(false);
+  useCloudAutoSaveOnLeave();
 
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
 
@@ -166,36 +167,6 @@ export default function InputPage() {
     }
   };
 
-  const handleToggleQuickCategory = (
-    kind: "expense" | "income",
-    name: string
-  ) => {
-    if (kind === "expense") {
-      const current = settings.quickExpenseCategories ?? [];
-      const next = current.includes(name)
-        ? current.filter((v) => v !== name)
-        : [...current, name];
-
-      const nextSettings: AppSettings = {
-        ...settings,
-        quickExpenseCategories: next,
-      };
-      setSettings(nextSettings);
-      saveAppSettings(nextSettings);
-    } else {
-      const current = settings.quickIncomeCategories ?? [];
-      const next = current.includes(name)
-        ? current.filter((v) => v !== name)
-        : [...current, name];
-
-      const nextSettings: AppSettings = {
-        ...settings,
-        quickIncomeCategories: next,
-      };
-      setSettings(nextSettings);
-      saveAppSettings(nextSettings);
-    }
-  };
   const handleAddRecord = () => {
     if (!isClient) return;
 
@@ -305,8 +276,6 @@ export default function InputPage() {
               amount={amountInput}
               onChangeAmount={setAmountInput}
               onSubmit={handleAddRecord}
-              quickExpenseCategories={settings.quickExpenseCategories}
-              quickIncomeCategories={settings.quickIncomeCategories}
               isDark={isDark}
             />
           </section>

@@ -20,6 +20,7 @@ import {
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
 import { buildSavingSupportState } from "../../lib/savingSupport";
+import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 
 type MonthlyBudgetData = {
   year: number;
@@ -43,6 +44,7 @@ type PeriodDailyInfo = {
 };
 
 export default function CalendarPage() {
+  useCloudAutoSaveOnLeave();
   const [now, setNow] = useState(() => new Date());
   const today = now;
   const [currentYear, setCurrentYear] = useState(today.getFullYear());

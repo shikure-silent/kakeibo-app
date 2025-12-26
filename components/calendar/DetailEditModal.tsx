@@ -29,7 +29,7 @@ export function DetailEditModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center bg-black/40 px-3 py-6 pb-24 sm:px-4 sm:py-10 sm:pb-12 overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="relative w-full max-w-2xl max-h-[calc(100vh-6rem)] overflow-y-auto bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
         <button
           type="button"
           onClick={onClose}

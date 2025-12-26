@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { DetailRecord } from "../../types/calendar";
 import {
   EXPENSE_CATEGORIES,
@@ -42,6 +42,31 @@ export function DetailListItem({
     record.mode === "income" ? incomeCategoryOptions : expenseCategoryOptions;
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
+  const categoryRef = useRef<HTMLDivElement | null>(null);
+  const payFromRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showCategorySuggestions && !showPayFromSuggestions) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        showCategorySuggestions &&
+        categoryRef.current &&
+        !categoryRef.current.contains(target)
+      ) {
+        setShowCategorySuggestions(false);
+      }
+      if (
+        showPayFromSuggestions &&
+        payFromRef.current &&
+        !payFromRef.current.contains(target)
+      ) {
+        setShowPayFromSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showCategorySuggestions, showPayFromSuggestions]);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-3 space-y-2">
@@ -62,7 +87,7 @@ export function DetailListItem({
             }
             placeholder="直接入力（例：食費 / 日用品 など）"
           />
-          <div className="relative inline-block">
+          <div ref={categoryRef} className="relative inline-block">
             <button
               type="button"
               onClick={() => setShowCategorySuggestions((prev) => !prev)}
@@ -174,7 +199,7 @@ export function DetailListItem({
               placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
             />
 
-            <div className="relative inline-block">
+            <div ref={payFromRef} className="relative inline-block">
               <button
                 type="button"
                 onClick={() => setShowPayFromSuggestions((prev) => !prev)}

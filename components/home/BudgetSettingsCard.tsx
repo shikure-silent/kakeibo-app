@@ -38,6 +38,8 @@ type Props = {
   customTemplates?: string[];
   isDark?: boolean;
   copyCustomFromPrevious?: boolean;
+  onToggleCopyCustomFromPrevious?: () => void;
+  lastAddedCustomItemId?: string | null;
 
   // ホーム側から渡しているやつ
   mode: "setup" | "dashboard";
@@ -65,6 +67,8 @@ export default function BudgetSettingsCard({
   customTemplates,
   isDark = false,
   copyCustomFromPrevious = true,
+  onToggleCopyCustomFromPrevious,
+  lastAddedCustomItemId,
 }: Props) {
   // --------------------
   // ダッシュボードモード
@@ -225,6 +229,8 @@ export default function BudgetSettingsCard({
         customTemplates={customTemplates}
         isDark={isDark}
         copyCustomFromPrevious={copyCustomFromPrevious}
+        onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
+        lastAddedCustomItemId={lastAddedCustomItemId}
       />
 
       <div className="mt-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">

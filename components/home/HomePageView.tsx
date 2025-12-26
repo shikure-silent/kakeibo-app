@@ -45,6 +45,8 @@ type Props = {
   savingRate: number | null;
   customTemplates: string[];
   copyCustomFromPrevious?: boolean;
+  onToggleCopyCustomFromPrevious?: () => void;
+  lastAddedCustomItemId?: string | null;
 };
 
 export function HomePageView({
@@ -82,6 +84,8 @@ export function HomePageView({
   savingRate,
   customTemplates,
   copyCustomFromPrevious = true,
+  onToggleCopyCustomFromPrevious,
+  lastAddedCustomItemId,
 }: Props) {
   const isDark = themeClass.includes("theme-dark");
 
@@ -152,6 +156,8 @@ export function HomePageView({
               customTemplates={customTemplates}
               isDark={isDark}
               copyCustomFromPrevious={copyCustomFromPrevious}
+              onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
+              lastAddedCustomItemId={lastAddedCustomItemId}
             />
           </section>
 

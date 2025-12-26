@@ -16,8 +16,6 @@ import {
   savePayFromPresets,
   getThemeClasses,
   clearAllKakeiboData,
-  getAutoUpdateCategories,
-  ExpenseCategoryKey,
 } from "../../lib/settingsStorage";
 import {
   EXPENSE_CATEGORIES,
@@ -33,7 +31,6 @@ import { AccountLoginSection } from "../../components/settings/AccountLoginSecti
 import { DataManagementSection } from "../../components/settings/DataManagementSection";
 import { AppInfoSection } from "../../components/settings/AppInfoSection";
 import { CloudSyncSection } from "../../components/settings/CloudSyncSection";
-import { AutoUpdateSettingsSection } from "../../components/settings/AutoUpdateSettingsSection";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
 const APP_VERSION = "0.3.0-beta";
@@ -196,14 +193,12 @@ export default function SettingsPage() {
   const themeClass = getThemeClasses(settings.theme);
   const isDark = themeClass.includes("theme-dark");
   const containerClass = isDark ? `${themeClass} dark` : themeClass;
-  const autoUpdateMap = getAutoUpdateCategories(settings);
   const sectionLinks = [
     { id: "account", label: "アカウント" },
     { id: "cloud", label: "クラウド同期" },
     { id: "theme", label: "テーマ設定" },
     { id: "saving", label: "貯金サポート" },
     { id: "category", label: "カテゴリ・項目" },
-    { id: "autoupdate", label: "自動更新の設定" },
     { id: "aggregation", label: "集計・予算" },
     { id: "data", label: "データ管理" },
     { id: "appinfo", label: "アプリ情報" },
@@ -228,28 +223,65 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const handleToggleAutoUpdate = (key: ExpenseCategoryKey) => {
-    setSettings((prev) => {
-      const current = getAutoUpdateCategories(prev);
-      const nextMap = { ...current, [key]: !current[key] };
-      const nextSettings = { ...prev, autoUpdateCategories: nextMap };
-      saveAppSettings(nextSettings);
-      return nextSettings;
-    });
-  };
-
   return (
     <main
       className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${containerClass}`}
     >
-      <header className="space-y-2 relative">
-        <h1
-          className={`text-lg lg:text-xl font-semibold ${
-            isDark ? "text-slate-100" : "text-slate-900"
-          }`}
-        >
-          設定
-        </h1>
+      <header className="space-y-2">
+        <div className="flex items-start justify-between gap-3 relative">
+          <h1
+            className={`text-lg lg:text-xl font-semibold ${
+              isDark ? "text-slate-100" : "text-slate-900"
+            }`}
+          >
+            設定
+          </h1>
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((prev) => !prev)}
+              className="inline-flex items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold shadow-sm"
+              style={{
+                borderColor: isDark ? "#475569" : "#e2e8f0",
+                backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                color: isDark ? "#e2e8f0" : "#334155",
+              }}
+              aria-label="設定メニューを開く"
+            >
+              &#9776;
+            </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 mt-2 w-48 rounded-xl border shadow-lg z-10"
+                style={{
+                  borderColor: isDark ? "#475569" : "#e2e8f0",
+                  backgroundColor: isDark ? "#0f172a" : "#ffffff",
+                }}
+              >
+                <ul
+                  className={`divide-y text-sm ${
+                    isDark ? "divide-slate-700" : "divide-slate-100"
+                  }`}
+                >
+                  {sectionLinks.map((s) => (
+                    <li key={s.id}>
+                      <a
+                        href={`#${s.id}`}
+                        className="block px-3 py-2 hover:bg-emerald-50"
+                        style={{
+                          color: isDark ? "#e2e8f0" : "#334155",
+                        }}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {s.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
         <p
           className={`text-[12px] leading-snug ${
             isDark ? "text-slate-300" : "text-slate-500"
@@ -257,51 +289,6 @@ export default function SettingsPage() {
         >
           アプリの表示やカテゴリ、集計方法などをカスタマイズできます。
         </p>
-        <div className="absolute right-0 top-0">
-          <button
-            type="button"
-            onClick={() => setMenuOpen((prev) => !prev)}
-            className="inline-flex items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold shadow-sm"
-            style={{
-              borderColor: isDark ? "#475569" : "#e2e8f0",
-              backgroundColor: isDark ? "#0f172a" : "#ffffff",
-              color: isDark ? "#e2e8f0" : "#334155",
-            }}
-            aria-label="設定メニューを開く"
-          >
-            &#9776;
-          </button>
-        </div>
-        {menuOpen && (
-          <div
-            className="absolute right-0 mt-2 w-48 rounded-xl border shadow-lg z-10"
-            style={{
-              borderColor: isDark ? "#475569" : "#e2e8f0",
-              backgroundColor: isDark ? "#0f172a" : "#ffffff",
-            }}
-          >
-            <ul
-              className={`divide-y text-sm ${
-                isDark ? "divide-slate-700" : "divide-slate-100"
-              }`}
-            >
-              {sectionLinks.map((s) => (
-                <li key={s.id}>
-                  <a
-                    href={`#${s.id}`}
-                    className="block px-3 py-2 hover:bg-emerald-50"
-                    style={{
-                      color: isDark ? "#e2e8f0" : "#334155",
-                    }}
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {s.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </header>
 
       <div className="space-y-6">
@@ -424,23 +411,6 @@ export default function SettingsPage() {
         />
         </section>
 
-        <section id="autoupdate">
-          <AutoUpdateSettingsSection
-            autoUpdateMap={autoUpdateMap}
-            onToggle={handleToggleAutoUpdate}
-            copyCustomExpenseFromPrevious={
-              settings.copyCustomExpenseFromPrevious ?? true
-            }
-            onToggleCopyCustom={() =>
-              handleChangeSetting(
-                "copyCustomExpenseFromPrevious",
-                !(settings.copyCustomExpenseFromPrevious ?? true)
-              )
-            }
-            isDark={isDark}
-          />
-        </section>
-
         <section id="aggregation">
           <AggregationSettingsSection
           payday={settings.payday}
@@ -464,20 +434,4 @@ export default function SettingsPage() {
     </main>
   );
 
-  function handleToggleQuickCategory(kind: "expense" | "income", name: string) {
-    const key =
-      kind === "expense" ? "quickExpenseCategories" : "quickIncomeCategories";
-
-    const current = (settings[key] ?? []) as string[];
-    const next = current.includes(name)
-      ? current.filter((v) => v !== name)
-      : [...current, name];
-
-    const nextSettings: AppSettings = {
-      ...settings,
-      [key]: next,
-    };
-    setSettings(nextSettings);
-    saveAppSettings(nextSettings);
-  }
 }

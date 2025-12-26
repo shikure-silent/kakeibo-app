@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import NumberInput from "./NumberInput";
 import { ExpenseMedian } from "../data/prefectureData";
 import { CustomExpenseItem } from "../types/budget";
@@ -20,6 +20,8 @@ type Props = {
   customTemplates?: string[];
   isDark?: boolean;
   copyCustomFromPrevious?: boolean;
+  onToggleCopyCustomFromPrevious?: () => void;
+  lastAddedCustomItemId?: string | null;
 };
 
 // デフォルト8項目
@@ -51,11 +53,49 @@ export default function ExpenseInputsBlock({
   customTemplates,
   isDark = false,
   copyCustomFromPrevious = true,
+  onToggleCopyCustomFromPrevious,
+  lastAddedCustomItemId,
 }: Props) {
   const [openTemplateFor, setOpenTemplateFor] = useState<string | null>(null);
-  const templateOptions = customTemplates && customTemplates.length > 0
-    ? customTemplates
-    : CUSTOM_EXPENSE_TEMPLATES;
+  const templateRef = useRef<HTMLDivElement | null>(null);
+  const customItemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const customItemInputRefs = useRef<Record<string, HTMLInputElement | null>>(
+    {}
+  );
+  const templateOptions =
+    customTemplates && customTemplates.length > 0
+      ? customTemplates
+      : CUSTOM_EXPENSE_TEMPLATES;
+
+  const lastAddedItem = useMemo(() => {
+    if (!lastAddedCustomItemId) return null;
+    return customItems.find((item) => item.id === lastAddedCustomItemId);
+  }, [customItems, lastAddedCustomItemId]);
+
+  useEffect(() => {
+    if (!openTemplateFor) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (templateRef.current && !templateRef.current.contains(target)) {
+        setOpenTemplateFor(null);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [openTemplateFor]);
+
+  useEffect(() => {
+    if (!lastAddedItem) return;
+    const node = customItemRefs.current[lastAddedItem.id];
+    if (!node) return;
+    node.scrollIntoView({ behavior: "smooth", block: "center" });
+    const input = customItemInputRefs.current[lastAddedItem.id];
+    if (!input) return;
+    requestAnimationFrame(() => {
+      input.focus();
+      input.select();
+    });
+  }, [lastAddedItem]);
 
   return (
     <div className="space-y-4">
@@ -88,7 +128,10 @@ export default function ExpenseInputsBlock({
                   >
                     {item.label}
                   </p>
-                  <span
+                  <button
+                    type="button"
+                    onClick={() => onToggleAutoUpdateCategory(item.key)}
+                    aria-pressed={isAuto}
                     className={`text-[10px] px-2 py-[2px] rounded-full border ${
                       isAuto
                         ? isDark
@@ -100,7 +143,7 @@ export default function ExpenseInputsBlock({
                     }`}
                   >
                     自動更新: {isAuto ? "オン" : "オフ"}
-                  </span>
+                  </button>
                   {isFixed && (
                     <span
                       className="
@@ -142,7 +185,7 @@ export default function ExpenseInputsBlock({
 
       {/* カスタム項目（他アプリにもありそうな項目＋手動入力） */}
       <div className="mt-2 space-y-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p
             className={`text-xs font-medium ${
               isDark ? "text-slate-100" : "text-slate-700"
@@ -150,38 +193,47 @@ export default function ExpenseInputsBlock({
           >
             カスタム項目（例: 教育費・ペット費・保険料の細分化 など）
           </p>
-          <span
-            className={`text-[11px] inline-flex items-center gap-1 rounded-full px-3 py-1 ${
-              copyCustomFromPrevious
-                ? isDark
-                  ? "bg-emerald-900/40 text-emerald-100 border border-emerald-400"
-                  : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : isDark
-                ? "bg-slate-800 text-slate-200 border border-slate-600"
-                : "bg-slate-100 text-slate-600 border border-slate-200"
-            }`}
-          >
-            前月コピー: {copyCustomFromPrevious ? "オン" : "オフ"}
-          </span>
-          <button
-            type="button"
-            onClick={onAddCustomItem}
-            className="
-              inline-flex items-center gap-1
-              text-[11px] font-semibold
-              hover:text-emerald-800
-            "
-            style={{
-              color: isDark ? "#bbf7d0" : "#047857",
-            }}
-          >
-            <span>＋</span>
-            <span>項目を追加</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onToggleCopyCustomFromPrevious}
+              aria-pressed={copyCustomFromPrevious}
+              className={`text-[11px] inline-flex items-center gap-1 rounded-full px-3 py-1 whitespace-nowrap ${
+                copyCustomFromPrevious
+                  ? isDark
+                    ? "bg-emerald-900/40 text-emerald-100 border border-emerald-400"
+                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : isDark
+                  ? "bg-slate-800 text-slate-200 border border-slate-600"
+                  : "bg-slate-100 text-slate-600 border border-slate-200"
+              }`}
+            >
+              前月コピー: {copyCustomFromPrevious ? "オン" : "オフ"}
+            </button>
+            <button
+              type="button"
+              onClick={onAddCustomItem}
+              className="
+                inline-flex items-center gap-1
+                text-[11px] font-semibold whitespace-nowrap
+                hover:text-emerald-800
+              "
+              style={{
+                color: isDark ? "#bbf7d0" : "#047857",
+              }}
+            >
+              <span>＋</span>
+              <span>項目を追加</span>
+            </button>
+          </div>
         </div>
 
         {customItems.length === 0 && (
-          <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
+          <p
+            className={`text-[11px] ${
+              isDark ? "text-slate-400" : "text-slate-400"
+            }`}
+          >
             まだカスタム項目はありません。「項目を追加」から作成できます。
           </p>
         )}
@@ -190,6 +242,9 @@ export default function ExpenseInputsBlock({
           {customItems.map((item) => (
             <div
               key={item.id}
+              ref={(el) => {
+                customItemRefs.current[item.id] = el;
+              }}
               className="rounded-2xl border px-3 py-3 lg:px-4 lg:py-3 space-y-3"
               style={{
                 borderColor: isDark ? "#475569" : "#e2e8f0",
@@ -208,6 +263,9 @@ export default function ExpenseInputsBlock({
                 </label>
                 <input
                   type="text"
+                  ref={(el) => {
+                    customItemInputRefs.current[item.id] = el;
+                  }}
                   value={item.label}
                   onChange={(e) =>
                     onChangeCustomItemLabel(item.id, e.target.value)
@@ -224,7 +282,7 @@ export default function ExpenseInputsBlock({
                     borderColor: isDark ? "#475569" : "#e2e8f0",
                   }}
                 />
-                <div className="relative inline-block">
+                <div ref={templateRef} className="relative inline-block">
                   <button
                     type="button"
                     className="
@@ -269,11 +327,7 @@ export default function ExpenseInputsBlock({
                         className={`
                           w-full px-3 py-1.5 text-left text-[11px]
                           hover:bg-emerald-50
-                          ${
-                            label === item.label
-                              ? "font-semibold"
-                              : ""
-                          }
+                          ${label === item.label ? "font-semibold" : ""}
                         `}
                         style={{
                           backgroundColor:
@@ -297,7 +351,11 @@ export default function ExpenseInputsBlock({
                     ))}
                   </div>
                 </div>
-                <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
+                <p
+                  className={`text-[10px] ${
+                    isDark ? "text-slate-400" : "text-slate-400"
+                  }`}
+                >
                   直接入力してもOKです。「候補から選ぶ」を押すと、よく使う項目から選べます。
                 </p>
               </div>
@@ -329,7 +387,6 @@ export default function ExpenseInputsBlock({
                     color: isDark ? "#fecdd3" : "#b91c1c",
                   }}
                 >
-                  <span>🗑</span>
                   <span>削除</span>
                 </button>
               </div>
