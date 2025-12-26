@@ -157,6 +157,8 @@ export default function CalendarView(props: Props) {
 
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [pcExpanded, setPcExpanded] = useState(false);
+  const [activeSupportCard, setActiveSupportCard] =
+    useState<SavingSupportCard | null>(null);
 
   // load persisted dismiss
   useEffect(() => {
@@ -220,6 +222,14 @@ export default function CalendarView(props: Props) {
 
   const dismissOne = (id: string) => {
     setDismissedIds((prev) => uniqAdd(prev, id));
+  };
+
+  const openSupportDetail = (card: SavingSupportCard) => {
+    setActiveSupportCard(card);
+  };
+
+  const closeSupportDetail = () => {
+    setActiveSupportCard(null);
   };
 
   const getCardMeta = (kind: SavingSupportCard["kind"]) => {
@@ -327,7 +337,16 @@ export default function CalendarView(props: Props) {
                 return (
                   <div
                     key={card.id}
-                    className={`relative rounded-xl border px-3 py-2.5 ${
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openSupportDetail(card)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openSupportDetail(card);
+                      }
+                    }}
+                    className={`relative rounded-xl border px-3 py-2.5 cursor-pointer ${
                       isDark
                         ? "bg-slate-900 border-slate-700"
                         : "bg-slate-50 border-slate-100"
@@ -335,7 +354,10 @@ export default function CalendarView(props: Props) {
                   >
                     <button
                       type="button"
-                      onClick={() => dismissOne(card.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dismissOne(card.id);
+                      }}
                       className={`absolute top-2 right-2 text-sm leading-none ${
                         isDark
                           ? "text-slate-400 hover:text-slate-200"
@@ -375,6 +397,7 @@ export default function CalendarView(props: Props) {
                       <div className="mt-2">
                         <Link
                           href="/input"
+                          onClick={(e) => e.stopPropagation()}
                           className={`inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-[11px] font-semibold border ${
                             isDark
                               ? "border-slate-600 text-slate-100 hover:bg-slate-800"
@@ -442,11 +465,13 @@ export default function CalendarView(props: Props) {
                   : "bg-white border-slate-100"
               }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold">今日のサポート</h2>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-[12px] font-semibold whitespace-nowrap">
+                    今日のサポート
+                  </h2>
                   <span
-                    className={`text-[10px] rounded-full px-2 py-0.5 border ${
+                    className={`text-[10px] rounded-full px-2 py-0.5 border whitespace-nowrap ${
                       isDark
                         ? "border-slate-600 text-slate-200"
                         : "border-slate-200 text-slate-600"
@@ -457,10 +482,10 @@ export default function CalendarView(props: Props) {
                 </div>
 
                 {visibleSupportCards.length > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-[11px]">
                     <Link
                       href="/settings"
-                      className={`text-[11px] ${
+                      className={`whitespace-nowrap ${
                         isDark
                           ? "text-slate-300 hover:text-slate-100"
                           : "text-slate-500 hover:text-slate-700"
@@ -471,7 +496,7 @@ export default function CalendarView(props: Props) {
                     <button
                       type="button"
                       onClick={resetDismissed}
-                      className={`text-[11px] ${
+                      className={`whitespace-nowrap ${
                         isDark
                           ? "text-slate-300 hover:text-slate-100"
                           : "text-slate-500 hover:text-slate-700"
@@ -482,7 +507,7 @@ export default function CalendarView(props: Props) {
                     <button
                       type="button"
                       onClick={dismissAll}
-                      className={`text-[11px] ${
+                      className={`whitespace-nowrap ${
                         isDark
                           ? "text-slate-300 hover:text-slate-100"
                           : "text-slate-500 hover:text-slate-700"
@@ -503,6 +528,15 @@ export default function CalendarView(props: Props) {
                       return (
                         <div
                           key={card.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openSupportDetail(card)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openSupportDetail(card);
+                            }
+                          }}
                           className={`relative rounded-xl border px-3 py-2 ${
                             isDark
                               ? "bg-slate-900 border-slate-700"
@@ -511,7 +545,10 @@ export default function CalendarView(props: Props) {
                         >
                           <button
                             type="button"
-                            onClick={() => dismissOne(card.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              dismissOne(card.id);
+                            }}
                             className={`absolute top-2 right-2 text-sm leading-none ${
                               isDark
                                 ? "text-slate-400 hover:text-slate-200"
@@ -572,6 +609,15 @@ export default function CalendarView(props: Props) {
                       return (
                         <div
                           key={card.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => openSupportDetail(card)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              openSupportDetail(card);
+                            }
+                          }}
                           className={`relative rounded-xl border px-3 py-2.5 ${
                             isDark
                               ? "bg-slate-900 border-slate-700"
@@ -580,7 +626,10 @@ export default function CalendarView(props: Props) {
                         >
                           <button
                             type="button"
-                            onClick={() => dismissOne(card.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              dismissOne(card.id);
+                            }}
                             className={`absolute top-2 right-2 text-sm leading-none ${
                               isDark
                                 ? "text-slate-400 hover:text-slate-200"
@@ -619,6 +668,7 @@ export default function CalendarView(props: Props) {
                             <div className="mt-2">
                               <Link
                                 href="/input"
+                                onClick={(e) => e.stopPropagation()}
                                 className={`inline-flex items-center justify-center rounded-lg px-2.5 py-1 text-[11px] font-semibold border ${
                                   isDark
                                     ? "border-slate-600 text-slate-100 hover:bg-slate-800"
@@ -718,6 +768,72 @@ export default function CalendarView(props: Props) {
         onClose={onCloseOverview}
         onEdit={onOpenDetailFromOverview}
       />
+
+      {activeSupportCard && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4 py-6">
+          <div
+            className={`relative w-full max-w-md rounded-2xl border px-4 py-4 shadow-lg ${
+              isDark
+                ? "bg-slate-900 border-slate-700 text-slate-100"
+                : "bg-white border-slate-100 text-slate-900"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={closeSupportDetail}
+              className={`absolute top-2 right-3 text-xl leading-none ${
+                isDark
+                  ? "text-slate-400 hover:text-slate-200"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+              aria-label="閉じる"
+            >
+              ×
+            </button>
+
+            <div className="flex items-center gap-2">
+              <span className="text-base">
+                {getCardMeta(activeSupportCard.kind).icon}
+              </span>
+              <span
+                className={`text-[10px] rounded-full px-2 py-0.5 border ${
+                  isDark
+                    ? "border-slate-600 text-slate-200"
+                    : "border-slate-200 text-slate-600"
+                }`}
+              >
+                {getCardMeta(activeSupportCard.kind).badge}
+              </span>
+            </div>
+
+            <h3 className="mt-2 text-sm font-semibold">
+              {activeSupportCard.title}
+            </h3>
+            <p
+              className={`mt-2 text-[12px] leading-relaxed ${
+                isDark ? "text-slate-300" : "text-slate-600"
+              }`}
+            >
+              {activeSupportCard.message}
+            </p>
+
+            {activeSupportCard.kind === "inputGap" && (
+              <div className="mt-3">
+                <Link
+                  href="/input"
+                  className={`inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-[12px] font-semibold border ${
+                    isDark
+                      ? "border-slate-600 text-slate-100 hover:bg-slate-800"
+                      : "border-slate-200 text-slate-700 hover:bg-white"
+                  }`}
+                >
+                  入力へ
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <DetailEditModal
         open={isDetailModalOpen}

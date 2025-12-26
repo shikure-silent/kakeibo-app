@@ -26,6 +26,8 @@ import {
   saveAppSettings,
   loadExpenseCategories,
 } from "../lib/settingsStorage";
+import { useCloudAutoSaveOnLeave } from "../lib/useCloudAutoSaveOnLeave";
+import { useSupabaseAuth } from "../lib/useSupabaseAuth";
 
 import SavingHighlightCard from "../components/home/SavingHighlightCard";
 import IncomeSettingsCard, {
@@ -37,8 +39,20 @@ import { HomePageView } from "../components/home/HomePageView";
 
 type HomeMode = "setup" | "dashboard";
 
+function maskEmail(email: string) {
+  const [local, domain] = email.split("@");
+  if (!domain) return email;
+  const head = local.slice(0, 2);
+  const tail = local.length >= 3 ? local.slice(-1) : "";
+  return `${head}${"*".repeat(
+    Math.max(1, local.length - (head.length + tail.length))
+  )}${tail}@${domain}`;
+}
+
 export default function HomePage() {
   const router = useRouter();
+  useCloudAutoSaveOnLeave();
+  const { user } = useSupabaseAuth();
 
   // アプリ全体設定（テーマ・オート更新カテゴリ・貯金サポート設定など）
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
@@ -58,6 +72,9 @@ export default function HomePage() {
   const [customExpenseItems, setCustomExpenseItems] = useState<
     CustomExpenseItem[]
   >([]);
+  const [lastAddedCustomItemId, setLastAddedCustomItemId] = useState<
+    string | null
+  >(null);
   const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<string[]>(
     [...EXPENSE_CATEGORIES]
   );
@@ -123,8 +140,11 @@ export default function HomePage() {
       // メンバーと収入
       if (Array.isArray(p.incomeMembers) && p.incomeMembers.length > 0) {
         setIncomeMembers(
-          p.incomeMembers.map((m) => ({
-            name: m.name ?? "",
+          p.incomeMembers.map((m, index) => ({
+            name:
+              index === 0 && displayName
+                ? displayName
+                : (m.name ?? ""),
             value: m.value ?? "",
           }))
         );
@@ -160,6 +180,10 @@ export default function HomePage() {
 
   const [confirmedBudget, setConfirmedBudget] =
     useState<ConfirmedBudget | null>(null);
+
+  const displayName =
+    (user?.user_metadata?.display_name as string | undefined) ||
+    (user?.email ? maskEmail(user.email) : "");
 
   // 初回マウント時に設定と「今サイクルが確定済みか」を読み込み
   useEffect(() => {
@@ -221,7 +245,65 @@ export default function HomePage() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!user || !displayName) return;
+    setIncomeMembers((prev) => {
+      if (!prev[0]) return prev;
+      if (prev[0].name === displayName) return prev;
+      const next = [...prev];
+      next[0] = { ...next[0], name: displayName };
+      return next;
+    });
+    if (typeof window === "undefined") return;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    const key = buildBudgetKey(year, month);
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as {
+        planningState?: PlanningState;
+      };
+      if (
+        !parsed.planningState ||
+        !Array.isArray(parsed.planningState.incomeMembers) ||
+        parsed.planningState.incomeMembers.length === 0
+      ) {
+        return;
+      }
+      const nextMembers = parsed.planningState.incomeMembers.map(
+        (member, index) =>
+          index === 0 ? { ...member, name: displayName } : member
+      );
+      window.localStorage.setItem(
+        key,
+        JSON.stringify({
+          ...parsed,
+          planningState: {
+            ...parsed.planningState,
+            incomeMembers: nextMembers,
+          },
+        })
+      );
+    } catch {
+      // noop
+    }
+  }, [user, displayName]);
+
   const themeClass = getThemeClasses(settings.theme);
+
+  const handleToggleCopyCustomFromPrevious = () => {
+    setSettings((prev) => {
+      const nextValue = !(prev.copyCustomExpenseFromPrevious ?? true);
+      const nextSettings = {
+        ...prev,
+        copyCustomExpenseFromPrevious: nextValue,
+      };
+      saveAppSettings(nextSettings);
+      return nextSettings;
+    });
+  };
 
   // 年代が変わったら、その年代の全国値をベースに支出予算をリセット
   // ＋ 家賃・サブスクは固定費ストアで上書き
@@ -302,14 +384,16 @@ export default function HomePage() {
 
   // カスタム支出項目：追加
   const handleAddCustomExpenseItem = () => {
+    const id = `custom-${Date.now()}-${customExpenseItems.length + 1}`;
     setCustomExpenseItems((prev) => [
       ...prev,
       {
-        id: `custom-${Date.now()}-${prev.length + 1}`,
+        id,
         label: "",
         value: "",
       },
     ]);
+    setLastAddedCustomItemId(id);
   };
 
   // カスタム支出項目：ラベル変更
@@ -635,6 +719,8 @@ export default function HomePage() {
       savingRate={savingRate}
       customTemplates={expenseCategoryOptions}
       copyCustomFromPrevious={settings.copyCustomExpenseFromPrevious ?? true}
+      onToggleCopyCustomFromPrevious={handleToggleCopyCustomFromPrevious}
+      lastAddedCustomItemId={lastAddedCustomItemId}
     />
   );
 }

@@ -37,8 +37,6 @@ export type AppSettings = {
 
   // ★ 入力まわり
   defaultInputMode?: DefaultInputModeOption;
-  quickExpenseCategories?: string[];
-  quickIncomeCategories?: string[];
 
   // --- A. 入力＆振り返りリマインド ---
   enableInputGapReminder?: boolean;
@@ -82,8 +80,6 @@ export const defaultSettings: AppSettings = {
   copyCustomExpenseFromPrevious: true,
 
   defaultInputMode: "expense",
-  quickExpenseCategories: [],
-  quickIncomeCategories: [],
 
   // 貯金サポート
   enableInputGapReminder: true,

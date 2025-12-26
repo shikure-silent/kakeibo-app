@@ -41,7 +41,7 @@ export default function BottomNav() {
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex-1 text-center rounded-full px-3 py-2 text-sm font-medium transition
+                  flex-1 text-center rounded-full px-2 py-2 text-[11px] font-medium leading-none whitespace-nowrap transition
                   ${
                     isActive
                       ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-950 dark:text-emerald-200"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { DetailRecord } from "../../types/calendar";
 import {
   EXPENSE_CATEGORIES,
@@ -57,6 +57,40 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
   const [amountText, setAmountText] = useState("");
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
+  const categoryRef = useRef<HTMLDivElement | null>(null);
+  const payFromRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!showCategorySuggestions && !showPayFromSuggestions) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (
+        showCategorySuggestions &&
+        categoryRef.current &&
+        !categoryRef.current.contains(target)
+      ) {
+        setShowCategorySuggestions(false);
+      }
+      if (
+        showPayFromSuggestions &&
+        payFromRef.current &&
+        !payFromRef.current.contains(target)
+      ) {
+        setShowPayFromSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showCategorySuggestions, showPayFromSuggestions]);
+
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
 
   const handleChangeDraft = <K extends keyof DetailRecord>(
     key: K,
@@ -92,8 +126,8 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-lg border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 space-y-3">
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-4 py-6 overflow-y-auto">
+      <div className="relative w-full max-w-md max-h-[calc(100vh-6rem)] overflow-y-auto bg-white rounded-2xl shadow-lg border border-slate-100 px-4 py-4 lg:px-5 lg:py-5 space-y-3">
         <button
           type="button"
           onClick={onClose}
@@ -153,7 +187,7 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
             placeholder="直接入力（例：食費 / 日用品 など）"
           />
 
-          <div className="relative inline-block">
+          <div ref={categoryRef} className="relative inline-block">
             <button
               type="button"
               onClick={() => setShowCategorySuggestions((prev) => !prev)}
@@ -236,7 +270,7 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
             placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
           />
 
-          <div className="relative inline-block">
+          <div ref={payFromRef} className="relative inline-block">
             <button
               type="button"
               onClick={() => setShowPayFromSuggestions((prev) => !prev)}

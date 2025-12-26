@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import NumberInput from "../NumberInput";
 import { Mode } from "../../types/calendar";
 import {
@@ -32,8 +32,6 @@ type Props = {
   amount: string;
   onChangeAmount: (value: string) => void;
   onSubmit: () => void;
-  quickExpenseCategories?: string[];
-  quickIncomeCategories?: string[];
   isDark?: boolean;
 };
 
@@ -55,11 +53,10 @@ export default function InputFormCard({
   amount,
   onChangeAmount,
   onSubmit,
-  quickExpenseCategories,
-  quickIncomeCategories,
   isDark = false,
 }: Props) {
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const categoryRef = useRef<HTMLDivElement | null>(null);
 
   // ★ 設定に応じた候補リスト
   const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<
@@ -79,20 +76,22 @@ export default function InputFormCard({
     setPayFromOptions(loadPayFromPresets([...PAY_FROM_OPTIONS]));
   }, []);
 
+  useEffect(() => {
+    if (!showCategorySuggestions) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (categoryRef.current && !categoryRef.current.contains(target)) {
+        setShowCategorySuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showCategorySuggestions]);
+
   // 今表示するカテゴリ候補（モードによって切り替え）
   // 今表示するカテゴリ候補（モードによって切り替え）
   const categoryOptions =
     mode === "expense" ? expenseCategoryOptions : incomeCategoryOptions;
-
-  // クイックカテゴリ（設定で選んだもの）を、実際の候補に存在するものだけに絞る
-  const quickCategories =
-    mode === "expense"
-      ? quickExpenseCategories ?? []
-      : quickIncomeCategories ?? [];
-
-  const activeQuickCategories = quickCategories.filter((name) =>
-    categoryOptions.includes(name)
-  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,56 +185,6 @@ export default function InputFormCard({
             </button>
           </div>
         </div>
-        {/* クイックカテゴリ（ここを新しく挿入） */}
-        {activeQuickCategories.length > 0 && (
-          <div className="space-y-1">
-            <p
-              className={`text-[11px] font-medium ${
-                isDark ? "text-slate-200" : "text-slate-600"
-              }`}
-            >
-              クイックカテゴリ
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {activeQuickCategories.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => handleSelectCategory(name)}
-                  className={`
-            px-2.5 py-0.5 rounded-full border text-[11px]
-            ${
-              name === category
-                ? "border-emerald-400"
-                : "border-slate-300 hover:bg-slate-50"
-            }
-          `}
-                  style={{
-                    backgroundColor:
-                      name === category
-                        ? isDark
-                          ? "#065f46"
-                          : "#ecfdf3"
-                        : isDark
-                        ? "#0f172a"
-                        : "#ffffff",
-                    color:
-                      name === category
-                        ? isDark
-                          ? "#bbf7d0"
-                          : "#047857"
-                        : isDark
-                        ? "#e2e8f0"
-                        : "#475569",
-                  }}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* 日付＋カテゴリ＋支出元/入金元 */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* 日付 */}
@@ -300,7 +249,7 @@ export default function InputFormCard({
             />
 
             {/* 候補から選ぶボタン（入力欄の“真下”） */}
-            <div className="relative inline-block">
+            <div ref={categoryRef} className="relative inline-block">
               <button
                 type="button"
                 onClick={() => setShowCategorySuggestions((prev) => !prev)}
