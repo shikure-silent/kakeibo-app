@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSupabaseAuth } from "../lib/useSupabaseAuth"; // ←パス調整
+import { setFlashToast } from "../lib/flashToast";
 
 type NavItem = { href: string; label: string };
 
@@ -69,9 +70,9 @@ export default function TopNav() {
   const onLogout = async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    setFlashToast({ message: "ログアウトしました。", tone: "info" });
     setOpenMenu(false);
     router.push("/");
-    router.refresh();
   };
 
   return (
@@ -189,7 +190,7 @@ export default function TopNav() {
                   href="/signup"
                   className="inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
                 >
-                  新規登録
+                  初めての方はこちら
                 </Link>
               </>
             )}

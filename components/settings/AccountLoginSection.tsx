@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
 import { clearKakeiboKeys } from "../../lib/cloudSync";
 import { clearActiveUserId } from "../../lib/accountScope";
+import { setFlashToast } from "../../lib/flashToast";
 
 function maskEmail(email: string) {
   const [local, domain] = email.split("@");
@@ -81,12 +82,26 @@ export function AccountLoginSection() {
 
                   await supabase.auth.signOut();
 
-                  window.location.reload();
+                  setFlashToast({ message: "ログアウトしました。", tone: "info" });
                 }}
                 className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
               >
                 ログアウト
               </button>
+
+              <Link
+                href="/reset-email"
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                メールアドレス再設定
+              </Link>
+
+              <Link
+                href="/reset-password"
+                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                パスワード再設定
+              </Link>
 
               {/* ✅ 専用ページに分けたのでクエリは不要 */}
               <Link
@@ -118,7 +133,7 @@ export function AccountLoginSection() {
                 href="/signup"
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
-                新規登録
+                初めての方はこちら
               </Link>
             </div>
           </>

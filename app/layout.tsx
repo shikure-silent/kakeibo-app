@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import BottomNav from "../components/BottomNav";
 import TopNav from "../components/TopNav";
+import FlashToast from "../components/FlashToast";
 import { APP_NAME } from "../lib/const";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
       <body className="bg-slate-50 text-slate-800 antialiased font-sans">
         {/* PC用トップナビ（lg以上で表示） */}
         <TopNav />
+        <FlashToast />
 
         {/* メインコンテンツ（下ナビぶん余白確保） */}
         <div className="min-h-screen pb-16 lg:pb-0">{children}</div>
