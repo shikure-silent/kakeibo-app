@@ -7,6 +7,7 @@ import { CustomExpenseItem } from "../../types/budget";
 import SavingHighlightCard from "./SavingHighlightCard";
 import IncomeSettingsCard, { IncomeMember } from "./IncomeSettingsCard";
 import BudgetSettingsCard from "./BudgetSettingsCard";
+import HomeSetupWizard from "./HomeSetupWizard";
 
 type HomeMode = "setup" | "dashboard";
 
@@ -24,9 +25,8 @@ type Props = {
   onRemoveCustomExpenseItem: (id: string) => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
-  onRequestEditPlan: () => void;
-  onStart?: () => void;
-  totalExpense: number;
+  onRequestIncomeEdit: () => void;
+  onRequestBudgetEdit: () => void;
   displayTotalExpense: number;
   displayTotalIncome: number;
   displaySaving: number;
@@ -38,15 +38,18 @@ type Props = {
   onMemberValueChange: (index: number, value: string) => void;
   onAgeGroupChange: (age: AgeGroup) => void;
   confirmedItems: { label: string; amount: number }[] | null;
-  isConfirmOpen: boolean;
-  onCloseConfirmModal: () => void;
-  onConfirmStart: () => void;
-  saving: number;
-  savingRate: number | null;
   customTemplates: string[];
   copyCustomFromPrevious?: boolean;
   onToggleCopyCustomFromPrevious?: () => void;
   lastAddedCustomItemId?: string | null;
+  wizardEntryMode: "full" | "income" | "budget";
+  wizardStep: number;
+  onWizardStepChange: (step: number) => void;
+  onWizardStartOver: () => void;
+  onWizardConfirmStart: () => void;
+  showOldDraftPrompt: boolean;
+  onResumeDraft: () => void;
+  onDiscardDraft: () => void;
 };
 
 export function HomePageView({
@@ -63,9 +66,8 @@ export function HomePageView({
   onRemoveCustomExpenseItem,
   autoUpdateMap,
   onToggleAutoUpdateCategory,
-  onRequestEditPlan,
-  onStart,
-  totalExpense,
+  onRequestIncomeEdit,
+  onRequestBudgetEdit,
   displayTotalExpense,
   displayTotalIncome,
   displaySaving,
@@ -77,15 +79,18 @@ export function HomePageView({
   onMemberValueChange,
   onAgeGroupChange,
   confirmedItems,
-  isConfirmOpen,
-  onCloseConfirmModal,
-  onConfirmStart,
-  saving,
-  savingRate,
   customTemplates,
   copyCustomFromPrevious = true,
   onToggleCopyCustomFromPrevious,
   lastAddedCustomItemId,
+  wizardEntryMode,
+  wizardStep,
+  onWizardStepChange,
+  onWizardStartOver,
+  onWizardConfirmStart,
+  showOldDraftPrompt,
+  onResumeDraft,
+  onDiscardDraft,
 }: Props) {
   const isDark = themeClass.includes("theme-dark");
 
@@ -117,11 +122,14 @@ export function HomePageView({
           isDark={isDark}
         />
 
-        {/* 左：カード群／右：説明 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-          <section className="lg:col-span-2 space-y-4">
-            {/* 🧾 収入の設定カード */}
-            <IncomeSettingsCard
+        {homeMode === "setup" ? (
+          <div className="space-y-4">
+            <HomeSetupWizard
+              entryMode={wizardEntryMode}
+              step={wizardStep}
+              onStepChange={onWizardStepChange}
+              onStartOver={onWizardStartOver}
+              onConfirmStart={onWizardConfirmStart}
               ageGroup={ageGroup}
               onAgeGroupChange={onAgeGroupChange}
               memberCount={memberCount}
@@ -129,144 +137,126 @@ export function HomePageView({
               incomeMembers={incomeMembers}
               onMemberNameChange={onMemberNameChange}
               onMemberValueChange={onMemberValueChange}
-              mode={homeMode}
-              onRequestEdit={onRequestEditPlan}
-              totalIncome={displayTotalIncome}
-              isDark={isDark}
-            />
-
-            {/* 💸 支出予算カード */}
-            <BudgetSettingsCard
-              ageGroupLabel={ageGroupLabels[ageGroup]}
-              median={medianForAge}
-              inputs={expenseInputs}
-              onChange={onExpenseChange}
-              customItems={customExpenseItems}
-              onAddCustomItem={onAddCustomExpenseItem}
-              onChangeCustomItemLabel={onChangeCustomExpenseLabel}
-              onChangeCustomItemAmount={onChangeCustomExpenseAmount}
-              onRemoveCustomItem={onRemoveCustomExpenseItem}
-              onStart={onStart}
+              expenseInputs={expenseInputs}
+              onExpenseChange={onExpenseChange}
+              medianForAge={medianForAge}
+              customExpenseItems={customExpenseItems}
+              onAddCustomExpenseItem={onAddCustomExpenseItem}
+              onChangeCustomExpenseLabel={onChangeCustomExpenseLabel}
+              onChangeCustomExpenseAmount={onChangeCustomExpenseAmount}
+              onRemoveCustomExpenseItem={onRemoveCustomExpenseItem}
               autoUpdateMap={autoUpdateMap}
               onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
-              mode={homeMode}
-              onRequestEdit={onRequestEditPlan}
+              totalIncome={displayTotalIncome}
               totalExpense={displayTotalExpense}
-              confirmedItems={confirmedItems}
+              saving={displaySaving}
+              savingRate={displaySavingRate}
               customTemplates={customTemplates}
-              isDark={isDark}
               copyCustomFromPrevious={copyCustomFromPrevious}
               onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
               lastAddedCustomItemId={lastAddedCustomItemId}
+              isDark={isDark}
             />
-          </section>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+            <section className="lg:col-span-2 space-y-4">
+              {/* 🧾 収入の設定カード */}
+              <IncomeSettingsCard
+                ageGroup={ageGroup}
+                onAgeGroupChange={onAgeGroupChange}
+                memberCount={memberCount}
+                onMemberCountChange={onMemberCountChange}
+                incomeMembers={incomeMembers}
+                onMemberNameChange={onMemberNameChange}
+                onMemberValueChange={onMemberValueChange}
+                mode={homeMode}
+                onRequestEdit={onRequestIncomeEdit}
+                totalIncome={displayTotalIncome}
+                isDark={isDark}
+              />
 
-          {/* 右：使い方・説明 */}
-          <aside className="space-y-4">
-            <div
-              className={`rounded-2xl shadow-sm border px-4 py-4 text-xs lg:text-sm space-y-2 ${
-                isDark
-                  ? "bg-slate-900 border-slate-700 text-slate-200"
-                  : "bg-white border-slate-100 text-slate-700"
-              }`}
-            >
-              <p className="font-medium">この画面でできること</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>
-                  世帯主の年代を選ぶと、その年代の全国データから8項目の支出予算の初期値が設定されます。
-                </li>
-                <li>
-                  世帯のメンバーごとの収入と支出予算を設定すると、「今月の貯金見込み」が自動計算されます。
-                </li>
-                <li>
-                  家賃・サブスクなどの固定費は、一度入力すると毎月自動で反映されます。
-                </li>
-                <li>
-                  娯楽費や医療・保険も年代別の目安を出しつつ、自分に合わせて調整できます。
-                </li>
-                <li>
-                  その他の項目は「カスタム項目」として追加・削除できます。
-                </li>
-              </ul>
-            </div>
-          </aside>
-        </div>
+              {/* 💸 支出予算カード */}
+              <BudgetSettingsCard
+                ageGroupLabel={ageGroupLabels[ageGroup]}
+                median={medianForAge}
+                inputs={expenseInputs}
+                onChange={onExpenseChange}
+                customItems={customExpenseItems}
+                onAddCustomItem={onAddCustomExpenseItem}
+                onChangeCustomItemLabel={onChangeCustomExpenseLabel}
+                onChangeCustomItemAmount={onChangeCustomExpenseAmount}
+                onRemoveCustomItem={onRemoveCustomExpenseItem}
+                autoUpdateMap={autoUpdateMap}
+                onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
+                mode={homeMode}
+                onRequestEdit={onRequestBudgetEdit}
+                totalExpense={displayTotalExpense}
+                confirmedItems={confirmedItems}
+                customTemplates={customTemplates}
+                isDark={isDark}
+                copyCustomFromPrevious={copyCustomFromPrevious}
+                onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
+                lastAddedCustomItemId={lastAddedCustomItemId}
+              />
+            </section>
+
+            {/* 右：使い方・説明 */}
+            <aside className="space-y-4">
+              <div
+                className={`rounded-2xl shadow-sm border px-4 py-4 text-xs lg:text-sm space-y-2 ${
+                  isDark
+                    ? "bg-slate-900 border-slate-700 text-slate-200"
+                    : "bg-white border-slate-100 text-slate-700"
+                }`}
+              >
+                <p className="font-medium">この画面でできること</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>
+                    世帯主の年代を選ぶと、その年代の全国データから8項目の支出予算の初期値が設定されます。
+                  </li>
+                  <li>
+                    世帯のメンバーごとの収入と支出予算を設定すると、「今月の貯金見込み」が自動計算されます。
+                  </li>
+                  <li>
+                    家賃・サブスクなどの固定費は、一度入力すると毎月自動で反映されます。
+                  </li>
+                  <li>
+                    娯楽費や医療・保険も年代別の目安を出しつつ、自分に合わせて調整できます。
+                  </li>
+                  <li>
+                    その他の項目は「カスタム項目」として追加・削除できます。
+                  </li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+        )}
       </div>
 
-      {/* ⭐ スタート前の確認モーダル */}
-      {isConfirmOpen && (
+      {showOldDraftPrompt && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
-          <div className="relative max-w-md w-full bg-white rounded-2xl shadow-lg p-5 space-y-4">
-            {/* ✖︎ ボタン */}
-            <button
-              type="button"
-              onClick={onCloseConfirmModal}
-              aria-label="閉じる"
-              className="
-                absolute top-2.5 right-2.5
-                text-slate-400 hover:text-slate-600
-                text-lg leading-none
-              "
-            >
-              ×
-            </button>
-
-            <h2 className="text-sm lg:text-base font-semibold text-slate-900">
-              この予算でスタートしますか？
+          <div className="max-w-md w-full rounded-2xl shadow-lg p-5 space-y-4 bg-white text-slate-900">
+            <h2 className="text-sm lg:text-base font-semibold">
+              途中入力が残っています
             </h2>
             <p className="text-sm text-slate-700">
-              今の設定だと、
-              <span className="font-semibold">
-                {" "}
-                今月の貯金見込みは{" "}
-                <span
-                  className={saving >= 0 ? "text-emerald-600" : "text-red-500"}
-                >
-                  ¥{Math.abs(saving).toLocaleString()}
-                </span>
-              </span>
-              {saving >= 0
-                ? " です。一緒に貯金をがんばりましょう！"
-                : " の赤字になりそうです。予算を見直してからスタートしてもOKです。"}
+              途中入力が残っています。続きから再開しますか？
             </p>
-            {savingRate !== null && (
-              <p className="text-xs text-slate-500">
-                貯金率の目安:{" "}
-                <span
-                  className={
-                    saving >= 0
-                      ? "text-emerald-600 font-medium"
-                      : "text-red-500 font-medium"
-                  }
-                >
-                  {savingRate.toFixed(1)}%
-                </span>
-              </p>
-            )}
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex flex-col sm:flex-row gap-2 sm:justify-end pt-1">
               <button
                 type="button"
-                onClick={onCloseConfirmModal}
-                className="
-                  px-3 py-1.5 rounded-full
-                  text-[11px] font-medium
-                  text-slate-600 bg-slate-100
-                  hover:bg-slate-200
-                "
+                onClick={onDiscardDraft}
+                className="rounded-full border px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
               >
-                あとで変更する
+                破棄して確定から
               </button>
               <button
                 type="button"
-                onClick={onConfirmStart}
-                className="
-                  px-4 py-1.5 rounded-full
-                  text-[11px] font-semibold
-                  bg-emerald-600 text-white
-                  hover:bg-emerald-700
-                "
+                onClick={onResumeDraft}
+                className="rounded-full bg-emerald-500 text-white px-4 py-2 text-xs font-semibold hover:bg-emerald-600"
               >
-                カレンダーへ進む
+                続きから
               </button>
             </div>
           </div>
