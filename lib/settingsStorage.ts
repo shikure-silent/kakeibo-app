@@ -108,22 +108,35 @@ export function loadAppSettings(): AppSettings {
 
   try {
     const raw = window.localStorage.getItem(SETTINGS_KEY);
-    if (!raw) return defaultSettings;
+    if (!raw) {
+      saveAppSettings(defaultSettings);
+      return defaultSettings;
+    }
     const parsed = JSON.parse(raw) as Partial<AppSettings>;
     const parsedAuto =
       parsed.autoUpdateCategories &&
       typeof parsed.autoUpdateCategories === "object"
         ? parsed.autoUpdateCategories
         : {};
+    const normalizedAuto = {
+      ...defaultAutoUpdateCategories,
+      ...parsedAuto,
+    };
+    const isAllOn = EXPENSE_CATEGORY_KEYS.every(
+      (key) => normalizedAuto[key]
+    );
 
-    return {
+    const mergedSettings: AppSettings = {
       ...defaultSettings,
       ...parsed,
       autoUpdateCategories: {
-        ...defaultAutoUpdateCategories,
-        ...parsedAuto,
+        ...(isAllOn ? defaultAutoUpdateCategories : normalizedAuto),
       },
     };
+    if (isAllOn) {
+      saveAppSettings(mergedSettings);
+    }
+    return mergedSettings;
   } catch {
     return defaultSettings;
   }

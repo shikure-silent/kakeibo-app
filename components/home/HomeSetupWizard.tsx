@@ -123,8 +123,10 @@ export default function HomeSetupWizard({
           <button
             type="button"
             onClick={onStartOver}
-            className={`text-[11px] underline ${
-              isDark ? "text-slate-300" : "text-slate-500"
+            className={`text-[11px] font-semibold px-3 py-1 rounded-full border ${
+              isDark
+                ? "text-amber-200 border-amber-400/60 bg-amber-500/10 hover:bg-amber-500/20"
+                : "text-amber-700 border-amber-300 bg-amber-50 hover:bg-amber-100"
             }`}
           >
             最初からやり直す

@@ -76,7 +76,7 @@ export default function TopNav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 hidden md:block">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex h-16 items-center justify-between gap-3">
           {/* 左：ロゴ */}
@@ -86,10 +86,7 @@ export default function TopNav() {
             </div>
             <div className="leading-tight">
               <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                無理なく貯金ができる
-              </div>
-              <div className="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400">
-                家計簿アプリ
+                無理なく貯金ができる家計簿アプリ
               </div>
             </div>
           </Link>
@@ -122,7 +119,7 @@ export default function TopNav() {
           </nav>
 
           {/* 右：認証 */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 ml-auto">
             {isLoading ? (
               <div className="h-10 w-32 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
             ) : user ? (
@@ -181,16 +178,16 @@ export default function TopNav() {
             ) : (
               <>
                 <Link
-                  href="/login"
-                  className="inline-flex items-center rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-200 dark:hover:bg-emerald-950/30"
-                >
-                  ログイン
-                </Link>
-                <Link
                   href="/signup"
-                  className="inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                  className="inline-flex items-center whitespace-nowrap rounded-full bg-emerald-600 px-2.5 py-2 text-[10px] font-semibold text-white hover:bg-emerald-700 sm:px-4 sm:text-sm"
                 >
                   初めての方はこちら
+                </Link>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center whitespace-nowrap rounded-full border border-emerald-200 bg-white px-2.5 py-2 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-200 dark:hover:bg-emerald-950/30 sm:px-4 sm:text-sm"
+                >
+                  ログイン
                 </Link>
               </>
             )}
