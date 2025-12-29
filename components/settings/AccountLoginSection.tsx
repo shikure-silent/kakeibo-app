@@ -40,9 +40,6 @@ export function AccountLoginSection() {
       <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
         アカウント
       </h2>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        ログインすると、将来のクラウド保存・マルチ端末利用（Supabase同期）に繋げられます。
-      </p>
 
       {mounted && !supabase && (
         <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/30 dark:text-amber-200">
@@ -82,7 +79,10 @@ export function AccountLoginSection() {
 
                   await supabase.auth.signOut();
 
-                  setFlashToast({ message: "ログアウトしました。", tone: "info" });
+                  setFlashToast({
+                    message: "ログアウトしました。",
+                    tone: "info",
+                  });
                 }}
                 className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
               >
@@ -118,8 +118,7 @@ export function AccountLoginSection() {
               未ログイン（ゲスト）
             </div>
             <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              今は localStorage
-              に保存。ログイン後に同期機能を追加できます（次ステップ）。
+              ログイン後に同期機能を追加できます。
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">

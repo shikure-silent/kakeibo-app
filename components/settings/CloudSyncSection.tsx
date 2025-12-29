@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
-import {
-  exportKakeiboDump,
-  importKakeiboDump,
-} from "../../lib/cloudSync";
+import { exportKakeiboDump, importKakeiboDump } from "../../lib/cloudSync";
 import { loadKakeiboState, saveKakeiboState } from "../../lib/kakeiboStateRepo";
 
 export function CloudSyncSection() {
@@ -65,11 +62,10 @@ export function CloudSyncSection() {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
       <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-        クラウド同期（試験）
+        クラウド同期
       </h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        ログインしている場合、現在の端末データ（localStorage）を Supabase
-        に保存/復元できます。
+        ログインしている場合、現在の端末データをクラウドに保存/復元できます。
       </p>
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/30">
@@ -77,7 +73,7 @@ export function CloudSyncSection() {
           <p className="text-sm text-slate-500">読み込み中…</p>
         ) : !canUse ? (
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            使うにはログインが必要です（未ログイン or Supabase未設定）。
+            使うにはログインが必要です。
           </p>
         ) : (
           <>
