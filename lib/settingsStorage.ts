@@ -21,10 +21,13 @@ export type DefaultInputModeOption = "expense" | "income";
 // 設定の保存キー
 const SETTINGS_KEY = "kakeibo_app_settings_v1";
 
-// autoUpdateCategories のデフォルト（全カテゴリ true）
+// autoUpdateCategories のデフォルト（固定費のみオン）
 export const defaultAutoUpdateCategories: Record<ExpenseCategoryKey, boolean> =
   EXPENSE_CATEGORY_KEYS.reduce(
-    (acc, key) => ({ ...acc, [key]: true }),
+    (acc, key) => ({
+      ...acc,
+      [key]: key === "rent" || key === "subscription",
+    }),
     {} as Record<ExpenseCategoryKey, boolean>
   );
 
@@ -77,7 +80,7 @@ export const defaultSettings: AppSettings = {
   payday: 1,
   budgetBase: "nationalMedian",
   autoUpdateCategories: defaultAutoUpdateCategories,
-  copyCustomExpenseFromPrevious: true,
+  copyCustomExpenseFromPrevious: false,
 
   defaultInputMode: "expense",
 

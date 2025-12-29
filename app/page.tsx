@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ExpenseMedian } from "../data/prefectureData";
 import {
   AgeGroup,
@@ -17,6 +16,14 @@ import {
   isHomeCycleConfirmed,
   saveHomeCycleConfirmed,
 } from "../lib/homeStorage";
+import {
+  HomeWizardDraft,
+  HOME_WIZARD_SCHEMA_VERSION,
+  clearHomeWizardDraft,
+  isHomeWizardDraftOld,
+  loadHomeWizardDraft,
+  saveHomeWizardDraft,
+} from "../lib/homeWizardDraft";
 import {
   AppSettings,
   defaultSettings,
@@ -50,7 +57,6 @@ function maskEmail(email: string) {
 }
 
 export default function HomePage() {
-  const router = useRouter();
   useCloudAutoSaveOnLeave();
   const { user } = useSupabaseAuth();
 
@@ -59,6 +65,17 @@ export default function HomePage() {
 
   // ホーム画面のモード：初期はセットアップモード
   const [homeMode, setHomeMode] = useState<HomeMode>("setup");
+  const [wizardStep, setWizardStep] = useState<number>(1);
+  const [wizardEntryMode, setWizardEntryMode] = useState<
+    "full" | "income" | "budget"
+  >("full");
+  const [pendingDraft, setPendingDraft] = useState<HomeWizardDraft | null>(
+    null
+  );
+  const [pendingDraftStep, setPendingDraftStep] = useState<number | null>(
+    null
+  );
+  const [showOldDraftPrompt, setShowOldDraftPrompt] = useState(false);
 
   // 年代（全国×年代別のデフォルト予算に使う）
   const [ageGroup, setAgeGroup] = useState<AgeGroup>("all");
@@ -87,8 +104,6 @@ export default function HomePage() {
     { name: "本人", value: "" },
   ]);
 
-  // 「この予算でスタート」前の確認モーダル
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   type ConfirmedBudgetItem = {
     label: string;
@@ -149,9 +164,11 @@ export default function HomePage() {
           }))
         );
         if (typeof p.memberCount === "number" && p.memberCount > 0) {
-          setMemberCount(p.memberCount);
+          const safeCount = Math.min(10, Math.max(1, p.memberCount));
+          setMemberCount(safeCount);
         } else {
-          setMemberCount(p.incomeMembers.length);
+          const safeCount = Math.min(10, Math.max(1, p.incomeMembers.length));
+          setMemberCount(safeCount);
         }
       }
 
@@ -176,6 +193,52 @@ export default function HomePage() {
     } catch (e) {
       console.error("ホームの計画復元に失敗しました", e);
     }
+  };
+
+  const clampWizardStep = (value: number) =>
+    Math.min(4, Math.max(1, value));
+
+  const applyWizardDraft = (
+    draft: HomeWizardDraft,
+    preferredStep?: number
+  ) => {
+    setHomeMode("setup");
+    setWizardStep(clampWizardStep(preferredStep ?? draft.step ?? 1));
+    if (draft.ageGroup) {
+      setAgeGroup(draft.ageGroup);
+    }
+    if (typeof draft.memberCount === "number" && draft.memberCount > 0) {
+      const safeCount = Math.min(10, Math.max(1, draft.memberCount));
+      setMemberCount(safeCount);
+    }
+    if (Array.isArray(draft.incomeMembers) && draft.incomeMembers.length > 0) {
+      setIncomeMembers(
+        draft.incomeMembers.map((m, index) => ({
+          name: index === 0 && displayName ? displayName : (m.name ?? ""),
+          value: m.value ?? "",
+        }))
+      );
+    }
+    if (draft.expenseInputs) {
+      setExpenseInputs((prev) => ({
+        ...prev,
+        ...draft.expenseInputs,
+      }));
+    }
+    if (Array.isArray(draft.customExpenseItems)) {
+      setCustomExpenseItems(
+        draft.customExpenseItems.map((item, index) => ({
+          id: item.id ?? `draft-${index}`,
+          label: item.label ?? "",
+          value: item.value ?? "",
+        }))
+      );
+    }
+    setCopiedDefaultsFromPrev(true);
+    setCopiedCustomFromPrev(true);
+    setShowOldDraftPrompt(false);
+    setPendingDraft(null);
+    setPendingDraftStep(null);
   };
 
   const [confirmedBudget, setConfirmedBudget] =
@@ -243,6 +306,24 @@ export default function HomePage() {
       setHomeMode("setup");
       setConfirmedBudget(null);
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+    if (isHomeCycleConfirmed(year, month)) return;
+
+    const draft = loadHomeWizardDraft();
+    if (!draft) return;
+    if (isHomeWizardDraftOld(draft.updatedAt)) {
+      setPendingDraft(draft);
+      setShowOldDraftPrompt(true);
+      return;
+    }
+    setWizardEntryMode("full");
+    applyWizardDraft(draft);
   }, []);
 
   useEffect(() => {
@@ -316,7 +397,9 @@ export default function HomePage() {
       const next = { ...prev };
 
       (Object.keys(baseInputs) as (keyof ExpenseMedian)[]).forEach((key) => {
-        if (autoMap[key]) {
+        const shouldOverwrite =
+          prev[key] === "" || typeof prev[key] === "undefined";
+        if (autoMap[key] && shouldOverwrite) {
           next[key] = baseInputs[key];
         }
       });
@@ -363,9 +446,6 @@ export default function HomePage() {
           });
         }
         return newMembers;
-      }
-      if (memberCount < prev.length) {
-        return prev.slice(0, memberCount);
       }
       return prev;
     });
@@ -443,6 +523,23 @@ export default function HomePage() {
     });
   };
 
+  const handleWizardStartOver = () => {
+    clearHomeWizardDraft();
+    setPendingDraft(null);
+    setPendingDraftStep(null);
+    setShowOldDraftPrompt(false);
+    setWizardEntryMode("full");
+    setWizardStep(1);
+    setAgeGroup("all");
+    setMemberCount(1);
+    setIncomeMembers([{ name: displayName || "本人", value: "" }]);
+    setExpenseInputs(buildExpenseInputs("all"));
+    setCustomExpenseItems([]);
+    setLastAddedCustomItemId(null);
+    setCopiedCustomFromPrev(false);
+    setCopiedDefaultsFromPrev(false);
+  };
+
   const toggleAutoUpdateCategory = (key: keyof ExpenseMedian) => {
     setSettings((prev) => {
       const current = getAutoUpdateCategories(prev);
@@ -452,6 +549,34 @@ export default function HomePage() {
       return nextSettings;
     });
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (homeMode !== "setup") return;
+    if (showOldDraftPrompt || pendingDraft) return;
+    const draft: HomeWizardDraft = {
+      schema_version: HOME_WIZARD_SCHEMA_VERSION,
+      updatedAt: Date.now(),
+      appVersion: process.env.NEXT_PUBLIC_APP_VERSION,
+      step: wizardStep,
+      ageGroup,
+      memberCount,
+      incomeMembers,
+      expenseInputs,
+      customExpenseItems,
+    };
+    saveHomeWizardDraft(draft);
+  }, [
+    ageGroup,
+    customExpenseItems,
+    expenseInputs,
+    homeMode,
+    incomeMembers,
+    memberCount,
+    pendingDraft,
+    showOldDraftPrompt,
+    wizardStep,
+  ]);
 
   // デフォルト8項目の数値
   const expenseNumbers: ExpenseMedian = {
@@ -476,19 +601,21 @@ export default function HomePage() {
     Object.values(expenseNumbers).reduce((sum, v) => sum + v, 0) +
     customExpensesTotal;
 
+  const visibleIncomeMembers = incomeMembers.slice(
+    0,
+    Math.max(memberCount, 1)
+  );
+
   // 収入合計
-  const totalIncome = incomeMembers.reduce((sum, m) => {
+  const totalIncome = visibleIncomeMembers.reduce((sum, m) => {
     const v = Number(m.value || "0");
     return sum + (Number.isNaN(v) ? 0 : v);
   }, 0);
 
   const saving = totalIncome - totalExpense;
-  const savingRate = totalIncome > 0 ? (saving / totalIncome) * 100 : null;
 
   // セットアップ時の計算結果
   const rawSaving = totalIncome - totalExpense;
-  const rawSavingRate =
-    totalIncome > 0 ? (rawSaving / totalIncome) * 100 : null;
 
   // ダッシュボード表示用の値（確定済みデータがあればそっちを優先）
   const displayTotalIncome =
@@ -509,22 +636,7 @@ export default function HomePage() {
   const displaySavingRate =
     displayTotalIncome > 0 ? (displaySaving / displayTotalIncome) * 100 : null;
 
-  // 設定から貯金目標（0.1 = 10%）とメンタルサポート設定を取得
-  const targetSavingRatePercent =
-    settings.targetSavingRate != null ? settings.targetSavingRate * 100 : null;
-
-  const enableEncouragingMessages = settings.enableEncouragingMessages ?? true;
-
-  // 「この予算でスタート」クリック時 → まず確認モーダルを開く
-  const handleOpenConfirmModal = () => {
-    setIsConfirmOpen(true);
-  };
-
-  const handleCloseConfirmModal = () => {
-    setIsConfirmOpen(false);
-  };
-
-  // モーダルで「カレンダーへ進む」押下 → 実際に保存して遷移
+  // 「この予算でスタート」押下 → 実際に保存して遷移
   const handleConfirmStart = () => {
     if (typeof window === "undefined") return;
 
@@ -533,6 +645,8 @@ export default function HomePage() {
     const month = today.getMonth() + 1;
 
     const key = buildBudgetKey(year, month);
+
+    const trimmedMembers = incomeMembers.slice(0, Math.max(memberCount, 1));
 
     const detailItems = [
       { label: "食費", amount: expenseNumbers.food },
@@ -567,7 +681,7 @@ export default function HomePage() {
         planningState: {
           ageGroup,
           memberCount,
-          incomeMembers, // メンバー名＋金額
+          incomeMembers: trimmedMembers, // メンバー名＋金額
           expenseInputs, // 食費〜医療・保険の8項目ぶん
           customExpenseItems, // カスタム項目ぶん
         }, // ★ ここに「フォームの状態」も一緒に保存
@@ -577,15 +691,63 @@ export default function HomePage() {
     // このサイクルが「計画確定済み」であることを保存
     saveHomeCycleConfirmed(year, month, true);
 
-    setIsConfirmOpen(false);
-    router.push("/calendar");
+    clearHomeWizardDraft();
+    setConfirmedBudget({
+      year,
+      month,
+      totalIncome,
+      totalBudget: totalExpense,
+      saving,
+      items: detailItems,
+    });
+    setHomeMode("dashboard");
   };
 
-  const handleEditPlan = () => {
-    // まず現在サイクルの計画をフォームに復元
+  const resolveEntryMode = (step?: number) => {
+    if (step === 2) return "income";
+    if (step === 3) return "budget";
+    return "full";
+  };
+
+  const handleResumeOldDraft = () => {
+    if (!pendingDraft) return;
+    setWizardEntryMode(resolveEntryMode(pendingDraftStep ?? undefined));
+    applyWizardDraft(pendingDraft, pendingDraftStep ?? undefined);
+  };
+
+  const handleDiscardOldDraft = () => {
+    clearHomeWizardDraft();
+    setShowOldDraftPrompt(false);
+    setPendingDraft(null);
+    const step = pendingDraftStep;
+    setPendingDraftStep(null);
+    if (typeof step === "number") {
+      setWizardEntryMode(resolveEntryMode(step));
+      restorePlanningFromStorage();
+      setHomeMode("setup");
+      setWizardStep(step);
+    } else if (homeMode === "setup") {
+      setWizardEntryMode("full");
+      setWizardStep(1);
+    }
+  };
+
+  const openWizardAtStep = (step: number) => {
+    setWizardEntryMode(resolveEntryMode(step));
+    const draft = loadHomeWizardDraft();
+    if (draft) {
+      if (isHomeWizardDraftOld(draft.updatedAt)) {
+        setPendingDraft(draft);
+        setPendingDraftStep(step);
+        setShowOldDraftPrompt(true);
+        return;
+      }
+      applyWizardDraft(draft, step);
+      return;
+    }
     restorePlanningFromStorage();
-    // その上でセットアップモードに戻す
     setHomeMode("setup");
+    setWizardStep(step);
   };
 
   // デフォルト8項目を前月からコピー（自動更新オンの項目のみ）
@@ -698,9 +860,8 @@ export default function HomePage() {
       onRemoveCustomExpenseItem={handleRemoveCustomExpenseItem}
       autoUpdateMap={autoUpdateMap}
       onToggleAutoUpdateCategory={toggleAutoUpdateCategory}
-      onRequestEditPlan={handleEditPlan}
-      onStart={handleOpenConfirmModal}
-      totalExpense={totalExpense}
+      onRequestIncomeEdit={() => openWizardAtStep(2)}
+      onRequestBudgetEdit={() => openWizardAtStep(3)}
       displayTotalExpense={displayTotalExpense}
       displayTotalIncome={displayTotalIncome}
       displaySaving={displaySaving}
@@ -712,15 +873,18 @@ export default function HomePage() {
       onMemberValueChange={handleMemberValueChange}
       onAgeGroupChange={handleAgeGroupChange}
       confirmedItems={confirmedBudget?.items ?? null}
-      isConfirmOpen={isConfirmOpen}
-      onCloseConfirmModal={handleCloseConfirmModal}
-      onConfirmStart={handleConfirmStart}
-      saving={saving}
-      savingRate={savingRate}
       customTemplates={expenseCategoryOptions}
       copyCustomFromPrevious={settings.copyCustomExpenseFromPrevious ?? true}
       onToggleCopyCustomFromPrevious={handleToggleCopyCustomFromPrevious}
       lastAddedCustomItemId={lastAddedCustomItemId}
+      wizardEntryMode={wizardEntryMode}
+      wizardStep={wizardStep}
+      onWizardStepChange={setWizardStep}
+      onWizardStartOver={handleWizardStartOver}
+      onWizardConfirmStart={handleConfirmStart}
+      showOldDraftPrompt={showOldDraftPrompt}
+      onResumeDraft={handleResumeOldDraft}
+      onDiscardDraft={handleDiscardOldDraft}
     />
   );
 }
