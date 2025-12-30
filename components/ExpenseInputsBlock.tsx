@@ -62,10 +62,21 @@ export default function ExpenseInputsBlock({
   const customItemInputRefs = useRef<Record<string, HTMLInputElement | null>>(
     {}
   );
-  const templateOptions =
+  const templateSource =
     customTemplates && customTemplates.length > 0
-      ? customTemplates
+      ? [...CUSTOM_EXPENSE_TEMPLATES, ...customTemplates]
       : CUSTOM_EXPENSE_TEMPLATES;
+  const defaultTemplateExcludes = new Set([
+    ...DEFAULT_ITEMS.map((item) => item.label),
+    "趣味・娯楽",
+    "医療・美容",
+  ]);
+  const templateOptions = templateSource.filter(
+    (label, index) =>
+      !!label &&
+      !defaultTemplateExcludes.has(label) &&
+      templateSource.indexOf(label) === index
+  );
 
   const lastAddedItem = useMemo(() => {
     if (!lastAddedCustomItemId) return null;
@@ -185,7 +196,13 @@ export default function ExpenseInputsBlock({
 
       {/* カスタム項目（他アプリにもありそうな項目＋手動入力） */}
       <div className="mt-2 space-y-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-2xl border px-3 py-2 ${
+            isDark
+              ? "border-emerald-600/40 bg-emerald-900/20"
+              : "border-emerald-200 bg-emerald-50"
+          }`}
+        >
           <p
             className={`text-xs font-medium ${
               isDark ? "text-slate-100" : "text-slate-700"
@@ -216,10 +233,13 @@ export default function ExpenseInputsBlock({
               className="
                 inline-flex items-center gap-1
                 text-[11px] font-semibold whitespace-nowrap
-                hover:text-emerald-800
+                px-2.5 py-1 rounded-full border
+                hover:text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50
               "
               style={{
                 color: isDark ? "#bbf7d0" : "#047857",
+                borderColor: isDark ? "#14532d" : "#bbf7d0",
+                backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ecfdf3",
               }}
             >
               <span>＋</span>
