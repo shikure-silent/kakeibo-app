@@ -199,8 +199,8 @@ export default function ExpenseInputsBlock({
         <div
           className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-2xl border px-3 py-2 ${
             isDark
-              ? "border-emerald-600/40 bg-emerald-900/20"
-              : "border-emerald-200 bg-emerald-50"
+              ? "border-slate-600 bg-slate-800"
+              : "border-slate-200 bg-slate-50"
           }`}
         >
           <p
