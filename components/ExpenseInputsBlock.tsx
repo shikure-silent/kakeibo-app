@@ -62,10 +62,20 @@ export default function ExpenseInputsBlock({
   const customItemInputRefs = useRef<Record<string, HTMLInputElement | null>>(
     {}
   );
-  const templateOptions =
+  const templateSource: string[] =
     customTemplates && customTemplates.length > 0
-      ? customTemplates
-      : CUSTOM_EXPENSE_TEMPLATES;
+      ? [...CUSTOM_EXPENSE_TEMPLATES, ...customTemplates]
+      : [...CUSTOM_EXPENSE_TEMPLATES];
+  const defaultTemplateExcludes = new Set([
+    ...DEFAULT_ITEMS.map((item) => item.label),
+    "趣味・娯楽",
+    "医療・美容",
+  ]);
+  const templateOptions = templateSource.filter((label, index) => {
+    if (!label) return false;
+    if (defaultTemplateExcludes.has(label)) return false;
+    return templateSource.findIndex((item) => item === label) === index;
+  });
 
   const lastAddedItem = useMemo(() => {
     if (!lastAddedCustomItemId) return null;
