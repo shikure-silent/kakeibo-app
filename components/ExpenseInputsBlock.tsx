@@ -195,7 +195,13 @@ export default function ExpenseInputsBlock({
 
       {/* カスタム項目（他アプリにもありそうな項目＋手動入力） */}
       <div className="mt-2 space-y-2">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div
+          className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-2xl border px-3 py-2 ${
+            isDark
+              ? "border-slate-600 bg-slate-800"
+              : "border-slate-200 bg-slate-50"
+          }`}
+        >
           <p
             className={`text-xs font-medium ${
               isDark ? "text-slate-100" : "text-slate-700"
@@ -226,10 +232,13 @@ export default function ExpenseInputsBlock({
               className="
                 inline-flex items-center gap-1
                 text-[11px] font-semibold whitespace-nowrap
-                hover:text-emerald-800
+                px-2.5 py-1 rounded-full border
+                hover:text-emerald-800 hover:border-emerald-300 hover:bg-emerald-50
               "
               style={{
                 color: isDark ? "#bbf7d0" : "#047857",
+                borderColor: isDark ? "#14532d" : "#bbf7d0",
+                backgroundColor: isDark ? "rgba(16, 185, 129, 0.1)" : "#ecfdf3",
               }}
             >
               <span>＋</span>
