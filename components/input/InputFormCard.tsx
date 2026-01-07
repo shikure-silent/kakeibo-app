@@ -196,21 +196,23 @@ export default function InputFormCard({
             >
               日付
             </label>
-            <input
-              type="date"
-              value={dateStr}
-              onChange={(e) => onChangeDate(e.target.value)}
-            className="
-                w-full max-w-full border rounded-full
-                px-3 py-1.5 text-xs
-                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-              "
+            <div
+              className="w-full rounded-full border overflow-hidden focus-within:ring-2 focus-within:ring-emerald-300 focus-within:border-emerald-400"
               style={{
                 backgroundColor: isDark ? "#0f172a" : "white",
-                color: isDark ? "#e2e8f0" : "#334155",
                 borderColor: isDark ? "#475569" : "#e2e8f0",
               }}
-            />
+            >
+              <input
+                type="date"
+                value={dateStr}
+                onChange={(e) => onChangeDate(e.target.value)}
+                className="w-full bg-transparent px-3 py-1.5 text-xs text-ellipsis"
+                style={{
+                  color: isDark ? "#e2e8f0" : "#334155",
+                }}
+              />
+            </div>
           </div>
 
           {/* カテゴリ */}

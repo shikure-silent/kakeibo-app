@@ -14,9 +14,9 @@ import {
   saveIncomeCategories,
   loadPayFromPresets,
   savePayFromPresets,
-  getThemeClasses,
   clearAllKakeiboData,
 } from "../../lib/settingsStorage";
+import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -31,6 +31,11 @@ import { AccountLoginSection } from "../../components/settings/AccountLoginSecti
 import { DataManagementSection } from "../../components/settings/DataManagementSection";
 import { AppInfoSection } from "../../components/settings/AppInfoSection";
 import { CloudSyncSection } from "../../components/settings/CloudSyncSection";
+import {
+  createLocalBackup,
+  parseLocalBackup,
+  restoreLocalBackup,
+} from "../../lib/localBackup";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
 const APP_VERSION = "0.3.0-beta";
@@ -119,6 +124,50 @@ export default function SettingsPage() {
     window.alert("支出元・入金元の候補をデフォルトに戻しました。");
   };
 
+  const handleCreateBackup = () => {
+    if (typeof window === "undefined") return;
+    const backup = createLocalBackup({
+      appVersion: APP_VERSION,
+      includeSettings: true,
+    });
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    a.href = url;
+    a.download = `kakeibo-backup-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+    window.alert("バックアップを作成しました。");
+  };
+
+  const handleImportBackup = async (file: File) => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = await file.text();
+      const parsed = parseLocalBackup(raw);
+      if (!parsed.ok) {
+        window.alert(parsed.error);
+        return;
+      }
+      const ok = window.confirm(
+        "バックアップを復元します。現在のデータは上書きされます。\n\n本当に復元してよろしいですか？"
+      );
+      if (!ok) return;
+      restoreLocalBackup(parsed.backup, {
+        includeSettings: true,
+        clearBefore: true,
+      });
+      window.alert("バックアップを復元しました。");
+      window.location.reload();
+    } catch {
+      window.alert("バックアップの読み込みに失敗しました。");
+    }
+  };
+
   const reorderList = (list: string[], from: number, to: number) => {
     if (from === to) return list;
     const next = [...list];
@@ -190,9 +239,8 @@ export default function SettingsPage() {
     if (kind === "payfrom") savePayFromPresets(newList);
   };
 
-  const themeClass = getThemeClasses(settings.theme);
-  const isDark = themeClass.includes("theme-dark");
-  const containerClass = isDark ? `${themeClass} dark` : themeClass;
+  const { themeClass, isDark } = useResolvedTheme(settings.theme);
+  const containerClass = themeClass;
   const sectionLinks = [
     { id: "account", label: "アカウント" },
     { id: "cloud", label: "クラウド同期" },
@@ -424,7 +472,12 @@ export default function SettingsPage() {
         </section>
 
         <section id="data">
-          <DataManagementSection onResetKakeiboData={handleResetKakeiboData} isDark={isDark} />
+          <DataManagementSection
+            onResetKakeiboData={handleResetKakeiboData}
+            onCreateBackup={handleCreateBackup}
+            onImportBackup={handleImportBackup}
+            isDark={isDark}
+          />
         </section>
 
         <section id="appinfo">

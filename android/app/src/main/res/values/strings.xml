@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">無理なく家計簿</string>
+    <string name="title_activity_main">無理なく家計簿</string>
+    <string name="package_name">com.murinaku.kakeibo</string>
+    <string name="custom_url_scheme">com.murinaku.kakeibo</string>
+</resources>

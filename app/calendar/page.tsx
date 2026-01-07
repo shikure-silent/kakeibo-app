@@ -15,8 +15,8 @@ import {
   AppSettings,
   defaultSettings,
   loadAppSettings,
-  getThemeClasses,
 } from "../../lib/settingsStorage";
+import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
 import { buildSavingSupportState } from "../../lib/savingSupport";
@@ -629,7 +629,7 @@ export default function CalendarPage() {
     };
   }, [periodInfos]);
 
-  const themeClass = getThemeClasses(settings.theme);
+  const { themeClass } = useResolvedTheme(settings.theme);
 
   return (
     <CalendarView
