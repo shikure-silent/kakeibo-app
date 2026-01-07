@@ -6,13 +6,102 @@ import { usePathname } from "next/navigation";
 type NavItem = {
   href: string;
   label: string;
+  icon: (props: { active: boolean }) => JSX.Element;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "ホーム" },
-  { href: "/calendar", label: "カレンダー" },
-  { href: "/input", label: "入力" },
-  { href: "/settings", label: "設定" },
+  {
+    href: "/",
+    label: "ホーム",
+    icon: ({ active }) => (
+        <svg
+          viewBox="0 0 24 24"
+          className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path
+          d="M3 11.5L12 4l9 7.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M6.5 10.5V20h11V10.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/calendar",
+    label: "カレンダー",
+    icon: ({ active }) => (
+        <svg
+          viewBox="0 0 24 24"
+          className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <rect
+          x="3"
+          y="5"
+          width="18"
+          height="16"
+          rx="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M8 3v4M16 3v4M3 10h18" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: "/input",
+    label: "入力",
+    icon: ({ active }) => (
+        <svg
+          viewBox="0 0 24 24"
+          className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path
+          d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 16v4z"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M13.5 6.5l3 3" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    href: "/settings",
+    label: "設定",
+    icon: ({ active }) => (
+        <svg
+          viewBox="0 0 24 24"
+          className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
+        aria-hidden="true"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      >
+        <path
+          d="M10.2 3h3.6l.6 2.2a7.6 7.6 0 0 1 1.7.9l2.1-1 1.8 3.1-1.7 1.6c.1.6.2 1.2.2 1.8s-.1 1.2-.2 1.8l1.7 1.6-1.8 3.1-2.1-1a7.6 7.6 0 0 1-1.7.9l-.6 2.2h-3.6l-.6-2.2a7.6 7.6 0 0 1-1.7-.9l-2.1 1-1.8-3.1 1.7-1.6a7.6 7.6 0 0 1 0-3.6L3.1 8.2l1.8-3.1 2.1 1a7.6 7.6 0 0 1 1.7-.9L10.2 3z"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx="12" cy="12" r="2.5" strokeLinecap="round" />
+      </svg>
+    ),
+  },
 ];
 
 export default function BottomNav() {
@@ -23,13 +112,13 @@ export default function BottomNav() {
       className="
         fixed bottom-0 inset-x-0 z-50
         border-t border-slate-200
-        bg-white/95 backdrop-blur
+        bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur
         shadow-[0_-1px_3px_rgba(15,23,42,0.08)]
         lg:hidden
       "
     >
-      <div className="max-w-6xl mx-auto px-3 py-2">
-        <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-900 w-full justify-between">
+      <div className="max-w-6xl mx-auto px-2">
+        <div className="flex items-center justify-between gap-1 pt-0.5 pb-2">
           {NAV_ITEMS.map((item) => {
             const isActive =
               item.href === "/"
@@ -40,16 +129,14 @@ export default function BottomNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`
-                  flex-1 text-center rounded-full px-2 py-2 text-[11px] font-medium leading-none whitespace-nowrap transition
-                  ${
-                    isActive
-                      ? "bg-white text-emerald-700 shadow-sm dark:bg-slate-950 dark:text-emerald-200"
-                      : "text-slate-600 hover:bg-slate-200/70 dark:text-slate-300 dark:hover:bg-slate-800"
-                  }
-                `}
+                className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1 text-[9px] font-medium transition ${
+                  isActive
+                    ? "text-emerald-700"
+                    : "text-slate-600 hover:text-emerald-600"
+                }`}
               >
-                {item.label}
+                {item.icon({ active: isActive })}
+                <span className="leading-none">{item.label}</span>
               </Link>
             );
           })}

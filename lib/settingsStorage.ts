@@ -20,6 +20,7 @@ export type DefaultInputModeOption = "expense" | "income";
 
 // 設定の保存キー
 const SETTINGS_KEY = "kakeibo_app_settings_v1";
+export const SETTINGS_EVENT = "kakeibo-settings-updated";
 
 // autoUpdateCategories のデフォルト（固定費のみオン）
 export const defaultAutoUpdateCategories: Record<ExpenseCategoryKey, boolean> =
@@ -146,6 +147,7 @@ export function saveAppSettings(settings: AppSettings) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    window.dispatchEvent(new Event(SETTINGS_EVENT));
   } catch {
     // 保存失敗時は何もしない
   }
@@ -155,7 +157,7 @@ export function getThemeClasses(theme: ThemeOption): string {
   switch (theme) {
     case "dark":
       // クラス名で判定できるよう theme-dark を付与
-      return "theme-dark bg-slate-900 text-slate-50";
+      return "theme-dark dark bg-slate-900 text-slate-50";
     case "light":
       return "theme-light bg-slate-50 text-slate-900";
     case "system":

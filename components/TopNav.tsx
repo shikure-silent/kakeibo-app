@@ -76,7 +76,7 @@ export default function TopNav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70">
+    <header className="relative z-50 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 lg:sticky lg:top-0">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex h-16 items-center justify-between gap-3">
           {/* 左：ロゴ */}

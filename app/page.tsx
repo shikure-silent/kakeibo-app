@@ -28,11 +28,11 @@ import {
   AppSettings,
   defaultSettings,
   loadAppSettings,
-  getThemeClasses,
   getAutoUpdateCategories,
   saveAppSettings,
   loadExpenseCategories,
 } from "../lib/settingsStorage";
+import { useResolvedTheme } from "../lib/useResolvedTheme";
 import { useCloudAutoSaveOnLeave } from "../lib/useCloudAutoSaveOnLeave";
 import { useSupabaseAuth } from "../lib/useSupabaseAuth";
 
@@ -372,7 +372,7 @@ export default function HomePage() {
     }
   }, [user, displayName]);
 
-  const themeClass = getThemeClasses(settings.theme);
+  const { themeClass } = useResolvedTheme(settings.theme);
 
   const handleToggleCopyCustomFromPrevious = () => {
     setSettings((prev) => {

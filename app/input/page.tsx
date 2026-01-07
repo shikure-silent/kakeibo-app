@@ -13,8 +13,8 @@ import {
   AppSettings,
   defaultSettings,
   loadAppSettings,
-  getThemeClasses,
 } from "../../lib/settingsStorage";
+import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 
 // 日付文字列を生成（YYYY-MM-DD）
@@ -125,8 +125,7 @@ export default function InputPage() {
     }
   }, []);
 
-  const themeClass = getThemeClasses(settings.theme);
-  const isDark = themeClass.includes("theme-dark");
+  const { themeClass, isDark } = useResolvedTheme(settings.theme);
 
   // 入力フォームの状態
   const [mode, setMode] = useState<Mode>("expense");

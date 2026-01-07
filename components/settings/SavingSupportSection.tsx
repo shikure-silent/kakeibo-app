@@ -293,14 +293,16 @@ export function SavingSupportSection({ settings, onChangeSetting }: Props) {
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     声かけの目安時刻
                   </div>
-                  <input
-                    type="time"
-                    value={detail.reminderTime}
-                    onChange={(e) =>
-                      onChangeSetting("reminderTime", e.target.value)
-                    }
-                    className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 shadow-sm outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                  />
+                  <div className="mt-1 h-10 w-full rounded-lg border border-slate-200 bg-white shadow-sm outline-none focus-within:border-emerald-400 overflow-hidden dark:border-slate-700 dark:bg-slate-900">
+                    <input
+                      type="time"
+                      value={detail.reminderTime}
+                      onChange={(e) =>
+                        onChangeSetting("reminderTime", e.target.value)
+                      }
+                      className="h-full w-full bg-transparent px-3 text-sm text-slate-800 outline-none dark:text-slate-100"
+                    />
+                  </div>
                 </div>
 
                 <div>
