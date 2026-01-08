@@ -13,6 +13,10 @@ type HomeMode = "setup" | "dashboard";
 
 type Props = {
   themeClass: string;
+  pageTitle: string;
+  pageDescription: string;
+  showSavingHighlight?: boolean;
+  centerHeader?: boolean;
   homeMode: HomeMode;
   ageGroup: AgeGroup;
   medianForAge: ExpenseMedian;
@@ -50,10 +54,16 @@ type Props = {
   showOldDraftPrompt: boolean;
   onResumeDraft: () => void;
   onDiscardDraft: () => void;
+  setupExtraContent?: React.ReactNode;
+  extraSection?: React.ReactNode;
 };
 
 export function HomePageView({
   themeClass,
+  pageTitle,
+  pageDescription,
+  showSavingHighlight = true,
+  centerHeader = false,
   homeMode,
   ageGroup,
   medianForAge,
@@ -91,6 +101,8 @@ export function HomePageView({
   showOldDraftPrompt,
   onResumeDraft,
   onDiscardDraft,
+  setupExtraContent,
+  extraSection,
 }: Props) {
   const isDark = themeClass.includes("theme-dark");
 
@@ -98,32 +110,35 @@ export function HomePageView({
     <main className={`min-h-screen ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* ヘッダー */}
-        <header className="space-y-2">
+        <header
+          className={`space-y-2 ${centerHeader ? "text-center" : ""}`}
+        >
           <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">
-            ホーム
+            {pageTitle}
           </h1>
           <p
             className={`text-xs lg:text-sm ${
               isDark ? "text-slate-300" : "text-slate-500"
-            }`}
+            } ${centerHeader ? "mx-auto max-w-xl" : ""}`}
           >
-            今月の収入と支出予算を設定して、貯金の見込みを確認できます。
-            カレンダーや入力タブと連動して、日々のお金の動きも管理できます。
+            {pageDescription}
           </p>
         </header>
 
-        {/* 🌟 今月の貯金見込みカード */}
-        <SavingHighlightCard
-          totalIncome={displayTotalIncome}
-          totalExpense={displayTotalExpense}
-          saving={displaySaving}
-          savingRate={displaySavingRate}
-          ageGroupLabel={ageGroupLabels[ageGroup]}
-          isDark={isDark}
-        />
+        {showSavingHighlight && (
+          <SavingHighlightCard
+            totalIncome={displayTotalIncome}
+            totalExpense={displayTotalExpense}
+            saving={displaySaving}
+            savingRate={displaySavingRate}
+            ageGroupLabel={ageGroupLabels[ageGroup]}
+            isDark={isDark}
+          />
+        )}
 
         {homeMode === "setup" ? (
           <div className="space-y-4">
+            {setupExtraContent}
             <HomeSetupWizard
               entryMode={wizardEntryMode}
               step={wizardStep}
@@ -232,6 +247,8 @@ export function HomePageView({
             </aside>
           </div>
         )}
+
+        {extraSection && <div className="pt-4">{extraSection}</div>}
       </div>
 
       {showOldDraftPrompt && (

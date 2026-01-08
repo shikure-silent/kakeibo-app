@@ -6,6 +6,7 @@ import TopNav from "../components/TopNav";
 import FlashToast from "../components/FlashToast";
 import { APP_NAME } from "../lib/const";
 import ThemeRoot from "../components/ThemeRoot";
+import InitialSetupGate from "../components/InitialSetupGate";
 
 export const metadata: Metadata = {
   title: APP_NAME,
@@ -27,15 +28,17 @@ export default function RootLayout({
     <html lang="ja">
       <body className="bg-slate-50 text-slate-800 antialiased font-sans">
         <ThemeRoot>
-          {/* PC用トップナビ（lg以上で表示） */}
-          <TopNav />
-          <FlashToast />
+          <InitialSetupGate>
+            {/* PC用トップナビ（lg以上で表示） */}
+            <TopNav />
+            <FlashToast />
 
-          {/* メインコンテンツ（下ナビぶん余白確保） */}
-          <div className="min-h-screen pb-16 lg:pb-0">{children}</div>
+            {/* メインコンテンツ（下ナビぶん余白確保） */}
+            <div className="min-h-screen">{children}</div>
 
-          {/* スマホ用ボトムナビ（lg未満で表示） */}
-          <BottomNav />
+            {/* スマホ用ボトムナビ（lg未満で表示） */}
+            <BottomNav />
+          </InitialSetupGate>
         </ThemeRoot>
       </body>
     </html>

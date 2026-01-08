@@ -44,7 +44,7 @@ export function AutoUpdateSettingsSection({
         自動更新の設定
       </h2>
       <p className={isDark ? "text-[11px] text-slate-300" : "text-[11px] text-slate-600"}>
-        ホーム画面の「支出予算 (今月の予算)」で、年代別の初期値や固定費を自動反映するカテゴリを選べます。
+        データページの「支出予算 (今月の予算)」で、年代別の初期値や固定費を自動反映するカテゴリを選べます。
         オフにしたカテゴリは手入力した値を維持します。
       </p>
 

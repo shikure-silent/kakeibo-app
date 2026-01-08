@@ -9,9 +9,9 @@ import { setFlashToast } from "../lib/flashToast";
 type NavItem = { href: string; label: string };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "ホーム" },
-  { href: "/calendar", label: "カレンダー" },
   { href: "/input", label: "入力" },
+  { href: "/calendar", label: "カレンダー" },
+  { href: "/data", label: "データ" },
   { href: "/settings", label: "設定" },
 ];
 
@@ -58,6 +58,7 @@ export default function TopNav() {
 
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(() => setOpenMenu(false));
+  const isSetup = pathname.startsWith("/setup");
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
@@ -75,12 +76,16 @@ export default function TopNav() {
     router.push("/");
   };
 
+  if (isSetup) {
+    return null;
+  }
+
   return (
     <header className="relative z-50 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 lg:sticky lg:top-0">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex h-16 items-center justify-between gap-3">
           {/* 左：ロゴ */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/calendar" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-emerald-600 text-white grid place-items-center text-sm font-bold">
               ¥
             </div>
@@ -96,9 +101,8 @@ export default function TopNav() {
             <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-900">
               {NAV_ITEMS.map((item) => {
                 const isActive =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(item.href);
+                  pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
 
                 return (
                   <Link

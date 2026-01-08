@@ -276,15 +276,15 @@ export default function SettingsPage() {
       className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${containerClass}`}
     >
       <header className="space-y-2">
-        <div className="flex items-start justify-between gap-3 relative">
+        <div className="relative flex items-start justify-center gap-3">
           <h1
-            className={`text-lg lg:text-xl font-semibold ${
+            className={`text-lg lg:text-xl font-semibold text-center ${
               isDark ? "text-slate-100" : "text-slate-900"
             }`}
           >
             設定
           </h1>
-          <div className="relative shrink-0">
+          <div className="absolute right-0 top-0 shrink-0">
             <button
               type="button"
               onClick={() => setMenuOpen((prev) => !prev)}
@@ -331,7 +331,7 @@ export default function SettingsPage() {
           </div>
         </div>
         <p
-          className={`text-[12px] leading-snug ${
+          className={`text-[12px] leading-snug text-center mx-auto max-w-xl ${
             isDark ? "text-slate-300" : "text-slate-500"
           }`}
         >
