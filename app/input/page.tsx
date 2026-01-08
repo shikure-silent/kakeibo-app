@@ -241,14 +241,14 @@ export default function InputPage() {
     <main className={`min-h-screen overflow-x-hidden ${themeClass}`}>
       <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
         {/* ヘッダー */}
-        <header className="space-y-2">
+        <header className="space-y-2 text-center">
           <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">
             入力
           </h1>
           <p
             className={`text-xs lg:text-sm ${
               isDark ? "text-slate-300" : "text-slate-500"
-            }`}
+            } mx-auto max-w-xl`}
           >
             毎日の支出や収入を記録する画面です。入力した内容はカレンダーページにも反映されます。
           </p>

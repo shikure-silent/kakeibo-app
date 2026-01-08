@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { buildBudgetKey, WEEKDAY_LABELS } from "../../lib/const";
+import { WEEKDAY_LABELS } from "../../lib/const";
 import {
   calcDayTotals,
   loadAmountsFromStorage,
@@ -22,21 +22,6 @@ import CalendarView from "../../components/calendar/CalendarView";
 import { buildSavingSupportState } from "../../lib/savingSupport";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 
-type MonthlyBudgetData = {
-  year: number;
-  month: number;
-  totalBudget: number;
-  items: { label: string; amount: number }[];
-  totalIncome?: number;
-  saving?: number;
-};
-
-type WeeklySummary = {
-  startDay: number;
-  endDay: number;
-  total: number;
-  average: number;
-};
 type PeriodDailyInfo = {
   date: Date;
   spending: number;
@@ -67,13 +52,9 @@ export default function CalendarPage() {
 
   const [budget, setBudget] = useState<MonthlyBudget | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [totalBudget, setTotalBudget] = useState(0);
-  const [savingEstimate, setSavingEstimate] = useState<number | null>(null);
 
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isOverviewModalOpen, setIsOverviewModalOpen] = useState(false);
-  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
-  const [chartModalDay, setChartModalDay] = useState<number | null>(null);
   const [periodInfos, setPeriodInfos] = useState<PeriodDailyInfo[]>([]);
   const [periodLabel, setPeriodLabel] = useState<string>("");
   const [periodRange, setPeriodRange] = useState<{
@@ -115,8 +96,6 @@ export default function CalendarPage() {
     [amounts]
   );
 
-  const maxAmount = useMemo(() => Math.max(0, ...amounts), [amounts]);
-
   const selectedDateLabel = useMemo(() => {
     if (!selectedDay) return "";
     const d = new Date(currentYear, currentMonth - 1, selectedDay);
@@ -129,34 +108,6 @@ export default function CalendarPage() {
     return budget.totalBudget - monthlyTotal;
   }, [budget, monthlyTotal]);
 
-  const dailyTarget = useMemo(() => {
-    if (!budget || daysInMonth === 0) return null;
-    return budget.totalBudget / daysInMonth;
-  }, [budget, daysInMonth]);
-
-  const weeklySummary: WeeklySummary | null = useMemo(() => {
-    if (daysInMonth === 0) return null;
-
-    let endDay = daysInMonth;
-    if (
-      today.getFullYear() === currentYear &&
-      today.getMonth() + 1 === currentMonth
-    ) {
-      endDay = today.getDate();
-    }
-    const startDay = Math.max(1, endDay - 6);
-    const slice = amounts.slice(startDay - 1, endDay);
-    const total = slice.reduce((sum, v) => sum + (v || 0), 0);
-    const daysCount = slice.length || 1;
-
-    return {
-      startDay,
-      endDay,
-      total,
-      average: total / daysCount,
-    };
-  }, [amounts, currentYear, currentMonth, daysInMonth, today]);
-
   const budgetUsagePercent = useMemo(() => {
     if (!budget || budget.totalBudget <= 0) return null;
     return Math.min(
@@ -164,22 +115,6 @@ export default function CalendarPage() {
       Math.max(0, (monthlyTotal / budget.totalBudget) * 100)
     );
   }, [budget, monthlyTotal]);
-  const chartDetailsForModal = useMemo(() => {
-    if (!chartModalDay) return [];
-    if (!dailyDetails || dailyDetails.length < chartModalDay) return [];
-    return dailyDetails[chartModalDay - 1] || [];
-  }, [chartModalDay, dailyDetails]);
-
-  // グラフ拡大用のデータ
-  const chartData = useMemo(
-    () =>
-      Array.from({ length: daysInMonth }, (_, i) => ({
-        day: i + 1,
-        amount: amounts[i] || 0,
-      })),
-    [amounts, daysInMonth]
-  );
-
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -221,33 +156,6 @@ export default function CalendarPage() {
     const loadedBudget = loadBudgetWithFallback(currentYear, currentMonth);
     setBudget(loadedBudget);
 
-    // Home画面で保存した totalBudget / totalIncome / saving を反映
-    if (typeof window !== "undefined") {
-      const key = buildBudgetKey(currentYear, currentMonth);
-      const raw = window.localStorage.getItem(key);
-      if (raw) {
-        try {
-          const data = JSON.parse(raw) as MonthlyBudgetData;
-          setTotalBudget(data.totalBudget ?? 0);
-          if (typeof data.saving === "number") {
-            setSavingEstimate(data.saving);
-          } else if (
-            typeof data.totalIncome === "number" &&
-            typeof data.totalBudget === "number"
-          ) {
-            setSavingEstimate(data.totalIncome - data.totalBudget);
-          } else {
-            setSavingEstimate(null);
-          }
-        } catch {
-          setTotalBudget(0);
-          setSavingEstimate(null);
-        }
-      } else {
-        setTotalBudget(0);
-        setSavingEstimate(null);
-      }
-    }
   }, [isClient, currentYear, currentMonth, daysInMonth]);
 
   // 選択中の日付の明細を読み込み
@@ -267,7 +175,6 @@ export default function CalendarPage() {
 
   const handlePrevMonth = () => {
     setIsDetailModalOpen(false);
-    setIsChartModalOpen(false);
     setSelectedDay(null);
     setSelectedDetails([]);
     setCurrentMonth((prev) => {
@@ -281,7 +188,6 @@ export default function CalendarPage() {
 
   const handleNextMonth = () => {
     setIsDetailModalOpen(false);
-    setIsChartModalOpen(false);
     setSelectedDay(null);
     setSelectedDetails([]);
     setCurrentMonth((prev) => {
@@ -320,26 +226,6 @@ export default function CalendarPage() {
   const handleOpenDetailFromOverview = () => {
     setIsOverviewModalOpen(false);
     setIsDetailModalOpen(true);
-  };
-
-  const handleSelectDayFromChart = (day: number) => {
-    setChartModalDay(day);
-    setIsChartModalOpen(true);
-  };
-
-  const handleCloseChartModal = () => {
-    setIsChartModalOpen(false);
-  };
-
-  // 拡大グラフ上で棒をクリックしたときに対象日を切り替える
-  const handleChartBarClickInModal = (data: any, index: number) => {
-    const day =
-      data?.payload?.day ??
-      data?.day ??
-      (typeof index === "number" ? index + 1 : null);
-    if (!day) return;
-    if (day < 1 || day > daysInMonth) return;
-    setChartModalDay(day);
   };
 
   // 明細更新時に支出／収入合計を再計算して保存
@@ -606,29 +492,6 @@ export default function CalendarPage() {
     periodTotal,
   ]);
 
-  // ▼ 給料日サイクルの日数・1日あたり目安・直近7日のサマリー
-  const periodDaysCount = periodInfos.length;
-
-  const periodDailyTarget = useMemo(() => {
-    if (!budget || periodDaysCount === 0) return null;
-    return budget.totalBudget / periodDaysCount;
-  }, [budget, periodDaysCount]);
-
-  const periodWeeklySummary: WeeklySummary | null = useMemo(() => {
-    if (periodInfos.length === 0) return null;
-
-    const last7 = periodInfos.slice(-7);
-    const total = last7.reduce((sum, info) => sum + (info.spending || 0), 0);
-    const daysCount = last7.length || 1;
-
-    return {
-      startDay: 1,
-      endDay: daysCount,
-      total,
-      average: total / daysCount,
-    };
-  }, [periodInfos]);
-
   const { themeClass } = useResolvedTheme(settings.theme);
 
   return (
@@ -651,22 +514,10 @@ export default function CalendarPage() {
       periodRemainingBudget={periodRemainingBudget}
       budgetUsagePercent={budgetUsagePercent}
       periodBudgetUsagePercent={periodBudgetUsagePercent}
-      savingEstimate={savingEstimate}
-      daysInMonth={daysInMonth}
-      maxAmount={maxAmount}
-      dailyTarget={dailyTarget}
-      periodDailyTarget={periodDailyTarget}
-      weeklySummary={weeklySummary}
-      periodWeeklySummary={periodWeeklySummary}
-      onSelectDayFromChart={handleSelectDayFromChart}
       selectedDateLabel={selectedDateLabel}
       selectedDetails={selectedDetails}
       isOverviewModalOpen={isOverviewModalOpen}
       isDetailModalOpen={isDetailModalOpen}
-      isChartModalOpen={isChartModalOpen}
-      chartModalDay={chartModalDay}
-      chartDetailsForModal={chartDetailsForModal}
-      chartData={chartData}
       onPrevMonth={handlePrevMonth}
       onNextMonth={handleNextMonth}
       onSelectDay={handleDayClick}
@@ -676,8 +527,6 @@ export default function CalendarPage() {
       onChangeRecord={handleUpdateDetail}
       onDeleteRecord={handleDeleteDetail}
       onAddRecord={handleAddDetail}
-      onCloseChart={handleCloseChartModal}
-      onChartBarClick={handleChartBarClickInModal}
       supportCards={supportCards}
     />
   );

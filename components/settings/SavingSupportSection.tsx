@@ -144,7 +144,7 @@ export function SavingSupportSection({ settings, onChangeSetting }: Props) {
         貯金サポート・通知設定
       </h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Web版では「プッシュ通知」ではなく、アプリを開いた時にホーム/カレンダー上で
+        Web版では「プッシュ通知」ではなく、アプリを開いた時にデータ/カレンダー上で
         “声かけカード”を表示するための設定です（通知の本実装はモバイル版で対応予定）。
       </p>
 

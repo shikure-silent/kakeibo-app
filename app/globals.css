@@ -3,11 +3,22 @@
 @tailwind utilities;
 
 html, body, #__next { height: 100%; }
+html { -webkit-text-size-adjust: 100%; }
 
 body {
   font-family: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", "Meiryo",
     "MS PGothic", sans-serif;
   padding-top: env(safe-area-inset-top);
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 640px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
 }
 
 /* テーマ用のベースカラー */

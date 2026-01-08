@@ -8,8 +8,6 @@ type Props = {
   monthlyTotal: number;
   remainingBudget: number | null;
   budgetUsagePercent: number | null;
-  /** Home画面で計算した「今月の貯金見込み」 */
-  savingEstimate?: number | null;
   /** ダークモードかどうか（CalendarView から渡す） */
   isDark?: boolean;
 };
@@ -21,7 +19,6 @@ export default function BudgetHighlightCard({
   monthlyTotal,
   remainingBudget,
   budgetUsagePercent,
-  savingEstimate,
   isDark = false,
 }: Props) {
   const cardBase = isDark
@@ -42,8 +39,8 @@ export default function BudgetHighlightCard({
             isDark ? "text-slate-300" : "text-slate-500"
           }`}
         >
-          ホーム画面で「支出予算（今月の予算）」を設定して
-          「この予算でスタート」を押すと、ここに今月の貯金見込みや予算の残りが表示されます。
+          初期設定やデータページで「支出予算（今月の予算）」を設定して
+          「この予算でスタート」を押すと、ここに予算の残りが表示されます。
         </p>
       </section>
     );
@@ -66,48 +63,12 @@ export default function BudgetHighlightCard({
   const usagePercentText =
     totalBudget > 0 ? `${usagePercent.toFixed(1)}%` : "—";
 
-  const displaySaving =
-    typeof savingEstimate === "number" ? savingEstimate : null;
-
   return (
     <section
       className={`rounded-2xl shadow-sm px-4 py-4 lg:px-6 lg:py-5 space-y-3 ${cardBase}`}
     >
-      {/* 上：今月の貯金見込み（前の雰囲気に寄せたシンプル表示） */}
-      <div className="flex items-baseline justify-between gap-2">
-        <div>
-          <p
-            className={`text-[11px] ${
-              isDark ? "text-slate-300" : "text-slate-500"
-            }`}
-          >
-            今月の貯金見込み
-          </p>
-          <p className="mt-1 text-xl lg:text-2xl font-semibold">
-            {displaySaving === null
-              ? "—"
-              : displaySaving >= 0
-              ? `${formatYen(displaySaving)} 貯金できそうです`
-              : `${formatYen(Math.abs(displaySaving))} の赤字になりそうです`}
-          </p>
-        </div>
-        {displaySaving !== null && (
-          <span
-            className={`text-[10px] ${
-              isDark ? "text-slate-300" : "text-slate-400"
-            }`}
-          >
-            ホーム画面で設定した収入と予算から計算
-          </span>
-        )}
-      </div>
-
       {/* 中：あといくら使えるか ＋ 数値サマリー */}
-      <div
-        className={`mt-2 pt-3 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-2 border-t ${
-          isDark ? "border-slate-700" : "border-slate-100"
-        }`}
-      >
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-2">
         <div className="space-y-1">
           <p
             className={`text-[11px] ${

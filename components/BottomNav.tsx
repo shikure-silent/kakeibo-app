@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 type NavItem = {
   href: string;
@@ -11,8 +12,8 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    href: "/",
-    label: "ホーム",
+    href: "/input",
+    label: "入力",
     icon: ({ active }) => (
         <svg
           viewBox="0 0 24 24"
@@ -23,15 +24,11 @@ const NAV_ITEMS: NavItem[] = [
         strokeWidth="1.8"
       >
         <path
-          d="M3 11.5L12 4l9 7.5"
+          d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 16v4z"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path
-          d="M6.5 10.5V20h11V10.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <path d="M13.5 6.5l3 3" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -39,9 +36,9 @@ const NAV_ITEMS: NavItem[] = [
     href: "/calendar",
     label: "カレンダー",
     icon: ({ active }) => (
-        <svg
-          viewBox="0 0 24 24"
-          className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
+      <svg
+        viewBox="0 0 24 24"
+        className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
         aria-hidden="true"
         fill="none"
         stroke="currentColor"
@@ -61,23 +58,21 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    href: "/input",
-    label: "入力",
+    href: "/data",
+    label: "データ",
     icon: ({ active }) => (
-        <svg
-          viewBox="0 0 24 24"
-          className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
+      <svg
+        viewBox="0 0 24 24"
+        className={`h-6 w-6 ${active ? "text-emerald-600" : "text-slate-500"}`}
         aria-hidden="true"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.8"
       >
-        <path
-          d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 16v4z"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path d="M13.5 6.5l3 3" strokeLinecap="round" />
+        <path d="M4 20h16" strokeLinecap="round" />
+        <path d="M6 20V11" strokeLinecap="round" />
+        <path d="M12 20V5" strokeLinecap="round" />
+        <path d="M18 20v-6" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -106,42 +101,95 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const isSetup = pathname.startsWith("/setup");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
+    const KEYBOARD_THRESHOLD = 120;
+    const getViewportHeight = () =>
+      viewport ? viewport.height : window.innerHeight;
+    let baseHeight = getViewportHeight();
+
+    const updateOffset = () => {
+      const current = getViewportHeight();
+      const diff = baseHeight - current;
+      if (diff >= KEYBOARD_THRESHOLD) {
+        root.style.setProperty("--keyboard-offset", `${diff}px`);
+        return;
+      }
+      if (Math.abs(diff) > 1) {
+        baseHeight = current;
+      }
+      root.style.setProperty("--keyboard-offset", "0px");
+    };
+
+    const resetBase = () => {
+      baseHeight = getViewportHeight();
+      root.style.setProperty("--keyboard-offset", "0px");
+    };
+
+    updateOffset();
+    if (viewport) {
+      viewport.addEventListener("resize", updateOffset);
+      viewport.addEventListener("scroll", updateOffset);
+    }
+    window.addEventListener("orientationchange", resetBase);
+    return () => {
+      if (viewport) {
+        viewport.removeEventListener("resize", updateOffset);
+        viewport.removeEventListener("scroll", updateOffset);
+      }
+      window.removeEventListener("orientationchange", resetBase);
+      root.style.setProperty("--keyboard-offset", "0px");
+    };
+  }, []);
+
+  if (isSetup) {
+    return null;
+  }
 
   return (
-    <nav
-      className="
-        fixed bottom-0 inset-x-0 z-50
-        border-t border-slate-200
-        bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur
-        shadow-[0_-1px_3px_rgba(15,23,42,0.08)]
-        lg:hidden
-      "
-    >
-      <div className="max-w-6xl mx-auto px-2">
-        <div className="flex items-center justify-between gap-1 pt-0.5 pb-2">
-          {NAV_ITEMS.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(item.href);
+    <>
+      <div
+        className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden"
+        aria-hidden="true"
+      />
+      <nav
+        style={{ transform: "translateY(var(--keyboard-offset, 0px))" }}
+        className="
+          fixed bottom-0 inset-x-0 z-50
+          border-t border-slate-200
+          bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur
+          shadow-[0_-1px_3px_rgba(15,23,42,0.08)]
+          lg:hidden
+        "
+      >
+        <div className="max-w-6xl mx-auto px-2">
+          <div className="flex items-center justify-between gap-1 pt-0.5 pb-2">
+            {NAV_ITEMS.map((item) => {
+              const isActive =
+                pathname === item.href || pathname.startsWith(`${item.href}/`);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1 text-[9px] font-medium transition ${
-                  isActive
-                    ? "text-emerald-700"
-                    : "text-slate-600 hover:text-emerald-600"
-                }`}
-              >
-                {item.icon({ active: isActive })}
-                <span className="leading-none">{item.label}</span>
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1 text-[9px] font-medium transition ${
+                    isActive
+                      ? "text-emerald-700"
+                      : "text-slate-600 hover:text-emerald-600"
+                  }`}
+                >
+                  {item.icon({ active: isActive })}
+                  <span className="leading-none">{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+    </>
   );
 }
