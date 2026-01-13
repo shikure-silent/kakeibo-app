@@ -27,6 +27,8 @@ type Props = {
   onChangeCustomExpenseLabel: (id: string, label: string) => void;
   onChangeCustomExpenseAmount: (id: string, value: string) => void;
   onRemoveCustomExpenseItem: (id: string) => void;
+  onToggleCustomItemCopyFromPrevious: (id: string) => void;
+  onClearLastAddedCustomItemId?: () => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
   onRequestIncomeEdit: () => void;
@@ -43,8 +45,6 @@ type Props = {
   onAgeGroupChange: (age: AgeGroup) => void;
   confirmedItems: { label: string; amount: number }[] | null;
   customTemplates: string[];
-  copyCustomFromPrevious?: boolean;
-  onToggleCopyCustomFromPrevious?: () => void;
   lastAddedCustomItemId?: string | null;
   wizardEntryMode: "full" | "income" | "budget";
   wizardStep: number;
@@ -74,6 +74,8 @@ export function HomePageView({
   onChangeCustomExpenseLabel,
   onChangeCustomExpenseAmount,
   onRemoveCustomExpenseItem,
+  onToggleCustomItemCopyFromPrevious,
+  onClearLastAddedCustomItemId,
   autoUpdateMap,
   onToggleAutoUpdateCategory,
   onRequestIncomeEdit,
@@ -90,8 +92,6 @@ export function HomePageView({
   onAgeGroupChange,
   confirmedItems,
   customTemplates,
-  copyCustomFromPrevious = true,
-  onToggleCopyCustomFromPrevious,
   lastAddedCustomItemId,
   wizardEntryMode,
   wizardStep,
@@ -160,6 +160,7 @@ export function HomePageView({
               onChangeCustomExpenseLabel={onChangeCustomExpenseLabel}
               onChangeCustomExpenseAmount={onChangeCustomExpenseAmount}
               onRemoveCustomExpenseItem={onRemoveCustomExpenseItem}
+              onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
               autoUpdateMap={autoUpdateMap}
               onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
               totalIncome={displayTotalIncome}
@@ -167,9 +168,8 @@ export function HomePageView({
               saving={displaySaving}
               savingRate={displaySavingRate}
               customTemplates={customTemplates}
-              copyCustomFromPrevious={copyCustomFromPrevious}
-              onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
               lastAddedCustomItemId={lastAddedCustomItemId}
+              onClearLastAddedCustomItemId={onClearLastAddedCustomItemId}
               isDark={isDark}
             />
           </div>
@@ -202,6 +202,7 @@ export function HomePageView({
                 onChangeCustomItemLabel={onChangeCustomExpenseLabel}
                 onChangeCustomItemAmount={onChangeCustomExpenseAmount}
                 onRemoveCustomItem={onRemoveCustomExpenseItem}
+                onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
                 autoUpdateMap={autoUpdateMap}
                 onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
                 mode={homeMode}
@@ -210,9 +211,8 @@ export function HomePageView({
                 confirmedItems={confirmedItems}
                 customTemplates={customTemplates}
                 isDark={isDark}
-                copyCustomFromPrevious={copyCustomFromPrevious}
-                onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
                 lastAddedCustomItemId={lastAddedCustomItemId}
+                onClearLastAddedCustomItemId={onClearLastAddedCustomItemId}
               />
             </section>
 

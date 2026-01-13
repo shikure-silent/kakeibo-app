@@ -202,6 +202,7 @@ export default function HomePageContainer({
             id: item.id ?? `restored-${index}`,
             label: item.label ?? "",
             value: item.value ?? "",
+            copyFromPrevious: item.copyFromPrevious ?? false,
           }))
         );
       }
@@ -232,6 +233,7 @@ export default function HomePageContainer({
         id: `restored-custom-${index}`,
         label: item.label || "カスタム項目",
         value: String(item.amount ?? 0),
+        copyFromPrevious: false,
       });
     });
 
@@ -278,6 +280,7 @@ export default function HomePageContainer({
           id: item.id ?? `draft-${index}`,
           label: item.label ?? "",
           value: item.value ?? "",
+          copyFromPrevious: item.copyFromPrevious ?? false,
         }))
       );
     }
@@ -421,18 +424,6 @@ export default function HomePageContainer({
 
   const { themeClass } = useResolvedTheme(settings.theme);
 
-  const handleToggleCopyCustomFromPrevious = () => {
-    setSettings((prev) => {
-      const nextValue = !(prev.copyCustomExpenseFromPrevious ?? true);
-      const nextSettings = {
-        ...prev,
-        copyCustomExpenseFromPrevious: nextValue,
-      };
-      saveAppSettings(nextSettings);
-      return nextSettings;
-    });
-  };
-
   // 年代が変わったら、その年代の全国値をベースに支出予算をリセット
   // ＋ 家賃・サブスクは固定費ストアで上書き
   useEffect(() => {
@@ -518,6 +509,7 @@ export default function HomePageContainer({
         id,
         label: "",
         value: "",
+        copyFromPrevious: false,
       },
     ]);
     setLastAddedCustomItemId(id);
@@ -537,9 +529,23 @@ export default function HomePageContainer({
     );
   };
 
+  const handleToggleCustomItemCopyFromPrevious = (id: string) => {
+    setCustomExpenseItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, copyFromPrevious: !(item.copyFromPrevious ?? false) }
+          : item
+      )
+    );
+  };
+
   // カスタム支出項目：削除
   const handleRemoveCustomExpenseItem = (id: string) => {
     setCustomExpenseItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleClearLastAddedCustomItemId = () => {
+    setLastAddedCustomItemId(null);
   };
 
   const handleAgeGroupChange = (next: AgeGroup) => {
@@ -859,10 +865,9 @@ export default function HomePageContainer({
     }
   }, [copiedDefaultsFromPrev, homeMode, settings]);
 
-  // カスタム項目を前月からコピー（設定がオンかつ未コピーのとき）
+  // カスタム項目を前月からコピー（前月コピーがオンの項目のみ）
   useEffect(() => {
     if (copiedCustomFromPrev) return;
-    if (!(settings.copyCustomExpenseFromPrevious ?? true)) return;
     if (customExpenseItems.length > 0) return;
     if (homeMode !== "setup") return;
     if (typeof window === "undefined") return;
@@ -886,11 +891,15 @@ export default function HomePageContainer({
       const prevItems = parsed.planningState?.customExpenseItems;
       if (!Array.isArray(prevItems) || prevItems.length === 0) return;
 
-      const mapped = prevItems.map((item, idx) => ({
-        id: item.id ?? `copied-${idx}`,
-        label: item.label ?? "",
-        value: item.value ?? "",
-      }));
+      const mapped = prevItems
+        .filter((item) => item.copyFromPrevious ?? false)
+        .map((item, idx) => ({
+          id: item.id ?? `copied-${idx}`,
+          label: item.label ?? "",
+          value: item.value ?? "",
+          copyFromPrevious: item.copyFromPrevious ?? false,
+        }));
+      if (mapped.length === 0) return;
       setCustomExpenseItems(mapped);
       setCopiedCustomFromPrev(true);
     } catch {
@@ -900,7 +909,6 @@ export default function HomePageContainer({
     copiedCustomFromPrev,
     customExpenseItems.length,
     homeMode,
-    settings.copyCustomExpenseFromPrevious,
   ]);
 
   return (
@@ -920,6 +928,8 @@ export default function HomePageContainer({
       onChangeCustomExpenseLabel={handleCustomExpenseLabelChange}
       onChangeCustomExpenseAmount={handleCustomExpenseValueChange}
       onRemoveCustomExpenseItem={handleRemoveCustomExpenseItem}
+      onToggleCustomItemCopyFromPrevious={handleToggleCustomItemCopyFromPrevious}
+      onClearLastAddedCustomItemId={handleClearLastAddedCustomItemId}
       autoUpdateMap={autoUpdateMap}
       onToggleAutoUpdateCategory={toggleAutoUpdateCategory}
       onRequestIncomeEdit={() => openWizardAtStep(2)}
@@ -936,8 +946,6 @@ export default function HomePageContainer({
       onAgeGroupChange={handleAgeGroupChange}
       confirmedItems={confirmedBudget?.items ?? null}
       customTemplates={expenseCategoryOptions}
-      copyCustomFromPrevious={settings.copyCustomExpenseFromPrevious ?? true}
-      onToggleCopyCustomFromPrevious={handleToggleCopyCustomFromPrevious}
       lastAddedCustomItemId={lastAddedCustomItemId}
       wizardEntryMode={wizardEntryMode}
       wizardStep={wizardStep}

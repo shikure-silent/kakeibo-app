@@ -61,6 +61,9 @@ export function AccountLoginSection() {
                 Email: {user.email}
               </div>
             )}
+            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              ページを閉じる/切り替えるときに、端末データが自動でクラウド保存されます。
+            </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
               <button
@@ -118,21 +121,21 @@ export function AccountLoginSection() {
               未ログイン（ゲスト）
             </div>
             <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              ログイン後に同期機能を追加できます。
+              ログインすると、ページを閉じる/切り替えるときに自動保存されます。
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link
-                href="/login"
-                className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-200 dark:hover:bg-emerald-950/30"
-              >
-                ログイン
-              </Link>
               <Link
                 href="/signup"
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
                 初めての方はこちら
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-200 dark:hover:bg-emerald-950/30"
+              >
+                ログイン
               </Link>
             </div>
           </>

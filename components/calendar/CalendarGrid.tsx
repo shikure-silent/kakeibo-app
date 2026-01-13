@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import { WEEKDAY_LABELS } from "../../lib/const";
 import { DetailRecord } from "../../types/calendar";
 
@@ -10,6 +10,7 @@ type Props = {
   incomeAmounts: number[]; // 収入合計
   selectedDay: number | null;
   onSelectDay: (day: number) => void;
+  onLongPressDay?: (day: number) => void;
   today: Date;
   currentYear: number;
   currentMonth: number;
@@ -23,6 +24,7 @@ export default function CalendarGrid({
   incomeAmounts,
   selectedDay,
   onSelectDay,
+  onLongPressDay,
   today,
   currentYear,
   currentMonth,
@@ -45,6 +47,38 @@ export default function CalendarGrid({
       return `${formatted}万`;
     }
     return value.toLocaleString();
+  };
+
+  const longPressTriggered = useRef<Record<number, boolean>>({});
+  const longPressStartAt = useRef<Record<number, number>>({});
+  const LONG_PRESS_MS = 450;
+
+  const startLongPress = (day: number) => {
+    longPressTriggered.current[day] = false;
+    longPressStartAt.current[day] = Date.now();
+  };
+
+  const finishLongPress = (day: number) => {
+    const startedAt = longPressStartAt.current[day];
+    longPressStartAt.current[day] = 0;
+    if (!startedAt) return;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed >= LONG_PRESS_MS && onLongPressDay) {
+      longPressTriggered.current[day] = true;
+      onLongPressDay(day);
+    }
+  };
+
+  const cancelLongPress = (day: number) => {
+    longPressStartAt.current[day] = 0;
+  };
+
+  const handleClick = (day: number) => {
+    if (longPressTriggered.current[day]) {
+      longPressTriggered.current[day] = false;
+      return;
+    }
+    onSelectDay(day);
   };
 
   return (
@@ -94,7 +128,7 @@ export default function CalendarGrid({
           const visibleDetails = hasDetails ? dayDetails.slice(0, 2) : [];
 
           const baseCellClass =
-            "relative rounded-xl border text-left transition-colors overflow-hidden";
+            "relative rounded-xl border text-left transition-colors overflow-hidden select-none";
           const normalCellClass = isDark
             ? "border-slate-700 bg-slate-900 hover:bg-slate-800"
             : "border-slate-200 bg-slate-50 hover:bg-slate-100";
@@ -106,7 +140,20 @@ export default function CalendarGrid({
             <button
               key={index}
               type="button"
-              onClick={() => onSelectDay(day)}
+              onClick={() => handleClick(day)}
+              onTouchStart={() => startLongPress(day)}
+              onTouchEnd={() => finishLongPress(day)}
+              onTouchMove={() => cancelLongPress(day)}
+              onTouchCancel={() => cancelLongPress(day)}
+              onMouseDown={() => startLongPress(day)}
+              onMouseUp={() => finishLongPress(day)}
+              onMouseLeave={() => cancelLongPress(day)}
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                WebkitTouchCallout: "none",
+                WebkitUserSelect: "none",
+                userSelect: "none",
+              }}
               className={`${baseCellClass} ${
                 isSelected ? selectedCellClass : normalCellClass
               }`}

@@ -17,11 +17,11 @@ type Props = {
   onRemoveCustomItem: (id: string) => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
+  onToggleCustomItemCopyFromPrevious: (id: string) => void;
   customTemplates?: string[];
   isDark?: boolean;
-  copyCustomFromPrevious?: boolean;
-  onToggleCopyCustomFromPrevious?: () => void;
   lastAddedCustomItemId?: string | null;
+  onClearLastAddedCustomItemId?: () => void;
 };
 
 // デフォルト8項目
@@ -50,11 +50,11 @@ export default function ExpenseInputsBlock({
   onRemoveCustomItem,
   autoUpdateMap,
   onToggleAutoUpdateCategory,
+  onToggleCustomItemCopyFromPrevious,
   customTemplates,
   isDark = false,
-  copyCustomFromPrevious = true,
-  onToggleCopyCustomFromPrevious,
   lastAddedCustomItemId,
+  onClearLastAddedCustomItemId,
 }: Props) {
   const [openTemplateFor, setOpenTemplateFor] = useState<string | null>(null);
   const templateRef = useRef<HTMLDivElement | null>(null);
@@ -104,8 +104,9 @@ export default function ExpenseInputsBlock({
     requestAnimationFrame(() => {
       input.focus();
       input.select();
+      onClearLastAddedCustomItemId?.();
     });
-  }, [lastAddedItem]);
+  }, [lastAddedItem, onClearLastAddedCustomItemId]);
 
   return (
     <div className="space-y-4">
@@ -212,22 +213,6 @@ export default function ExpenseInputsBlock({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={onToggleCopyCustomFromPrevious}
-              aria-pressed={copyCustomFromPrevious}
-              className={`text-[11px] inline-flex items-center gap-1 rounded-full px-3 py-1 whitespace-nowrap ${
-                copyCustomFromPrevious
-                  ? isDark
-                    ? "bg-emerald-900/40 text-emerald-100 border border-emerald-400"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                  : isDark
-                  ? "bg-slate-800 text-slate-200 border border-slate-600"
-                  : "bg-slate-100 text-slate-600 border border-slate-200"
-              }`}
-            >
-              前月コピー: {copyCustomFromPrevious ? "オン" : "オフ"}
-            </button>
-            <button
-              type="button"
               onClick={onAddCustomItem}
               className="
                 inline-flex items-center gap-1
@@ -258,159 +243,181 @@ export default function ExpenseInputsBlock({
         )}
 
         <div className="space-y-2">
-          {customItems.map((item) => (
-            <div
-              key={item.id}
-              ref={(el) => {
-                customItemRefs.current[item.id] = el;
-              }}
-              className="rounded-2xl border px-3 py-3 lg:px-4 lg:py-3 space-y-3"
-              style={{
-                borderColor: isDark ? "#475569" : "#e2e8f0",
-                backgroundColor: isDark ? "#0f172a" : "white",
-                color: isDark ? "#e2e8f0" : "#0f172a",
-              }}
-            >
-              {/* 項目名 + 候補から選ぶ */}
-              <div className="space-y-1.5">
-                <label
-                  className={`block text-[11px] font-medium ${
-                    isDark ? "text-slate-200" : "text-slate-600"
-                  }`}
-                >
-                  項目名
-                </label>
-                <input
-                  type="text"
-                  ref={(el) => {
-                    customItemInputRefs.current[item.id] = el;
-                  }}
-                  value={item.label}
-                  onChange={(e) =>
-                    onChangeCustomItemLabel(item.id, e.target.value)
-                  }
-                  placeholder="例: 教育費 / ペット費 / 推し活 など"
-                  className="
-                    w-full border rounded-lg
-                    px-3 py-1.5 text-[12px]
-                    focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-                  "
-                  style={{
-                    backgroundColor: isDark ? "#0f172a" : "white",
-                    color: isDark ? "#e2e8f0" : "#334155",
-                    borderColor: isDark ? "#475569" : "#e2e8f0",
-                  }}
-                />
-                <div ref={templateRef} className="relative inline-block">
-                  <button
-                    type="button"
+          {customItems.map((item) => {
+            const isCopyEnabled = item.copyFromPrevious ?? false;
+
+            return (
+              <div
+                key={item.id}
+                ref={(el) => {
+                  customItemRefs.current[item.id] = el;
+                }}
+                className="rounded-2xl border px-3 py-3 lg:px-4 lg:py-3 space-y-3"
+                style={{
+                  borderColor: isDark ? "#475569" : "#e2e8f0",
+                  backgroundColor: isDark ? "#0f172a" : "white",
+                  color: isDark ? "#e2e8f0" : "#0f172a",
+                }}
+              >
+                {/* 項目名 + 候補から選ぶ */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <label
+                      className={`block text-[11px] font-medium ${
+                        isDark ? "text-slate-200" : "text-slate-600"
+                      }`}
+                    >
+                      項目名
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => onToggleCustomItemCopyFromPrevious(item.id)}
+                      aria-pressed={isCopyEnabled}
+                      className={`text-[10px] px-2 py-[2px] rounded-full border ${
+                        isCopyEnabled
+                          ? isDark
+                            ? "bg-emerald-900/40 text-emerald-100 border-emerald-400"
+                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : isDark
+                          ? "bg-slate-800 text-slate-300 border-slate-600"
+                          : "bg-slate-100 text-slate-500 border-slate-200"
+                      }`}
+                    >
+                      前月コピー: {isCopyEnabled ? "オン" : "オフ"}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    ref={(el) => {
+                      customItemInputRefs.current[item.id] = el;
+                    }}
+                    value={item.label}
+                    onChange={(e) =>
+                      onChangeCustomItemLabel(item.id, e.target.value)
+                    }
+                    placeholder="例: 教育費 / ペット費 / 推し活 など"
                     className="
-                      rounded-full border
-                      px-4 py-1.5 text-[12px]
-                      hover:bg-slate-100
+                      w-full border rounded-lg
+                      px-3 py-1.5 text-[12px]
+                      focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
                     "
                     style={{
-                      backgroundColor: isDark ? "#0f172a" : "#f8fafc",
-                      color: isDark ? "#e2e8f0" : "#334155",
-                      borderColor: isDark ? "#475569" : "#cbd5e1",
-                    }}
-                    onClick={() =>
-                      setOpenTemplateFor((prev) =>
-                        prev === item.id ? null : item.id
-                      )
-                    }
-                  >
-                    候補から選ぶ
-                  </button>
-                  <div
-                    className={`
-                      absolute z-20 mt-1
-                      max-h-40 w-48 overflow-auto
-                      rounded-lg border border-slate-200
-                      bg-white shadow-lg
-                      ${openTemplateFor === item.id ? "" : "hidden"}
-                    `}
-                    style={{
                       backgroundColor: isDark ? "#0f172a" : "white",
+                      color: isDark ? "#e2e8f0" : "#334155",
                       borderColor: isDark ? "#475569" : "#e2e8f0",
                     }}
-                  >
-                    {templateOptions.map((label) => (
-                      <button
-                        key={label}
-                        type="button"
-                        onClick={() => {
-                          onChangeCustomItemLabel(item.id, label);
-                          setOpenTemplateFor(null);
-                        }}
-                        className={`
-                          w-full px-3 py-1.5 text-left text-[11px]
-                          hover:bg-emerald-50
-                          ${label === item.label ? "font-semibold" : ""}
-                        `}
-                        style={{
-                          backgroundColor:
-                            label === item.label
-                              ? isDark
-                                ? "#065f46"
-                                : "#ecfdf3"
-                              : "transparent",
-                          color:
-                            label === item.label
-                              ? isDark
-                                ? "#bbf7d0"
-                                : "#047857"
-                              : isDark
-                              ? "#e2e8f0"
-                              : "#334155",
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <p
-                  className={`text-[10px] ${
-                    isDark ? "text-slate-400" : "text-slate-400"
-                  }`}
-                >
-                  直接入力してもOKです。「候補から選ぶ」を押すと、よく使う項目から選べます。
-                </p>
-              </div>
-
-              {/* 金額＋削除ボタン */}
-              <div className="flex flex-col sm:flex-row sm:items-end gap-2">
-                <div className="flex-1">
-                  <NumberInput
-                    label="予算額（半角数字）"
-                    value={item.value}
-                    onChange={(v) => onChangeCustomItemAmount(item.id, v)}
-                    placeholder="例: 5000"
-                    isDark={isDark}
                   />
+                  <div ref={templateRef} className="relative inline-block">
+                    <button
+                      type="button"
+                      className="
+                        rounded-full border
+                        px-4 py-1.5 text-[12px]
+                        hover:bg-slate-100
+                      "
+                      style={{
+                        backgroundColor: isDark ? "#0f172a" : "#f8fafc",
+                        color: isDark ? "#e2e8f0" : "#334155",
+                        borderColor: isDark ? "#475569" : "#cbd5e1",
+                      }}
+                      onClick={() =>
+                        setOpenTemplateFor((prev) =>
+                          prev === item.id ? null : item.id
+                        )
+                      }
+                    >
+                      候補から選ぶ
+                    </button>
+                    <div
+                      className={`
+                        absolute z-20 mt-1
+                        max-h-40 w-48 overflow-auto
+                        rounded-lg border border-slate-200
+                        bg-white shadow-lg
+                        ${openTemplateFor === item.id ? "" : "hidden"}
+                      `}
+                      style={{
+                        backgroundColor: isDark ? "#0f172a" : "white",
+                        borderColor: isDark ? "#475569" : "#e2e8f0",
+                      }}
+                    >
+                      {templateOptions.map((label) => (
+                        <button
+                          key={label}
+                          type="button"
+                          onClick={() => {
+                            onChangeCustomItemLabel(item.id, label);
+                            setOpenTemplateFor(null);
+                          }}
+                          className={`
+                            w-full px-3 py-1.5 text-left text-[11px]
+                            hover:bg-emerald-50
+                            ${label === item.label ? "font-semibold" : ""}
+                          `}
+                          style={{
+                            backgroundColor:
+                              label === item.label
+                                ? isDark
+                                  ? "#065f46"
+                                  : "#ecfdf3"
+                                : "transparent",
+                            color:
+                              label === item.label
+                                ? isDark
+                                  ? "#bbf7d0"
+                                  : "#047857"
+                                : isDark
+                                ? "#e2e8f0"
+                                : "#334155",
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p
+                    className={`text-[10px] ${
+                      isDark ? "text-slate-400" : "text-slate-400"
+                    }`}
+                  >
+                    直接入力してもOKです。「候補から選ぶ」を押すと、よく使う項目から選べます。
+                  </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onRemoveCustomItem(item.id)}
-                  className="
-                    inline-flex items-center gap-1
-                    px-3 py-1 rounded-full
-                    border
-                    text-[11px] font-medium
-                    self-start sm:self-end
-                  "
-                  style={{
-                    borderColor: isDark ? "#7f1d1d" : "#fecdd3",
-                    backgroundColor: isDark ? "#450a0a" : "#fef2f2",
-                    color: isDark ? "#fecdd3" : "#b91c1c",
-                  }}
-                >
-                  <span>削除</span>
-                </button>
+
+                {/* 金額＋削除ボタン */}
+                <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                  <div className="flex-1">
+                    <NumberInput
+                      label="予算額（半角数字）"
+                      value={item.value}
+                      onChange={(v) => onChangeCustomItemAmount(item.id, v)}
+                      placeholder="例: 5000"
+                      isDark={isDark}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveCustomItem(item.id)}
+                    className="
+                      inline-flex items-center gap-1
+                      px-3 py-1 rounded-full
+                      border
+                      text-[11px] font-medium
+                      self-start sm:self-end
+                    "
+                    style={{
+                      borderColor: isDark ? "#7f1d1d" : "#fecdd3",
+                      backgroundColor: isDark ? "#450a0a" : "#fef2f2",
+                      color: isDark ? "#fecdd3" : "#b91c1c",
+                    }}
+                  >
+                    <span>削除</span>
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -32,13 +32,13 @@ type Props = {
   onChangeCustomItemLabel: (id: string, label: string) => void;
   onChangeCustomItemAmount: (id: string, amount: string) => void;
   onRemoveCustomItem: (id: string) => void;
+  onToggleCustomItemCopyFromPrevious: (id: string) => void;
+  onClearLastAddedCustomItemId?: () => void;
   onStart?: () => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
   customTemplates?: string[];
   isDark?: boolean;
-  copyCustomFromPrevious?: boolean;
-  onToggleCopyCustomFromPrevious?: () => void;
   lastAddedCustomItemId?: string | null;
 
   // ホーム側から渡しているやつ
@@ -58,6 +58,8 @@ export default function BudgetSettingsCard({
   onChangeCustomItemLabel,
   onChangeCustomItemAmount,
   onRemoveCustomItem,
+  onToggleCustomItemCopyFromPrevious,
+  onClearLastAddedCustomItemId,
   onStart,
   autoUpdateMap,
   onToggleAutoUpdateCategory,
@@ -66,8 +68,6 @@ export default function BudgetSettingsCard({
   confirmedItems,
   customTemplates,
   isDark = false,
-  copyCustomFromPrevious = true,
-  onToggleCopyCustomFromPrevious,
   lastAddedCustomItemId,
 }: Props) {
   // --------------------
@@ -224,13 +224,13 @@ export default function BudgetSettingsCard({
         onChangeCustomItemLabel={onChangeCustomItemLabel}
         onChangeCustomItemAmount={onChangeCustomItemAmount}
         onRemoveCustomItem={onRemoveCustomItem}
+        onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
         autoUpdateMap={autoUpdateMap}
         onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
         customTemplates={customTemplates}
         isDark={isDark}
-        copyCustomFromPrevious={copyCustomFromPrevious}
-        onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
         lastAddedCustomItemId={lastAddedCustomItemId}
+        onClearLastAddedCustomItemId={onClearLastAddedCustomItemId}
       />
 
       <div className="mt-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">

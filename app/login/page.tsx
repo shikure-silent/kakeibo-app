@@ -145,7 +145,9 @@ function LoginPageInner() {
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
                 aria-label={
-                  showPassword ? "パスワードを非表示にする" : "パスワードを表示する"
+                  showPassword
+                    ? "パスワードを非表示にする"
+                    : "パスワードを表示する"
                 }
               >
                 {showPassword ? (
@@ -194,12 +196,21 @@ function LoginPageInner() {
               href="/reset-password/request"
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
             >
-              パスワードを忘れた？
+              パスワード再設定
+            </Link>
+          </div>
+
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400">
+            <Link
+              href="/reset-email"
+              className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
+            >
+              メールアドレスの再設定
             </Link>
           </div>
 
           <div className="pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
-            アカウントがない？{" "}
+            アカウントがない{" "}
             <Link
               href={`/signup?next=${encodeURIComponent(nextUrl)}`}
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
