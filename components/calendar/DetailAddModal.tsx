@@ -139,9 +139,6 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
 
         <div className="space-y-1">
           <h2 className="text-sm font-semibold text-slate-900">項目を追加</h2>
-          <p className="text-[11px] text-slate-500">
-            カテゴリ・支出/収入元・金額・メモを入力して、この日の内訳に追加します。
-          </p>
         </div>
 
         {/* 種類切り替え（支出 / 収入） */}
@@ -236,9 +233,6 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
               </div>
             )}
           </div>
-          <p className="text-[10px] text-slate-400">
-            直接入力してもOKです。「候補から選ぶ」を押すと、よく使うカテゴリ一覧から選べます。
-          </p>
         </div>
 
         {/* 店舗名（支出のみ表示） */}
@@ -316,9 +310,6 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
               </div>
             )}
           </div>
-          <p className="text-[10px] text-slate-400">
-            直接入力してもOKです。「候補から選ぶ」を押すと、よく使う支出元・入金元から選べます。
-          </p>
         </div>
 
         {/* 金額（新規追加） */}
@@ -336,9 +327,6 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
             onChange={(e) => handleChangeAmount(e.target.value)}
             placeholder="例：1200"
           />
-          <p className="text-[10px] text-slate-400">
-            ※全角数字で入力された場合も、自動で半角に変換して桁区切りで表示します。
-          </p>
           <p className="text-[10px] text-slate-500">
             入力中:{" "}
             <span className="font-semibold">
@@ -351,7 +339,9 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
 
         {/* メモ */}
         <div className="space-y-1">
-          <label className="block text-[11px] text-slate-500">メモ（任意）</label>
+          <label className="block text-[11px] text-slate-500">
+            メモ（任意）
+          </label>
           <textarea
             rows={2}
             className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300 resize-none"

@@ -315,10 +315,6 @@ export default function InputFormCard({
                 </div>
               )}
             </div>
-
-            <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
-              直接入力してもOKです。「候補から選ぶ」を押すと、よく使うカテゴリ一覧から選べます。
-            </p>
           </div>
 
           {/* 支出元 / 入金元 */}
@@ -354,9 +350,6 @@ export default function InputFormCard({
                     </option>
                   ))}
                 </select>
-                <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
-                  現金・クレジットカード・電子決済など、支出に使った方法を選べます。
-                </p>
               </>
             ) : (
               <>
@@ -377,7 +370,11 @@ export default function InputFormCard({
                   }}
                   placeholder="例: 給与、〇〇銀行、フリマ売上 など"
                 />
-                <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
+                <p
+                  className={`text-[10px] ${
+                    isDark ? "text-slate-400" : "text-slate-400"
+                  }`}
+                >
                   入金元を自由に入力できます。（会社名・銀行名・サービス名など）
                 </p>
               </>
@@ -454,9 +451,6 @@ export default function InputFormCard({
               placeholder="例: 3,000"
               isDark={isDark}
             />
-            <p className={`mt-1 text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
-              全角やカンマで入力しても、自動で半角数字に整えられます。
-            </p>
           </div>
           <div>
             <button
