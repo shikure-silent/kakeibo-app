@@ -67,7 +67,14 @@ export function DetailOverviewModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-3 py-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-4 sm:py-[calc(env(safe-area-inset-top)+2.5rem)] sm:pb-[calc(env(safe-area-inset-bottom)+2.5rem)] overflow-y-auto">
-      <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4 space-y-3">
+      <div
+        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4 space-y-3 select-none"
+        style={{
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
+          userSelect: "none",
+        }}
+      >
         <button
           type="button"
           onClick={onClose}
@@ -155,17 +162,17 @@ export function DetailOverviewModal({
         <div className="pt-1 flex flex-col sm:flex-row sm:justify-end gap-2">
           <button
             type="button"
-            onClick={onClose}
-            className="rounded-full border border-slate-300 px-3 py-1.5 text-[11px] text-slate-600 hover:bg-slate-50"
-          >
-            閉じる
-          </button>
-          <button
-            type="button"
             onClick={onEdit}
             className="rounded-full bg-emerald-500 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-emerald-600"
           >
             編集・追加する
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full border border-slate-300 px-3 py-1.5 text-[11px] text-slate-600 hover:bg-slate-50"
+          >
+            閉じる
           </button>
         </div>
       </div>

@@ -199,20 +199,26 @@ export default function CalendarPage() {
     });
   };
 
-  const handleDayClick = (day: number | null) => {
-    if (!day) return;
-    if (day < 1 || day > daysInMonth) return;
+  const selectDay = (day: number) => {
     const detailsForDay = dailyDetails[day - 1] ?? [];
     setSelectedDay(day);
     setSelectedDetails(detailsForDay);
+    return detailsForDay;
+  };
 
-    if (detailsForDay.length > 0) {
-      setIsOverviewModalOpen(true);
-      setIsDetailModalOpen(false);
-    } else {
-      setIsDetailModalOpen(true);
-      setIsOverviewModalOpen(false);
-    }
+  const handleDayClick = (day: number | null) => {
+    if (!day) return;
+    if (day < 1 || day > daysInMonth) return;
+    selectDay(day);
+    setIsOverviewModalOpen(true);
+    setIsDetailModalOpen(false);
+  };
+
+  const handleDayLongPress = (day: number) => {
+    if (day < 1 || day > daysInMonth) return;
+    selectDay(day);
+    setIsDetailModalOpen(true);
+    setIsOverviewModalOpen(false);
   };
 
   const handleCloseDetailModal = () => {
@@ -521,6 +527,7 @@ export default function CalendarPage() {
       onPrevMonth={handlePrevMonth}
       onNextMonth={handleNextMonth}
       onSelectDay={handleDayClick}
+      onLongPressDay={handleDayLongPress}
       onCloseOverview={handleCloseOverviewModal}
       onOpenDetailFromOverview={handleOpenDetailFromOverview}
       onCloseDetail={handleCloseDetailModal}

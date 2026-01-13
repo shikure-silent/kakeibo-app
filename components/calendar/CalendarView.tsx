@@ -17,6 +17,7 @@ type Props = {
   incomeAmounts: number[];
   selectedDay: number | null;
   onSelectDay: (day: number | null) => void;
+  onLongPressDay?: (day: number) => void;
   today: Date;
   currentYear: number;
   currentMonth: number;
@@ -71,6 +72,7 @@ export default function CalendarView(props: Props) {
     amounts,
     incomeAmounts,
     onSelectDay,
+    onLongPressDay,
     today,
     currentYear,
     currentMonth,
@@ -380,6 +382,7 @@ export default function CalendarView(props: Props) {
               incomeAmounts={incomeAmounts}
               selectedDay={selectedDay}
               onSelectDay={onSelectDay}
+              onLongPressDay={onLongPressDay}
               today={today}
               currentYear={currentYear}
               currentMonth={currentMonth}

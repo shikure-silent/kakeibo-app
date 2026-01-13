@@ -17,6 +17,7 @@ import {
   clearAllKakeiboData,
 } from "../../lib/settingsStorage";
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
+import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 import {
   EXPENSE_CATEGORIES,
   INCOME_CATEGORIES,
@@ -30,7 +31,6 @@ import { AggregationSettingsSection } from "../../components/settings/Aggregatio
 import { AccountLoginSection } from "../../components/settings/AccountLoginSection";
 import { DataManagementSection } from "../../components/settings/DataManagementSection";
 import { AppInfoSection } from "../../components/settings/AppInfoSection";
-import { CloudSyncSection } from "../../components/settings/CloudSyncSection";
 import {
   createLocalBackup,
   parseLocalBackup,
@@ -38,9 +38,10 @@ import {
 } from "../../lib/localBackup";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
-const APP_VERSION = "0.3.0-beta";
+const APP_VERSION = "0.7.0-beta";
 
 export default function SettingsPage() {
+  useCloudAutoSaveOnLeave();
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   const [incomeCategories, setIncomeCategories] = useState<string[]>([]);
@@ -243,7 +244,6 @@ export default function SettingsPage() {
   const containerClass = themeClass;
   const sectionLinks = [
     { id: "account", label: "アカウント" },
-    { id: "cloud", label: "クラウド同期" },
     { id: "theme", label: "テーマ設定" },
     { id: "saving", label: "貯金サポート" },
     { id: "category", label: "カテゴリ・項目" },
@@ -344,131 +344,132 @@ export default function SettingsPage() {
           <AccountLoginSection />
         </section>
 
-        <section id="cloud">
-          <CloudSyncSection />
-        </section>
-
         <section id="theme">
           <ThemeSettingsSection
-          theme={settings.theme}
-          onChangeTheme={(theme: ThemeOption) =>
-            handleChangeSetting("theme", theme)
-          }
-          isDark={isDark}
-        />
+            theme={settings.theme}
+            onChangeTheme={(theme: ThemeOption) =>
+              handleChangeSetting("theme", theme)
+            }
+            isDark={isDark}
+          />
         </section>
 
         <section id="saving">
           <SavingSupportSection
-          settings={settings}
-          onChangeSetting={handleChangeSetting}
-        />
+            settings={settings}
+            onChangeSetting={handleChangeSetting}
+          />
         </section>
 
         <section id="category">
           <CategorySettingsSection
-          expenseCategories={expenseCategories}
-          incomeCategories={incomeCategories}
-          payFromPresets={payFromPresets}
-          onEditExpenseCategory={(idx, val) =>
-            handleEditItem(
-              expenseCategories,
-              setExpenseCategories,
-              idx,
-              val,
-              "expense"
-            )
-          }
-          onAddExpenseCategory={() =>
-            handleAddItem(expenseCategories, setExpenseCategories, "expense")
-          }
-          onRemoveExpenseCategory={(idx) =>
-            handleRemoveItem(
-              expenseCategories,
-              setExpenseCategories,
-              idx,
-              "expense"
-            )
-          }
-          onReorderExpenseCategory={(from, to) =>
-            handleReorder(
-              expenseCategories,
-              setExpenseCategories,
-              from,
-              to,
-              "expense"
-            )
-          }
-          onEditIncomeCategory={(idx, val) =>
-            handleEditItem(
-              incomeCategories,
-              setIncomeCategories,
-              idx,
-              val,
-              "income"
-            )
-          }
-          onAddIncomeCategory={() =>
-            handleAddItem(incomeCategories, setIncomeCategories, "income")
-          }
-          onRemoveIncomeCategory={(idx) =>
-            handleRemoveItem(
-              incomeCategories,
-              setIncomeCategories,
-              idx,
-              "income"
-            )
-          }
-          onReorderIncomeCategory={(from, to) =>
-            handleReorder(
-              incomeCategories,
-              setIncomeCategories,
-              from,
-              to,
-              "income"
-            )
-          }
-          onEditPayFrom={(idx, val) =>
-            handleEditItem(
-              payFromPresets,
-              setPayFromPresets,
-              idx,
-              val,
-              "payfrom"
-            )
-          }
-          onAddPayFrom={() =>
-            handleAddItem(payFromPresets, setPayFromPresets, "payfrom")
-          }
-          onRemovePayFrom={(idx) =>
-            handleRemoveItem(payFromPresets, setPayFromPresets, idx, "payfrom")
-          }
-          onReorderPayFrom={(from, to) =>
-            handleReorder(
-              payFromPresets,
-              setPayFromPresets,
-              from,
-              to,
-              "payfrom"
-            )
-          }
-          onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
-          onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
-          onResetPayFromPresets={handleResetPayFromPresetsToDefault}
-          isDark={isDark}
-        />
+            expenseCategories={expenseCategories}
+            incomeCategories={incomeCategories}
+            payFromPresets={payFromPresets}
+            onEditExpenseCategory={(idx, val) =>
+              handleEditItem(
+                expenseCategories,
+                setExpenseCategories,
+                idx,
+                val,
+                "expense"
+              )
+            }
+            onAddExpenseCategory={() =>
+              handleAddItem(expenseCategories, setExpenseCategories, "expense")
+            }
+            onRemoveExpenseCategory={(idx) =>
+              handleRemoveItem(
+                expenseCategories,
+                setExpenseCategories,
+                idx,
+                "expense"
+              )
+            }
+            onReorderExpenseCategory={(from, to) =>
+              handleReorder(
+                expenseCategories,
+                setExpenseCategories,
+                from,
+                to,
+                "expense"
+              )
+            }
+            onEditIncomeCategory={(idx, val) =>
+              handleEditItem(
+                incomeCategories,
+                setIncomeCategories,
+                idx,
+                val,
+                "income"
+              )
+            }
+            onAddIncomeCategory={() =>
+              handleAddItem(incomeCategories, setIncomeCategories, "income")
+            }
+            onRemoveIncomeCategory={(idx) =>
+              handleRemoveItem(
+                incomeCategories,
+                setIncomeCategories,
+                idx,
+                "income"
+              )
+            }
+            onReorderIncomeCategory={(from, to) =>
+              handleReorder(
+                incomeCategories,
+                setIncomeCategories,
+                from,
+                to,
+                "income"
+              )
+            }
+            onEditPayFrom={(idx, val) =>
+              handleEditItem(
+                payFromPresets,
+                setPayFromPresets,
+                idx,
+                val,
+                "payfrom"
+              )
+            }
+            onAddPayFrom={() =>
+              handleAddItem(payFromPresets, setPayFromPresets, "payfrom")
+            }
+            onRemovePayFrom={(idx) =>
+              handleRemoveItem(
+                payFromPresets,
+                setPayFromPresets,
+                idx,
+                "payfrom"
+              )
+            }
+            onReorderPayFrom={(from, to) =>
+              handleReorder(
+                payFromPresets,
+                setPayFromPresets,
+                from,
+                to,
+                "payfrom"
+              )
+            }
+            onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
+            onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
+            onResetPayFromPresets={handleResetPayFromPresetsToDefault}
+            isDark={isDark}
+          />
         </section>
 
         <section id="aggregation">
           <AggregationSettingsSection
-          payday={settings.payday}
-          budgetBase={settings.budgetBase}
-          onChangePayday={(day) => handleChangeSetting("payday", day)}
-          onChangeBudgetBase={(base: BudgetBaseOption) =>
-            handleChangeSetting("budgetBase", base)
-          }
-          isDark={isDark}
-        />
+            payday={settings.payday}
+            budgetBase={settings.budgetBase}
+            onChangePayday={(day) => handleChangeSetting("payday", day)}
+            onChangeBudgetBase={(base: BudgetBaseOption) =>
+              handleChangeSetting("budgetBase", base)
+            }
+            isDark={isDark}
+          />
         </section>
 
         <section id="data">
@@ -486,5 +487,4 @@ export default function SettingsPage() {
       </div>
     </main>
   );
-
 }

@@ -33,6 +33,8 @@ type Props = {
   onChangeCustomExpenseLabel: (id: string, label: string) => void;
   onChangeCustomExpenseAmount: (id: string, value: string) => void;
   onRemoveCustomExpenseItem: (id: string) => void;
+  onToggleCustomItemCopyFromPrevious: (id: string) => void;
+  onClearLastAddedCustomItemId?: () => void;
   autoUpdateMap: Record<keyof ExpenseMedian, boolean>;
   onToggleAutoUpdateCategory: (key: keyof ExpenseMedian) => void;
   totalIncome: number;
@@ -40,8 +42,6 @@ type Props = {
   saving: number;
   savingRate: number | null;
   customTemplates?: string[];
-  copyCustomFromPrevious?: boolean;
-  onToggleCopyCustomFromPrevious?: () => void;
   lastAddedCustomItemId?: string | null;
   isDark?: boolean;
 };
@@ -70,6 +70,8 @@ export default function HomeSetupWizard({
   onChangeCustomExpenseLabel,
   onChangeCustomExpenseAmount,
   onRemoveCustomExpenseItem,
+  onToggleCustomItemCopyFromPrevious,
+  onClearLastAddedCustomItemId,
   autoUpdateMap,
   onToggleAutoUpdateCategory,
   totalIncome,
@@ -77,8 +79,6 @@ export default function HomeSetupWizard({
   saving,
   savingRate,
   customTemplates,
-  copyCustomFromPrevious = true,
-  onToggleCopyCustomFromPrevious,
   lastAddedCustomItemId,
   isDark = false,
 }: Props) {
@@ -340,13 +340,13 @@ export default function HomeSetupWizard({
             onChangeCustomItemLabel={onChangeCustomExpenseLabel}
             onChangeCustomItemAmount={onChangeCustomExpenseAmount}
             onRemoveCustomItem={onRemoveCustomExpenseItem}
+            onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
             autoUpdateMap={autoUpdateMap}
             onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
             customTemplates={customTemplates}
             isDark={isDark}
-            copyCustomFromPrevious={copyCustomFromPrevious}
-            onToggleCopyCustomFromPrevious={onToggleCopyCustomFromPrevious}
             lastAddedCustomItemId={lastAddedCustomItemId}
+            onClearLastAddedCustomItemId={onClearLastAddedCustomItemId}
           />
 
           <div className="flex items-center justify-between text-sm">
