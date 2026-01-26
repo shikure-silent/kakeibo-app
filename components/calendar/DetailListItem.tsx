@@ -177,9 +177,9 @@ export function DetailListItem({
         </div>
       </div>
 
-      {/* 下段：支出元 ＋ 店舗名 ＋ メモ */}
+      {/* 下段：支出元 ＋ メモ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* 左カラム：支出元 ＋ 店舗名 */}
+        {/* 左カラム：支出元 */}
         <div className="space-y-2">
           {/* 支出元 / 入金元 */}
           <div className="space-y-1">
@@ -253,26 +253,6 @@ export function DetailListItem({
             </p>
           </div>
 
-          {/* 店舗名（支出のみ表示） */}
-          {record.mode !== "income" && (
-            <div className="space-y-1">
-              <label className="block text-[11px] text-slate-500">
-                店舗名（任意）
-              </label>
-              <input
-                type="text"
-                className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-                value={record.shopName ?? ""}
-                onChange={(e) =>
-                  onChange(index, {
-                    ...record,
-                    shopName: e.target.value,
-                  } as DetailRecord)
-                }
-                placeholder="例：〇〇スーパー / △△ドラッグ"
-              />
-            </div>
-          )}
         </div>
 
         {/* 右カラム：メモ */}

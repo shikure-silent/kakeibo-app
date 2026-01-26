@@ -382,36 +382,6 @@ export default function InputFormCard({
           </div>
         </div>
 
-        {/* 店舗名（任意）※支出のときだけ表示 */}
-        {mode === "expense" && (
-          <div className="space-y-1.5">
-            <label
-              className={`block text-[11px] font-medium ${
-                isDark ? "text-slate-200" : "text-slate-600"
-              }`}
-            >
-              店舗名（任意）
-            </label>
-            <input
-              type="text"
-              value={shopName}
-              onChange={(e) => onChangeShopName(e.target.value)}
-              className="
-                w-full border border-slate-200 rounded-2xl
-                px-3 py-2 text-xs text-slate-700
-                bg-white
-                focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400
-              "
-              style={{
-                backgroundColor: isDark ? "#0f172a" : "white",
-                color: isDark ? "#e2e8f0" : "#334155",
-                borderColor: isDark ? "#475569" : "#e2e8f0",
-              }}
-              placeholder="例: スーパーA、コンビニB など"
-            />
-          </div>
-        )}
-
         {/* メモ */}
         <div className="space-y-1.5">
           <label

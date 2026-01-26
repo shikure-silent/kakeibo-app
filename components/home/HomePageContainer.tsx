@@ -34,6 +34,7 @@ import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
 import { CustomExpenseItem } from "../../types/budget";
 import { HomePageView } from "./HomePageView";
 import type { IncomeMember } from "./IncomeSettingsCard";
+import RemainingBudgetCard from "./RemainingBudgetCard";
 
 type HomeMode = "setup" | "dashboard";
 
@@ -423,6 +424,8 @@ export default function HomePageContainer({
   }, [user, displayName]);
 
   const { themeClass } = useResolvedTheme(settings.theme);
+  const isDark = themeClass.includes("theme-dark");
+  const isData = variant === "data";
 
   // 年代が変わったら、その年代の全国値をベースに支出予算をリセット
   // ＋ 家賃・サブスクは固定費ストアで上書き
@@ -917,6 +920,15 @@ export default function HomePageContainer({
       pageTitle={pageTitle}
       pageDescription={pageDescription}
       showSavingHighlight={variant !== "setup"}
+      savingHighlightExtra={
+        isData ? (
+          <>
+            <RemainingBudgetCard isDark={isDark} />
+            {extraSection}
+          </>
+        ) : null
+      }
+      showGuideAside={!isData}
       centerHeader
       homeMode={homeMode}
       ageGroup={ageGroup}
@@ -956,7 +968,7 @@ export default function HomePageContainer({
       onResumeDraft={handleResumeOldDraft}
       onDiscardDraft={handleDiscardOldDraft}
       setupExtraContent={setupExtraContent}
-      extraSection={extraSection}
+      extraSection={isData ? undefined : extraSection}
     />
   );
 }

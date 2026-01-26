@@ -16,6 +16,8 @@ type Props = {
   pageTitle: string;
   pageDescription: string;
   showSavingHighlight?: boolean;
+  savingHighlightExtra?: React.ReactNode;
+  showGuideAside?: boolean;
   centerHeader?: boolean;
   homeMode: HomeMode;
   ageGroup: AgeGroup;
@@ -63,6 +65,8 @@ export function HomePageView({
   pageTitle,
   pageDescription,
   showSavingHighlight = true,
+  savingHighlightExtra,
+  showGuideAside = true,
   centerHeader = false,
   homeMode,
   ageGroup,
@@ -126,14 +130,17 @@ export function HomePageView({
         </header>
 
         {showSavingHighlight && (
-          <SavingHighlightCard
-            totalIncome={displayTotalIncome}
-            totalExpense={displayTotalExpense}
-            saving={displaySaving}
-            savingRate={displaySavingRate}
-            ageGroupLabel={ageGroupLabels[ageGroup]}
-            isDark={isDark}
-          />
+          <div className="space-y-4">
+            <SavingHighlightCard
+              totalIncome={displayTotalIncome}
+              totalExpense={displayTotalExpense}
+              saving={displaySaving}
+              savingRate={displaySavingRate}
+              ageGroupLabel={ageGroupLabels[ageGroup]}
+              isDark={isDark}
+            />
+            {savingHighlightExtra}
+          </div>
         )}
 
         {homeMode === "setup" ? (
@@ -217,34 +224,36 @@ export function HomePageView({
             </section>
 
             {/* 右：使い方・説明 */}
-            <aside className="space-y-4">
-              <div
-                className={`rounded-2xl shadow-sm border px-4 py-4 text-xs lg:text-sm space-y-2 ${
-                  isDark
-                    ? "bg-slate-900 border-slate-700 text-slate-200"
-                    : "bg-white border-slate-100 text-slate-700"
-                }`}
-              >
-                <p className="font-medium">この画面でできること</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>
-                    世帯主の年代を選ぶと、その年代の全国データから8項目の支出予算の初期値が設定されます。
-                  </li>
-                  <li>
-                    世帯のメンバーごとの収入と支出予算を設定すると、「今月の貯金見込み」が自動計算されます。
-                  </li>
-                  <li>
-                    家賃・サブスクなどの固定費は、一度入力すると毎月自動で反映されます。
-                  </li>
-                  <li>
-                    娯楽費や医療・保険も年代別の目安を出しつつ、自分に合わせて調整できます。
-                  </li>
-                  <li>
-                    その他の項目は「カスタム項目」として追加・削除できます。
-                  </li>
-                </ul>
-              </div>
-            </aside>
+            {showGuideAside && (
+              <aside className="space-y-4">
+                <div
+                  className={`rounded-2xl shadow-sm border px-4 py-4 text-xs lg:text-sm space-y-2 ${
+                    isDark
+                      ? "bg-slate-900 border-slate-700 text-slate-200"
+                      : "bg-white border-slate-100 text-slate-700"
+                  }`}
+                >
+                  <p className="font-medium">この画面でできること</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>
+                      世帯主の年代を選ぶと、その年代の全国データから8項目の支出予算の初期値が設定されます。
+                    </li>
+                    <li>
+                      世帯のメンバーごとの収入と支出予算を設定すると、「今月の貯金見込み」が自動計算されます。
+                    </li>
+                    <li>
+                      家賃・サブスクなどの固定費は、一度入力すると毎月自動で反映されます。
+                    </li>
+                    <li>
+                      娯楽費や医療・保険も年代別の目安を出しつつ、自分に合わせて調整できます。
+                    </li>
+                    <li>
+                      その他の項目は「カスタム項目」として追加・削除できます。
+                    </li>
+                  </ul>
+                </div>
+              </aside>
+            )}
           </div>
         )}
 

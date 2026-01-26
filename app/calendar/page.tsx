@@ -21,6 +21,7 @@ import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
 import { buildSavingSupportState } from "../../lib/savingSupport";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
+import { useSupportBell } from "../../components/support/SupportBellProvider";
 
 type PeriodDailyInfo = {
   date: Date;
@@ -30,6 +31,7 @@ type PeriodDailyInfo = {
 
 export default function CalendarPage() {
   useCloudAutoSaveOnLeave();
+  const { setCards } = useSupportBell();
   const [now, setNow] = useState(() => new Date());
   const today = now;
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -91,11 +93,6 @@ export default function CalendarPage() {
     return cells;
   }, [firstDayOfWeek, daysInMonth]);
 
-  const monthlyTotal = useMemo(
-    () => amounts.reduce((sum, v) => sum + (v || 0), 0),
-    [amounts]
-  );
-
   const selectedDateLabel = useMemo(() => {
     if (!selectedDay) return "";
     const d = new Date(currentYear, currentMonth - 1, selectedDay);
@@ -103,18 +100,6 @@ export default function CalendarPage() {
     return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${w}）`;
   }, [currentYear, currentMonth, selectedDay]);
 
-  const remainingBudget = useMemo(() => {
-    if (!budget) return null;
-    return budget.totalBudget - monthlyTotal;
-  }, [budget, monthlyTotal]);
-
-  const budgetUsagePercent = useMemo(() => {
-    if (!budget || budget.totalBudget <= 0) return null;
-    return Math.min(
-      100,
-      Math.max(0, (monthlyTotal / budget.totalBudget) * 100)
-    );
-  }, [budget, monthlyTotal]);
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -415,16 +400,6 @@ export default function CalendarPage() {
     [periodInfos]
   );
 
-  const periodRemainingBudget = useMemo(() => {
-    if (!budget) return null;
-    return budget.totalBudget - periodTotal;
-  }, [budget, periodTotal]);
-
-  const periodBudgetUsagePercent = useMemo(() => {
-    if (!budget || budget.totalBudget <= 0) return null;
-    return Math.min(100, Math.max(0, (periodTotal / budget.totalBudget) * 100));
-  }, [budget, periodTotal]);
-
   const supportCards = useMemo(() => {
     if (!isClient) return [];
     if (!isViewingThisMonth) return [];
@@ -498,6 +473,10 @@ export default function CalendarPage() {
     periodTotal,
   ]);
 
+  useEffect(() => {
+    setCards(supportCards);
+  }, [setCards, supportCards]);
+
   const { themeClass } = useResolvedTheme(settings.theme);
 
   return (
@@ -511,15 +490,10 @@ export default function CalendarPage() {
       currentYear={currentYear}
       currentMonth={currentMonth}
       dailyDetails={dailyDetails}
-      budget={budget}
       hasPeriod={hasPeriod}
       periodLabel={periodLabel}
-      periodTotal={periodTotal}
-      monthlyTotal={monthlyTotal}
-      remainingBudget={remainingBudget}
-      periodRemainingBudget={periodRemainingBudget}
-      budgetUsagePercent={budgetUsagePercent}
-      periodBudgetUsagePercent={periodBudgetUsagePercent}
+      periodStart={periodRange?.start ?? null}
+      periodEnd={periodRange?.end ?? null}
       selectedDateLabel={selectedDateLabel}
       selectedDetails={selectedDetails}
       isOverviewModalOpen={isOverviewModalOpen}
@@ -534,7 +508,6 @@ export default function CalendarPage() {
       onChangeRecord={handleUpdateDetail}
       onDeleteRecord={handleDeleteDetail}
       onAddRecord={handleAddDetail}
-      supportCards={supportCards}
     />
   );
 }

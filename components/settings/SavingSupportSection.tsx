@@ -12,6 +12,7 @@ type OnChangeSetting = <K extends keyof AppSettings>(
 type Props = {
   settings: AppSettings;
   onChangeSetting: OnChangeSetting;
+  showHeader?: boolean;
 };
 
 function pct(v: number | undefined) {
@@ -38,7 +39,11 @@ const normalizeDigits = (value: string) =>
     .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
     .replace(/[^0-9]/g, "");
 
-export function SavingSupportSection({ settings, onChangeSetting }: Props) {
+export function SavingSupportSection({
+  settings,
+  onChangeSetting,
+  showHeader = true,
+}: Props) {
   const [permission, setPermission] = useState<
     NotificationPermission | "unsupported"
   >("unsupported");
@@ -140,13 +145,17 @@ export function SavingSupportSection({ settings, onChangeSetting }: Props) {
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-        貯金サポート・通知設定
-      </h2>
-      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Web版では「プッシュ通知」ではなく、アプリを開いた時にデータ/カレンダー上で
-        “声かけカード”を表示するための設定です（通知の本実装はモバイル版で対応予定）。
-      </p>
+      {showHeader && (
+        <>
+          <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+            貯金サポート・通知設定
+          </h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Web版では「プッシュ通知」ではなく、アプリを開いた時にデータ/カレンダー上で
+            “声かけカード”を表示するための設定です（通知の本実装はモバイル版で対応予定）。
+          </p>
+        </>
+      )}
 
       <div className="mt-4 space-y-5">
         {/* A: リマインド */}
