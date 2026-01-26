@@ -46,6 +46,8 @@ export default function SettingsPage() {
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   const [incomeCategories, setIncomeCategories] = useState<string[]>([]);
   const [payFromPresets, setPayFromPresets] = useState<string[]>([]);
+  const [isSavingOpen, setIsSavingOpen] = useState(true);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(true);
 
   // 初期読み込み
   useEffect(() => {
@@ -354,110 +356,160 @@ export default function SettingsPage() {
           />
         </section>
 
-        <section id="saving">
-          <SavingSupportSection
-            settings={settings}
-            onChangeSetting={handleChangeSetting}
-          />
+        <section id="saving" className="space-y-2">
+          <div
+            className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${
+              isDark
+                ? "bg-slate-900 border-slate-700 text-slate-100"
+                : "bg-white border-slate-100 text-slate-900"
+            }`}
+          >
+            <h2 className="text-sm font-semibold">貯金サポート・通知設定</h2>
+            <button
+              type="button"
+              onClick={() => setIsSavingOpen((prev) => !prev)}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-full border text-lg ${
+                isDark
+                  ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
+              aria-label="貯金サポート・通知設定の開閉"
+              aria-expanded={isSavingOpen}
+            >
+              {isSavingOpen ? "−" : "+"}
+            </button>
+          </div>
+          {isSavingOpen && (
+            <SavingSupportSection
+              settings={settings}
+              onChangeSetting={handleChangeSetting}
+              showHeader={false}
+            />
+          )}
         </section>
 
-        <section id="category">
-          <CategorySettingsSection
-            expenseCategories={expenseCategories}
-            incomeCategories={incomeCategories}
-            payFromPresets={payFromPresets}
-            onEditExpenseCategory={(idx, val) =>
-              handleEditItem(
-                expenseCategories,
-                setExpenseCategories,
-                idx,
-                val,
-                "expense"
-              )
-            }
-            onAddExpenseCategory={() =>
-              handleAddItem(expenseCategories, setExpenseCategories, "expense")
-            }
-            onRemoveExpenseCategory={(idx) =>
-              handleRemoveItem(
-                expenseCategories,
-                setExpenseCategories,
-                idx,
-                "expense"
-              )
-            }
-            onReorderExpenseCategory={(from, to) =>
-              handleReorder(
-                expenseCategories,
-                setExpenseCategories,
-                from,
-                to,
-                "expense"
-              )
-            }
-            onEditIncomeCategory={(idx, val) =>
-              handleEditItem(
-                incomeCategories,
-                setIncomeCategories,
-                idx,
-                val,
-                "income"
-              )
-            }
-            onAddIncomeCategory={() =>
-              handleAddItem(incomeCategories, setIncomeCategories, "income")
-            }
-            onRemoveIncomeCategory={(idx) =>
-              handleRemoveItem(
-                incomeCategories,
-                setIncomeCategories,
-                idx,
-                "income"
-              )
-            }
-            onReorderIncomeCategory={(from, to) =>
-              handleReorder(
-                incomeCategories,
-                setIncomeCategories,
-                from,
-                to,
-                "income"
-              )
-            }
-            onEditPayFrom={(idx, val) =>
-              handleEditItem(
-                payFromPresets,
-                setPayFromPresets,
-                idx,
-                val,
-                "payfrom"
-              )
-            }
-            onAddPayFrom={() =>
-              handleAddItem(payFromPresets, setPayFromPresets, "payfrom")
-            }
-            onRemovePayFrom={(idx) =>
-              handleRemoveItem(
-                payFromPresets,
-                setPayFromPresets,
-                idx,
-                "payfrom"
-              )
-            }
-            onReorderPayFrom={(from, to) =>
-              handleReorder(
-                payFromPresets,
-                setPayFromPresets,
-                from,
-                to,
-                "payfrom"
-              )
-            }
-            onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
-            onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
-            onResetPayFromPresets={handleResetPayFromPresetsToDefault}
-            isDark={isDark}
-          />
+        <section id="category" className="space-y-2">
+          <div
+            className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${
+              isDark
+                ? "bg-slate-900 border-slate-700 text-slate-100"
+                : "bg-white border-slate-100 text-slate-900"
+            }`}
+          >
+            <h2 className="text-sm font-semibold">カテゴリ・項目設定</h2>
+            <button
+              type="button"
+              onClick={() => setIsCategoryOpen((prev) => !prev)}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-full border text-lg ${
+                isDark
+                  ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              }`}
+              aria-label="カテゴリ・項目設定の開閉"
+              aria-expanded={isCategoryOpen}
+            >
+              {isCategoryOpen ? "−" : "+"}
+            </button>
+          </div>
+          {isCategoryOpen && (
+            <CategorySettingsSection
+              expenseCategories={expenseCategories}
+              incomeCategories={incomeCategories}
+              payFromPresets={payFromPresets}
+              onEditExpenseCategory={(idx, val) =>
+                handleEditItem(
+                  expenseCategories,
+                  setExpenseCategories,
+                  idx,
+                  val,
+                  "expense"
+                )
+              }
+              onAddExpenseCategory={() =>
+                handleAddItem(expenseCategories, setExpenseCategories, "expense")
+              }
+              onRemoveExpenseCategory={(idx) =>
+                handleRemoveItem(
+                  expenseCategories,
+                  setExpenseCategories,
+                  idx,
+                  "expense"
+                )
+              }
+              onReorderExpenseCategory={(from, to) =>
+                handleReorder(
+                  expenseCategories,
+                  setExpenseCategories,
+                  from,
+                  to,
+                  "expense"
+                )
+              }
+              onEditIncomeCategory={(idx, val) =>
+                handleEditItem(
+                  incomeCategories,
+                  setIncomeCategories,
+                  idx,
+                  val,
+                  "income"
+                )
+              }
+              onAddIncomeCategory={() =>
+                handleAddItem(incomeCategories, setIncomeCategories, "income")
+              }
+              onRemoveIncomeCategory={(idx) =>
+                handleRemoveItem(
+                  incomeCategories,
+                  setIncomeCategories,
+                  idx,
+                  "income"
+                )
+              }
+              onReorderIncomeCategory={(from, to) =>
+                handleReorder(
+                  incomeCategories,
+                  setIncomeCategories,
+                  from,
+                  to,
+                  "income"
+                )
+              }
+              onEditPayFrom={(idx, val) =>
+                handleEditItem(
+                  payFromPresets,
+                  setPayFromPresets,
+                  idx,
+                  val,
+                  "payfrom"
+                )
+              }
+              onAddPayFrom={() =>
+                handleAddItem(payFromPresets, setPayFromPresets, "payfrom")
+              }
+              onRemovePayFrom={(idx) =>
+                handleRemoveItem(
+                  payFromPresets,
+                  setPayFromPresets,
+                  idx,
+                  "payfrom"
+                )
+              }
+              onReorderPayFrom={(from, to) =>
+                handleReorder(
+                  payFromPresets,
+                  setPayFromPresets,
+                  from,
+                  to,
+                  "payfrom"
+                )
+              }
+              onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
+              onResetIncomeCategories={handleResetIncomeCategoriesToDefault}
+              onResetPayFromPresets={handleResetPayFromPresetsToDefault}
+              isDark={isDark}
+              showHeader={false}
+            />
+          )}
         </section>
 
         <section id="aggregation">

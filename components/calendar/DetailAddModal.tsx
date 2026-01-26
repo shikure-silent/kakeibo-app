@@ -235,22 +235,6 @@ export function DetailAddModal({ open, onClose, onConfirm }: Props) {
           </div>
         </div>
 
-        {/* 店舗名（支出のみ表示） */}
-        {draft.mode !== "income" && (
-          <div className="space-y-1">
-            <label className="block text-[11px] text-slate-500">
-              店舗名（任意）
-            </label>
-            <input
-              type="text"
-              className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
-              value={draft.shopName ?? ""}
-              onChange={(e) => handleChangeDraft("shopName", e.target.value)}
-              placeholder="例: スーパーA、コンビニB など"
-            />
-          </div>
-        )}
-
         {/* 支出元 / 入金元 */}
         <div className="space-y-1">
           <label className="block text-[11px] text-slate-500">

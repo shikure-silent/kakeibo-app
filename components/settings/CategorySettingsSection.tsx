@@ -19,6 +19,7 @@ type Props = {
   onResetExpenseCategories: () => void;
   onResetIncomeCategories: () => void;
   onResetPayFromPresets: () => void;
+  showHeader?: boolean;
   isDark?: boolean;
 };
 
@@ -41,6 +42,7 @@ export function CategorySettingsSection({
   onResetExpenseCategories,
   onResetIncomeCategories,
   onResetPayFromPresets,
+  showHeader = true,
   isDark = false,
 }: Props) {
   return (
@@ -51,13 +53,15 @@ export function CategorySettingsSection({
           : "bg-white border-slate-100 text-slate-900"
       }`}
     >
-      <h2
-        className={`text-sm font-semibold ${
-          isDark ? "text-slate-100" : "text-slate-800"
-        }`}
-      >
-        カテゴリ・項目設定
-      </h2>
+      {showHeader && (
+        <h2
+          className={`text-sm font-semibold ${
+            isDark ? "text-slate-100" : "text-slate-800"
+          }`}
+        >
+          カテゴリ・項目設定
+        </h2>
+      )}
 
       {/* 支出カテゴリ */}
       <div className="space-y-1.5">

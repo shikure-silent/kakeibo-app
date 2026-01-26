@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { WEEKDAY_LABELS } from "../../lib/const";
+import { loadHolidayMap, type HolidayMap } from "../../lib/holiday";
 import { DetailRecord } from "../../types/calendar";
 
 type Props = {
@@ -15,6 +16,8 @@ type Props = {
   currentYear: number;
   currentMonth: number;
   dailyDetails: DetailRecord[][];
+  periodStart?: Date | null;
+  periodEnd?: Date | null;
   isDark?: boolean;
 };
 
@@ -29,48 +32,91 @@ export default function CalendarGrid({
   currentYear,
   currentMonth,
   dailyDetails,
+  periodStart = null,
+  periodEnd = null,
   isDark = false,
 }: Props) {
+  const [holidayMap, setHolidayMap] = useState<HolidayMap>({});
+
+  useEffect(() => {
+    let active = true;
+    loadHolidayMap()
+      .then((map) => {
+        if (active) setHolidayMap(map);
+      })
+      .catch(() => {
+        if (active) setHolidayMap({});
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const todayYear = today.getFullYear();
   const todayMonth = today.getMonth() + 1;
   const todayDate = today.getDate();
 
-  const cardBaseClass = isDark
-    ? "bg-slate-900 border-slate-700"
-    : "bg-white border-slate-100";
+  const iosSurfaceClass = isDark ? "bg-slate-900 text-slate-100" : "bg-white";
+  const iosBorderClass = isDark ? "border-slate-700" : "border-slate-200";
+  const iosMutedTextClass = isDark ? "text-slate-400" : "text-slate-500";
+  const iosSundayTextClass = isDark ? "text-rose-300" : "text-rose-500";
+  const iosSaturdayTextClass = isDark ? "text-sky-300" : "text-sky-500";
+  const iosSelectedClass = isDark ? "bg-emerald-900/30" : "bg-emerald-50";
+  const iosDayTextClass = isDark ? "text-slate-100" : "text-slate-700";
+  const iosPeriodStartDot = isDark ? "bg-emerald-400" : "bg-emerald-500";
+  const iosPeriodEndDot = isDark ? "bg-amber-400" : "bg-amber-500";
 
-  // スマホ用：金額を少し短くする（万表記）
-  const formatMobileAmount = (value: number) => {
-    if (value >= 10000) {
-      const man = value / 10000;
-      const formatted = man >= 10 ? man.toFixed(0) : man.toFixed(1);
-      return `${formatted}万`;
-    }
-    return value.toLocaleString();
-  };
-
+  const longPressTimers = useRef<Record<number, number | null>>({});
   const longPressTriggered = useRef<Record<number, boolean>>({});
-  const longPressStartAt = useRef<Record<number, number>>({});
+  const bodySelectionSnapshot = useRef<{
+    userSelect: string;
+    webkitUserSelect: string;
+    webkitTouchCallout: string;
+  } | null>(null);
   const LONG_PRESS_MS = 450;
 
-  const startLongPress = (day: number) => {
-    longPressTriggered.current[day] = false;
-    longPressStartAt.current[day] = Date.now();
+  const disableBodySelection = () => {
+    if (typeof document === "undefined") return;
+    if (bodySelectionSnapshot.current) return;
+    const body = document.body;
+    bodySelectionSnapshot.current = {
+      userSelect: body.style.userSelect,
+      webkitUserSelect: (body.style as any).webkitUserSelect ?? "",
+      webkitTouchCallout: (body.style as any).webkitTouchCallout ?? "",
+    };
+    body.style.userSelect = "none";
+    (body.style as any).webkitUserSelect = "none";
+    (body.style as any).webkitTouchCallout = "none";
   };
 
-  const finishLongPress = (day: number) => {
-    const startedAt = longPressStartAt.current[day];
-    longPressStartAt.current[day] = 0;
-    if (!startedAt) return;
-    const elapsed = Date.now() - startedAt;
-    if (elapsed >= LONG_PRESS_MS && onLongPressDay) {
+  const restoreBodySelection = () => {
+    if (typeof document === "undefined") return;
+    const snapshot = bodySelectionSnapshot.current;
+    if (!snapshot) return;
+    const body = document.body;
+    body.style.userSelect = snapshot.userSelect;
+    (body.style as any).webkitUserSelect = snapshot.webkitUserSelect;
+    (body.style as any).webkitTouchCallout = snapshot.webkitTouchCallout;
+    bodySelectionSnapshot.current = null;
+  };
+
+  const startLongPress = (day: number) => {
+    if (!onLongPressDay) return;
+    longPressTriggered.current[day] = false;
+    disableBodySelection();
+    const prev = longPressTimers.current[day];
+    if (prev) window.clearTimeout(prev);
+    longPressTimers.current[day] = window.setTimeout(() => {
       longPressTriggered.current[day] = true;
       onLongPressDay(day);
-    }
+    }, LONG_PRESS_MS);
   };
 
   const cancelLongPress = (day: number) => {
-    longPressStartAt.current[day] = 0;
+    const timer = longPressTimers.current[day];
+    if (timer) window.clearTimeout(timer);
+    longPressTimers.current[day] = null;
+    restoreBodySelection();
   };
 
   const handleClick = (day: number) => {
@@ -81,32 +127,60 @@ export default function CalendarGrid({
     onSelectDay(day);
   };
 
+  const isSameDate = (date: Date | null, y: number, m: number, d: number) => {
+    if (!date) return false;
+    return (
+      date.getFullYear() === y &&
+      date.getMonth() + 1 === m &&
+      date.getDate() === d
+    );
+  };
+
   return (
     <section
-      className={`rounded-2xl shadow-sm border px-2.5 py-2.5 sm:px-3 sm:py-3 lg:px-4 lg:py-4 ${cardBaseClass}`}
+      className={`w-full box-border rounded-none border-0 overflow-hidden ${iosSurfaceClass}`}
+      style={{
+        paddingRight: "env(safe-area-inset-right)",
+        paddingLeft: "env(safe-area-inset-left)",
+      }}
     >
       {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 mb-1.5 sm:mb-2">
-        {WEEKDAY_LABELS.map((w) => (
-          <div
-            key={w}
-            className={`text-center text-[10px] sm:text-[11px] font-medium ${
-              isDark ? "text-slate-400" : "text-slate-400"
-            }`}
-          >
-            {w}
-          </div>
-        ))}
+      <div className={`grid w-full grid-cols-7 border-b ${iosBorderClass}`}>
+        {WEEKDAY_LABELS.map((w, idx) => {
+          const labelClass =
+            idx === 0
+              ? iosSundayTextClass
+              : idx === 6
+              ? iosSaturdayTextClass
+              : iosMutedTextClass;
+          const dividerClass = idx === 6 ? "" : `border-r ${iosBorderClass}`;
+          return (
+            <div
+              key={w}
+              className={`box-border py-1 text-center text-[10px] font-medium ${labelClass} ${dividerClass}`}
+            >
+              {w}
+            </div>
+          );
+        })}
       </div>
 
       {/* 日付セル */}
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 lg:gap-2">
+      <div className="grid w-full grid-cols-7">
         {calendarCells.map((day, index) => {
+          const isLastCol = index % 7 === 6;
+          const isLastRow = index >= calendarCells.length - 7;
+          const iosCellBorderClass = `${!isLastCol ? "border-r" : ""} ${
+            !isLastRow ? "border-b" : ""
+          } ${iosBorderClass}`;
+          const iosCellPaddingClass = isLastCol ? "px-1.5" : "px-2";
           if (!day) {
             return (
               <div
                 key={index}
-                className="rounded-xl bg-transparent min-h-[52px] sm:min-h-[64px]"
+                className={
+                  `box-border min-h-[104px] ${iosCellBorderClass}`
+                }
               />
             );
           }
@@ -125,16 +199,37 @@ export default function CalendarGrid({
               ? dailyDetails[day - 1] || []
               : [];
           const hasDetails = dayDetails.length > 0;
-          const visibleDetails = hasDetails ? dayDetails.slice(0, 2) : [];
 
-          const baseCellClass =
-            "relative rounded-xl border text-left transition-colors overflow-hidden select-none";
-          const normalCellClass = isDark
-            ? "border-slate-700 bg-slate-900 hover:bg-slate-800"
-            : "border-slate-200 bg-slate-50 hover:bg-slate-100";
-          const selectedCellClass = isDark
-            ? "border-emerald-400 bg-emerald-900/40"
-            : "border-emerald-500 bg-emerald-50";
+          const dateKey = `${currentYear}-${String(currentMonth).padStart(
+            2,
+            "0"
+          )}-${String(day).padStart(2, "0")}`;
+          const holidayLabel = holidayMap[dateKey];
+          const dayOfWeek = new Date(
+            currentYear,
+            currentMonth - 1,
+            day
+          ).getDay();
+          const isSunday = dayOfWeek === 0;
+          const isSaturday = dayOfWeek === 6;
+          const isPeriodStart = isSameDate(
+            periodStart,
+            currentYear,
+            currentMonth,
+            day
+          );
+          const isPeriodEnd = isSameDate(
+            periodEnd,
+            currentYear,
+            currentMonth,
+            day
+          );
+          const dayNumberClass =
+            holidayLabel || isSunday
+              ? iosSundayTextClass
+              : isSaturday
+              ? iosSaturdayTextClass
+              : iosDayTextClass;
 
           return (
             <button
@@ -142,11 +237,11 @@ export default function CalendarGrid({
               type="button"
               onClick={() => handleClick(day)}
               onTouchStart={() => startLongPress(day)}
-              onTouchEnd={() => finishLongPress(day)}
+              onTouchEnd={() => cancelLongPress(day)}
               onTouchMove={() => cancelLongPress(day)}
               onTouchCancel={() => cancelLongPress(day)}
               onMouseDown={() => startLongPress(day)}
-              onMouseUp={() => finishLongPress(day)}
+              onMouseUp={() => cancelLongPress(day)}
               onMouseLeave={() => cancelLongPress(day)}
               onContextMenu={(e) => e.preventDefault()}
               style={{
@@ -154,149 +249,88 @@ export default function CalendarGrid({
                 WebkitUserSelect: "none",
                 userSelect: "none",
               }}
-              className={`${baseCellClass} ${
-                isSelected ? selectedCellClass : normalCellClass
-              }`}
+              className={`box-border relative w-full min-h-[104px] text-left align-top transition-colors select-none ${
+                isSelected ? iosSelectedClass : ""
+              } ${iosCellBorderClass}`}
             >
-              {/* ▼ スマホ表示（〜639px） */}
-              <div className="flex h-full min-h-[64px] flex-col px-1.5 py-1.5 sm:hidden">
-                {/* 1行目：日付 + 今日バッジ（縦並び・中央寄せ） */}
-                <div className="flex flex-col items-center">
+              <div className={`flex h-full flex-col ${iosCellPaddingClass} py-2`}>
+                <div className="flex flex-wrap items-start gap-1 min-w-0">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span
+                      className={`text-[12px] font-semibold leading-none ${dayNumberClass}`}
+                    >
+                      {day}
+                    </span>
+                    {isPeriodStart && (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${iosPeriodStartDot}`}
+                        aria-label="集計開始日"
+                      />
+                    )}
+                    {isPeriodEnd && (
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${iosPeriodEndDot}`}
+                        aria-label="集計終了日"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {holidayLabel && (
                   <span
-                    className={`text-[11px] font-semibold leading-none ${
-                      isDark ? "text-slate-50" : "text-slate-800"
+                    className={`mt-0.5 text-[10px] leading-tight truncate ${iosSundayTextClass}`}
+                  >
+                    {holidayLabel}
+                  </span>
+                )}
+
+                {isToday && (
+                  <span
+                    className={`mt-0.5 inline-flex w-fit items-center rounded-full border px-1 py-[1px] text-[8px] font-semibold leading-none whitespace-nowrap ${
+                      isDark
+                        ? "border-emerald-700 text-emerald-300"
+                        : "border-emerald-200 text-emerald-600"
                     }`}
                   >
-                    {day}
+                    今日
                   </span>
-                  {isToday && (
-                    <span className="mt-0.5 inline-flex min-w-[22px] justify-center items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-[1px] text-[8px] font-semibold text-emerald-600 leading-none whitespace-nowrap">
-                      今日
-                    </span>
-                  )}
-                </div>
+                )}
 
-                {/* 2行目：金額（PCと同じく金額が先） */}
-                <div className="mt-0.5 w-full">
+                <div className="mt-1 space-y-0.5 min-w-0">
                   {spending > 0 ? (
                     <p
-                      className={`text-[9px] font-semibold leading-tight ${
-                        isDark ? "text-slate-50" : "text-slate-800"
-                      }`}
-                    >
-                      ¥{formatMobileAmount(spending)}
-                    </p>
-                  ) : income > 0 ? (
-                    <p className="text-[8px] leading-tight text-emerald-500">
-                      ＋¥{formatMobileAmount(income)}
-                    </p>
-                  ) : null}
-                </div>
-
-                {/* 3行目：カテゴリ（or 内訳なし） */}
-                <div className="mt-0.5 w-full">
-                  {hasDetails ? (
-                    <p
-                      className={`text-[8px] leading-tight truncate ${
-                        isDark ? "text-slate-400" : "text-slate-400"
-                      }`}
-                    >
-                      {dayDetails[0]?.category || "未分類"}
-                      {dayDetails.length > 1 &&
-                        ` ほか${dayDetails.length - 1}件`}
-                    </p>
-                  ) : (
-                    <p
-                      className={`text-[8px] leading-tight ${
-                        isDark ? "text-slate-500" : "text-slate-400"
-                      }`}
-                    >
-                      内訳なし
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* ▼ PC / タブレット表示（従来どおり） */}
-              <div className="hidden h-full min-h-[80px] w-full sm:flex sm:flex-col sm:items-start sm:px-2 sm:py-2 lg:min-h-[96px]">
-                {/* 上：日付＋今日 */}
-                <div className="flex w-full items-center justify-between mb-1">
-                  <span
-                    className={`text-xs lg:text-sm font-semibold leading-none ${
-                      isDark ? "text-slate-50" : "text-slate-800"
-                    }`}
-                  >
-                    {day}
-                  </span>
-                  {isToday && (
-                    <span className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-1.5 py-[1px] text-[9px] font-semibold text-emerald-600 leading-none">
-                      今日
-                    </span>
-                  )}
-                </div>
-
-                {/* 中：合計金額 */}
-                <div className="w-full space-y-0.5">
-                  {spending > 0 ? (
-                    <p
-                      className={`text-xs font-semibold ${
-                        isDark ? "text-slate-50" : "text-slate-800"
+                      className={`text-[13px] font-semibold truncate ${
+                        isDark ? "text-slate-100" : "text-slate-800"
                       }`}
                     >
                       ¥{spending.toLocaleString()}
                     </p>
                   ) : (
-                    <p
-                      className={`text-[10px] ${
-                        isDark ? "text-slate-400" : "text-slate-400"
-                      }`}
-                    >
+                    <p className={`text-[11px] truncate ${iosMutedTextClass}`}>
                       支出なし
                     </p>
                   )}
 
                   {income > 0 && (
-                    <p className="text-[10px] text-emerald-500">
+                    <p
+                      className={`text-[11px] truncate ${
+                        isDark ? "text-sky-300" : "text-sky-500"
+                      }`}
+                    >
                       ＋¥{income.toLocaleString()}
                     </p>
                   )}
                 </div>
 
-                {/* 下：内訳リスト */}
-                <div className="mt-1 w-full space-y-0.5">
-                  {hasDetails ? (
-                    <>
-                      {visibleDetails.map((rec, i) => (
-                        <p
-                          key={i}
-                          className={`text-[9px] truncate ${
-                            isDark ? "text-slate-300" : "text-slate-500"
-                          }`}
-                        >
-                          {rec.category || "未分類"}：¥
-                          {Number(rec.amount || 0).toLocaleString()}
-                        </p>
-                      ))}
-                      {dayDetails.length > visibleDetails.length && (
-                        <p
-                          className={`text-[9px] ${
-                            isDark ? "text-slate-400" : "text-slate-400"
-                          }`}
-                        >
-                          ほか {dayDetails.length - visibleDetails.length} 件…
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <span
-                      className={`text-[9px] ${
-                        isDark ? "text-slate-400" : "text-slate-300"
-                      }`}
-                    >
-                      内訳なし
-                    </span>
-                  )}
-                </div>
+                {hasDetails ? null : (
+                  <span
+                    className={`mt-1 text-[10px] ${
+                      isDark ? "text-slate-400" : "text-slate-300"
+                    }`}
+                  >
+                    内訳なし
+                  </span>
+                )}
               </div>
             </button>
           );
