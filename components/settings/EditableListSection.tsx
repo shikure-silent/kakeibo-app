@@ -10,6 +10,7 @@ type EditableListSectionProps = {
   onAdd: () => void;
   onRemove: (index: number) => void;
   onReorder: (from: number, to: number) => void;
+  showReorderButtons?: boolean;
   isDark?: boolean;
 };
 
@@ -21,13 +22,13 @@ export function EditableListSection({
   onAdd,
   onRemove,
   onReorder,
+  showReorderButtons = false,
   isDark = false,
 }: EditableListSectionProps) {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const prevLengthRef = useRef<number>(items.length);
   const initializedRef = useRef(false);
-  const skippedFirstGrowthRef = useRef(false);
 
   const handleDragStart = (index: number, e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = "move";
@@ -60,21 +61,29 @@ export function EditableListSection({
       return;
     }
 
-    // 2回目（初期ロードでリストが増えるケース）もスキップ
-    if (!skippedFirstGrowthRef.current) {
-      skippedFirstGrowthRef.current = true;
+    // 初期ロードでの増加（prev=0→current>0）はスキップ
+    if (current > prev && prev === 0) {
       prevLengthRef.current = current;
       return;
     }
 
     // 追加されたときだけ、末尾の入力までスクロール＆フォーカス
-    if (current > prev && prev > 0) {
-      const inputs = listRef.current?.querySelectorAll("input");
+    if (current > prev) {
+      const listEl = listRef.current;
+      const inputs = listEl?.querySelectorAll("input");
       const lastInput =
         inputs && inputs.length > 0 ? inputs[inputs.length - 1] : null;
-      if (lastInput) {
-        lastInput.scrollIntoView({ behavior: "smooth", block: "center" });
-        lastInput.focus();
+      if (listEl && lastInput) {
+        const listRect = listEl.getBoundingClientRect();
+        const inputRect = lastInput.getBoundingClientRect();
+        const currentTop = listEl.scrollTop;
+        const offsetTop =
+          inputRect.top -
+          listRect.top +
+          currentTop -
+          Math.max(12, listRect.height * 0.25);
+        listEl.scrollTo({ top: Math.max(0, offsetTop), behavior: "smooth" });
+        lastInput.focus({ preventScroll: true });
       }
     }
     prevLengthRef.current = current;
@@ -96,7 +105,7 @@ export function EditableListSection({
 
   return (
     <div className="space-y-2">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pr-6">
         <div>
           <p
             className={`text-[11px] font-medium ${
@@ -116,7 +125,7 @@ export function EditableListSection({
         <button
           type="button"
           onClick={onAdd}
-          className="text-[11px] rounded-full border px-3 py-1 w-full sm:w-auto text-center"
+          className="text-[11px] rounded-full border px-3 py-1 w-full sm:w-auto text-center whitespace-nowrap flex-shrink-0 min-w-[88px]"
           style={{
             borderColor: isDark ? "#34d399" : "#34d399",
             color: isDark ? "#bbf7d0" : "#047857",
@@ -131,7 +140,7 @@ export function EditableListSection({
         {items.map((item, index) => (
           <div
             key={index}
-            className="flex flex-row items-stretch gap-3 rounded-xl border px-3 py-2"
+            className="flex flex-col sm:flex-row items-stretch gap-2 rounded-xl border px-3 py-2"
             style={{
               borderColor:
                 draggingIndex === index
@@ -157,7 +166,7 @@ export function EditableListSection({
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
           >
-            <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <span
                 className={`text-[14px] select-none cursor-grab ${
                   isDark ? "text-slate-500" : "text-slate-400"
@@ -180,10 +189,46 @@ export function EditableListSection({
                 />
               </div>
             </div>
+            {showReorderButtons && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onReorder(index, Math.max(0, index - 1))}
+                  disabled={index === 0}
+                  className="rounded-full border px-2 py-1 text-[11px]"
+                  style={{
+                    borderColor: isDark ? "#475569" : "#e2e8f0",
+                    backgroundColor: isDark ? "#0f172a" : "white",
+                    color: isDark ? "#cbd5f5" : "#475569",
+                    opacity: index === 0 ? 0.4 : 1,
+                  }}
+                  aria-label="上に移動"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onReorder(index, Math.min(items.length - 1, index + 1))
+                  }
+                  disabled={index === items.length - 1}
+                  className="rounded-full border px-2 py-1 text-[11px]"
+                  style={{
+                    borderColor: isDark ? "#475569" : "#e2e8f0",
+                    backgroundColor: isDark ? "#0f172a" : "white",
+                    color: isDark ? "#cbd5f5" : "#475569",
+                    opacity: index === items.length - 1 ? 0.4 : 1,
+                  }}
+                  aria-label="下に移動"
+                >
+                  ↓
+                </button>
+              </div>
+            )}
             <button
               type="button"
               onClick={() => onRemove(index)}
-              className="ml-auto self-end rounded-full border px-3 py-1 text-[11px] font-medium"
+              className="self-end sm:ml-auto rounded-full border px-3 py-1 text-[11px] font-medium whitespace-nowrap"
               style={{
                 borderColor: isDark ? "#7f1d1d" : "#fecdd3",
                 backgroundColor: isDark ? "#450a0a" : "white",

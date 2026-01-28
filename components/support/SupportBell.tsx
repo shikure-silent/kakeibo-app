@@ -98,6 +98,15 @@ export default function SupportBell({ cards }: Props) {
   }, [isOpen]);
 
   useEffect(() => {
+    if (!activeSupportCard) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [activeSupportCard]);
+
+  useEffect(() => {
     if (!isOpen) return;
     const updatePanelPosition = () => {
       const anchor = bellRef.current;

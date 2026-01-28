@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { BudgetBaseOption } from "../../lib/settingsStorage";
 
 type Props = {
   totalIncome: number;
@@ -8,6 +9,8 @@ type Props = {
   saving: number;
   savingRate: number | null;
   ageGroupLabel: string;
+  budgetBase: BudgetBaseOption;
+  userAverageMonthsUsed?: number | null;
   /** 目標貯金率（%）。例: 10 = 10%、null のときは「目標なし」扱い */
   targetSavingRatePercent?: number | null;
   isDark?: boolean;
@@ -22,11 +25,19 @@ export default function SavingHighlightCard({
   saving,
   savingRate,
   ageGroupLabel,
+  budgetBase,
+  userAverageMonthsUsed = null,
   targetSavingRatePercent,
   enableEncouragingMessages = true,
   isDark = false,
 }: Props) {
   const noInput = totalIncome <= 0 && totalExpense <= 0;
+  const budgetBaseNote =
+    budgetBase === "userAverage"
+      ? userAverageMonthsUsed
+        ? `過去${userAverageMonthsUsed}ヶ月の平均支出をもとに初期値を設定しています。`
+        : "過去数ヶ月の平均支出をもとに初期値を設定しています（データ不足時は全国平均値で補完）。"
+      : `年代: ${ageGroupLabel} の全国平均値データをもとに初期値を設定しています。`;
 
   const formatSavingText = () => {
     if (noInput) {
@@ -168,7 +179,7 @@ export default function SavingHighlightCard({
             </span>
           </p>
           <p className={isDark ? "text-slate-400" : "text-slate-500"}>
-            年代: {ageGroupLabel} の全国データをもとに初期値を設定しています。
+            {budgetBaseNote}
           </p>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import React from "react";
 import NumberInput from "../NumberInput";
 import { AgeGroup, ageGroupLabels } from "../../data/ageGroupData";
+import { BudgetBaseOption } from "../../lib/settingsStorage";
 
 export type IncomeMember = {
   name: string;
@@ -18,6 +19,7 @@ type Props = {
   onMemberNameChange: (index: number, name: string) => void;
   onMemberValueChange: (index: number, value: string) => void;
   totalIncome: number;
+  budgetBase: BudgetBaseOption;
 
   // 追加済みのやつ
   mode: "setup" | "dashboard";
@@ -34,10 +36,19 @@ export default function IncomeSettingsCard({
   onMemberNameChange,
   onMemberValueChange,
   totalIncome,
+  budgetBase,
   mode,
   onRequestEdit,
   isDark = false,
 }: Props) {
+  const ageGroupLabelText =
+    budgetBase === "userAverage"
+      ? "世帯主の年代（データ不足時の補完に使用）"
+      : "世帯主の年代（全国×年代別の参考データを使用）";
+  const ageGroupHintText =
+    budgetBase === "userAverage"
+      ? "年代は、過去データが少ない場合の補完に使われます。"
+      : "選んだ年代に合わせて、支出予算の初期値が変わります。";
   // --------------------
   // ダッシュボードモード
   // --------------------
@@ -160,7 +171,7 @@ export default function IncomeSettingsCard({
               isDark ? "text-slate-200" : "text-slate-600"
             }`}
           >
-            世帯主の年代（全国×年代別の参考データを使用）
+            {ageGroupLabelText}
           </label>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <select
@@ -188,7 +199,7 @@ export default function IncomeSettingsCard({
                 isDark ? "text-slate-300" : "text-slate-500"
               }`}
             >
-              選んだ年代に合わせて、支出予算の初期値が変わります。
+              {ageGroupHintText}
             </span>
           </div>
         </div>

@@ -4,6 +4,7 @@ import React from "react";
 import ExpenseInputsBlock from "../ExpenseInputsBlock";
 import { ExpenseMedian } from "../../data/prefectureData";
 import { CustomExpenseItem } from "../../types/budget";
+import { BudgetBaseOption } from "../../lib/settingsStorage";
 
 // カテゴリキー → 表示ラベル
 const EXPENSE_LABEL_MAP: Record<keyof ExpenseMedian, string> = {
@@ -23,6 +24,8 @@ type ConfirmedItem = {
 
 type Props = {
   ageGroupLabel: string;
+  budgetBase: BudgetBaseOption;
+  userAverageMonthsUsed?: number | null;
   median: ExpenseMedian;
   inputs: Record<keyof ExpenseMedian, string>;
   onChange: (key: keyof ExpenseMedian, value: string) => void;
@@ -49,6 +52,8 @@ type Props = {
 
 export default function BudgetSettingsCard({
   ageGroupLabel,
+  budgetBase,
+  userAverageMonthsUsed = null,
   median,
   inputs,
   onChange,
@@ -70,6 +75,12 @@ export default function BudgetSettingsCard({
   isDark = false,
   lastAddedCustomItemId,
 }: Props) {
+  const budgetBaseText =
+    budgetBase === "userAverage"
+      ? userAverageMonthsUsed
+        ? `過去${userAverageMonthsUsed}ヶ月の平均支出をベースに`
+        : "過去数ヶ月の平均支出をベースに（データ不足時は全国平均値で補完して）"
+      : `選択した年代（${ageGroupLabel}）の全国平均値データをベースに`;
   // --------------------
   // ダッシュボードモード
   // --------------------
@@ -116,8 +127,8 @@ export default function BudgetSettingsCard({
               isDark ? "text-slate-300" : "text-slate-500"
             }`}
           >
-            選択した年代（{ageGroupLabel}
-            ）の全国データをベースに、現在の支出予算を設定しています。
+            {budgetBaseText}
+            、現在の支出予算を設定しています。
           </p>
         </div>
 
@@ -210,8 +221,8 @@ export default function BudgetSettingsCard({
             isDark ? "text-slate-300" : "text-slate-500"
           }`}
         >
-          選択した年代（{ageGroupLabel}
-          ）の全国データをもとにした初期値ですが、自由に編集・項目追加できます。
+          {budgetBaseText}
+          した初期値ですが、自由に編集・項目追加できます。
         </p>
       </div>
 

@@ -4,6 +4,7 @@ import React from "react";
 import { AgeGroup, ageGroupLabels } from "../../data/ageGroupData";
 import { ExpenseMedian } from "../../data/prefectureData";
 import { CustomExpenseItem } from "../../types/budget";
+import { BudgetBaseOption } from "../../lib/settingsStorage";
 import NumberInput from "../NumberInput";
 import ExpenseInputsBlock from "../ExpenseInputsBlock";
 
@@ -25,6 +26,7 @@ type Props = {
   incomeMembers: IncomeMember[];
   onMemberNameChange: (index: number, name: string) => void;
   onMemberValueChange: (index: number, value: string) => void;
+  budgetBase: BudgetBaseOption;
   expenseInputs: Record<keyof ExpenseMedian, string>;
   onExpenseChange: (key: keyof ExpenseMedian, value: string) => void;
   medianForAge: ExpenseMedian;
@@ -62,6 +64,7 @@ export default function HomeSetupWizard({
   incomeMembers,
   onMemberNameChange,
   onMemberValueChange,
+  budgetBase,
   expenseInputs,
   onExpenseChange,
   medianForAge,
@@ -104,6 +107,10 @@ export default function HomeSetupWizard({
 
   const showSummary = clampedStep > 1;
   const warningAgeUnselected = ageGroup === "all";
+  const ageGroupWarningText =
+    budgetBase === "userAverage"
+      ? "年代は、過去データが少ない場合の補完に使われます（未選択でもOK）。"
+      : "年代を選ぶと予算の初期値がより自然になります（未選択でもOK）。";
   const warningIncomeZero = totalIncome === 0;
   const warningBudgetZero = totalExpense === 0;
 
@@ -213,7 +220,7 @@ export default function HomeSetupWizard({
 
           {warningAgeUnselected && (
             <p className="text-[11px] text-amber-600">
-              年代を選ぶと予算の初期値がより自然になります（未選択でもOK）。
+              {ageGroupWarningText}
             </p>
           )}
 

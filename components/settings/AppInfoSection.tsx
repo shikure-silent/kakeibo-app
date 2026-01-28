@@ -28,7 +28,9 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         >
           アプリ名
         </p>
-        <p className={`text-[12px] ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+        <p
+          className={`text-[12px] ${isDark ? "text-slate-200" : "text-slate-800"}`}
+        >
           無理なく貯金ができる家計簿アプリ
         </p>
       </div>
@@ -41,7 +43,9 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         >
           バージョン
         </p>
-        <p className={`text-[12px] ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+        <p
+          className={`text-[12px] ${isDark ? "text-slate-200" : "text-slate-800"}`}
+        >
           {version}
         </p>
       </div>
@@ -54,11 +58,15 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         >
           データの保存について
         </p>
-        <p className={`text-[11px] leading-snug ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+        <p
+          className={`text-[11px] leading-snug ${isDark ? "text-slate-300" : "text-slate-500"}`}
+        >
           このアプリの家計簿データは、この端末のブラウザ内（localStorage）にのみ保存されます。
           開発者側のサーバーには送信されません。
         </p>
-        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
+        <p
+          className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}
+        >
           ブラウザの「サイトデータの削除」などを行うと家計簿データも消えるため、ご注意ください。
         </p>
       </div>
@@ -71,8 +79,10 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         >
           このアプリについて
         </p>
-        <p className={`text-[11px] leading-snug ${isDark ? "text-slate-300" : "text-slate-500"}`}>
-          「全国×年代別の支出中央値」をベースに、無理なく貯金できるペースをつかむことを目指した個人開発中の家計簿アプリです。
+        <p
+          className={`text-[11px] leading-snug ${isDark ? "text-slate-300" : "text-slate-500"}`}
+        >
+          「全国×年代別の支出平均値」をベースに、無理なく貯金できるペースをつかむことを目指した家計簿アプリです。
           まだベータ版のため、仕様は今後も変更される可能性があります。
         </p>
       </div>

@@ -4,6 +4,7 @@ import React from "react";
 import { AgeGroup, ageGroupLabels } from "../../data/ageGroupData";
 import { ExpenseMedian } from "../../data/prefectureData";
 import { CustomExpenseItem } from "../../types/budget";
+import { BudgetBaseOption } from "../../lib/settingsStorage";
 import SavingHighlightCard from "./SavingHighlightCard";
 import IncomeSettingsCard, { IncomeMember } from "./IncomeSettingsCard";
 import BudgetSettingsCard from "./BudgetSettingsCard";
@@ -19,6 +20,8 @@ type Props = {
   savingHighlightExtra?: React.ReactNode;
   showGuideAside?: boolean;
   centerHeader?: boolean;
+  budgetBase: BudgetBaseOption;
+  userAverageMonthsUsed: number | null;
   homeMode: HomeMode;
   ageGroup: AgeGroup;
   medianForAge: ExpenseMedian;
@@ -68,6 +71,8 @@ export function HomePageView({
   savingHighlightExtra,
   showGuideAside = true,
   centerHeader = false,
+  budgetBase,
+  userAverageMonthsUsed,
   homeMode,
   ageGroup,
   medianForAge,
@@ -109,6 +114,12 @@ export function HomePageView({
   extraSection,
 }: Props) {
   const isDark = themeClass.includes("theme-dark");
+  const budgetBaseHint =
+    budgetBase === "userAverage"
+      ? userAverageMonthsUsed
+        ? `過去${userAverageMonthsUsed}ヶ月の平均支出をベースに初期値が設定されます。`
+        : "過去数ヶ月の平均支出をベースに初期値を設定します（データ不足時は全国平均値で補完）。"
+      : "世帯主の年代を選ぶと、その年代の全国平均値データから8項目の支出予算の初期値が設定されます。";
 
   return (
     <main className={`min-h-screen ${themeClass}`}>
@@ -137,6 +148,8 @@ export function HomePageView({
               saving={displaySaving}
               savingRate={displaySavingRate}
               ageGroupLabel={ageGroupLabels[ageGroup]}
+              budgetBase={budgetBase}
+              userAverageMonthsUsed={userAverageMonthsUsed}
               isDark={isDark}
             />
             {savingHighlightExtra}
@@ -159,6 +172,7 @@ export function HomePageView({
               incomeMembers={incomeMembers}
               onMemberNameChange={onMemberNameChange}
               onMemberValueChange={onMemberValueChange}
+              budgetBase={budgetBase}
               expenseInputs={expenseInputs}
               onExpenseChange={onExpenseChange}
               medianForAge={medianForAge}
@@ -192,6 +206,7 @@ export function HomePageView({
                 incomeMembers={incomeMembers}
                 onMemberNameChange={onMemberNameChange}
                 onMemberValueChange={onMemberValueChange}
+                budgetBase={budgetBase}
                 mode={homeMode}
                 onRequestEdit={onRequestIncomeEdit}
                 totalIncome={displayTotalIncome}
@@ -201,6 +216,8 @@ export function HomePageView({
               {/* 💸 支出予算カード */}
               <BudgetSettingsCard
                 ageGroupLabel={ageGroupLabels[ageGroup]}
+                budgetBase={budgetBase}
+                userAverageMonthsUsed={userAverageMonthsUsed}
                 median={medianForAge}
                 inputs={expenseInputs}
                 onChange={onExpenseChange}
@@ -236,7 +253,7 @@ export function HomePageView({
                   <p className="font-medium">この画面でできること</p>
                   <ul className="list-disc pl-4 space-y-1">
                     <li>
-                      世帯主の年代を選ぶと、その年代の全国データから8項目の支出予算の初期値が設定されます。
+                      {budgetBaseHint}
                     </li>
                     <li>
                       世帯のメンバーごとの収入と支出予算を設定すると、「今月の貯金見込み」が自動計算されます。

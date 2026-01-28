@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { DetailRecord } from "../../types/calendar";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -46,6 +46,15 @@ export function DetailOverviewModal({
   onClose,
   onEdit,
 }: Props) {
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
+
   if (!open || !selectedDay) return null;
 
   const payFromSummary = useMemo(() => {
