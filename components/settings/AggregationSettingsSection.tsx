@@ -77,7 +77,7 @@ export function AggregationSettingsSection({
             isDark ? "text-slate-200" : "text-slate-600"
           }`}
         >
-          予算の基準（将来のオプション）
+          予算の基準
         </p>
         <div className="flex flex-col gap-1 text-[11px]">
           {(["nationalMedian", "userAverage"] as BudgetBaseOption[]).map(
@@ -96,16 +96,21 @@ export function AggregationSettingsSection({
                 />
                 <span className={isDark ? "text-slate-200" : "text-slate-700"}>
                   {opt === "nationalMedian" &&
-                    "全国×年代別の支出中央値をベースにする（現在使用中）"}
+                    "全国×年代別の支出平均値をベースにする"}
                   {opt === "userAverage" &&
-                    "自分の過去数ヶ月の平均支出をベースにする（今後追加予定）"}
+                    "自分の過去数ヶ月の平均支出をベースにする"}
                 </span>
               </label>
             )
           )}
         </div>
-        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
-          ※ 「自分の平均から計算する」は今後のバージョンで実装予定です。
+        <p
+          className={`text-[10px] ${
+            isDark ? "text-slate-400" : "text-slate-400"
+          }`}
+        >
+          ※
+          過去の入力が少ない場合は、全国×年代別の平均値で補完して初期値を作成します。
         </p>
       </div>
     </section>

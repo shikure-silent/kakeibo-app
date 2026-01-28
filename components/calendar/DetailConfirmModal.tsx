@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 type Props = {
   open: boolean;
@@ -10,6 +10,15 @@ type Props = {
 };
 
 export function DetailConfirmModal({ open, mode, onCancel, onConfirm }: Props) {
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (

@@ -4,9 +4,11 @@ import React, { useEffect, useState } from "react";
 import { ExpenseMedian } from "../../data/prefectureData";
 import { AgeGroup, ageGroupMedians } from "../../data/ageGroupData";
 import { buildBudgetKey, EXPENSE_CATEGORIES } from "../../lib/const";
+import { getNationalMedianForAgeGroup } from "../../lib/budgetBaseProvider";
 import {
   buildExpenseInputs,
   FixedExpenseKey,
+  buildUserAverageExpenseMedian,
   loadFixedExpenses,
   saveFixedExpense,
   isHomeCycleConfirmed,
@@ -39,6 +41,9 @@ import RemainingBudgetCard from "./RemainingBudgetCard";
 type HomeMode = "setup" | "dashboard";
 
 type Variant = "data" | "setup";
+
+const USER_AVERAGE_MONTHS = 3;
+const USER_AVERAGE_LOOKBACK_MONTHS = 12;
 
 const DEFAULT_BUDGET_LABEL_MAP: Record<string, keyof ExpenseMedian> = {
   食費: "food",
@@ -104,6 +109,12 @@ export default function HomePageContainer({
   const [expenseInputs, setExpenseInputs] = useState<
     Record<keyof ExpenseMedian, string>
   >(() => buildExpenseInputs("all"));
+  const [budgetBaseMedian, setBudgetBaseMedian] = useState<ExpenseMedian>(
+    ageGroupMedians.all
+  );
+  const [userAverageMonthsUsed, setUserAverageMonthsUsed] = useState<
+    number | null
+  >(null);
 
   // カスタム支出項目
   const [customExpenseItems, setCustomExpenseItems] = useState<
@@ -427,35 +438,41 @@ export default function HomePageContainer({
   const isDark = themeClass.includes("theme-dark");
   const isData = variant === "data";
 
-  // 年代が変わったら、その年代の全国値をベースに支出予算をリセット
+  // 年代や予算基準が変わったら、支出予算の基準値を反映
   // ＋ 家賃・サブスクは固定費ストアで上書き
   useEffect(() => {
-    const baseInputs = buildExpenseInputs(ageGroup);
-    const autoMap = getAutoUpdateCategories(settings);
-    const fixed = loadFixedExpenses();
+    let cancelled = false;
 
-    setExpenseInputs((prev) => {
-      const next = { ...prev };
+    const applyBudgetBase = async () => {
+    const national = await getNationalMedianForAgeGroup(ageGroup);
+    const nationalMedian = national.median ?? ageGroupMedians[ageGroup];
 
-      (Object.keys(baseInputs) as (keyof ExpenseMedian)[]).forEach((key) => {
-        const shouldOverwrite =
-          prev[key] === "" || typeof prev[key] === "undefined";
-        if (autoMap[key] && shouldOverwrite) {
-          next[key] = baseInputs[key];
+      let baseMedian = nationalMedian;
+      let monthsUsed: number | null = null;
+
+      if (settings.budgetBase === "userAverage") {
+        const result = buildUserAverageExpenseMedian(
+          new Date(),
+          USER_AVERAGE_MONTHS,
+          USER_AVERAGE_LOOKBACK_MONTHS
+        );
+        if (result) {
+          baseMedian = result.median;
+          monthsUsed = result.monthsUsed;
         }
-      });
-
-      if (autoMap.rent && typeof fixed.rent === "number") {
-        next.rent = String(fixed.rent);
-      }
-      if (autoMap.subscription && typeof fixed.subscription === "number") {
-        next.subscription = String(fixed.subscription);
       }
 
-      return next;
-    });
-    // カスタム項目は「自分で決める部分」なのでそのまま維持
-  }, [ageGroup]);
+      if (cancelled) return;
+
+      setBudgetBaseMedian(baseMedian);
+      setUserAverageMonthsUsed(monthsUsed);
+    };
+
+    void applyBudgetBase();
+    return () => {
+      cancelled = true;
+    };
+  }, [ageGroup, settings.budgetBase, settings.autoUpdateCategories]);
 
   // 初回マウント時に固定費を反映（SSRとの不一致を避けるため）
   useEffect(() => {
@@ -555,8 +572,8 @@ export default function HomePageContainer({
     setAgeGroup(next);
   };
 
-  // 年代に応じた中央値を取得
-  const medianForAge = ageGroupMedians[ageGroup];
+  // 予算基準に応じた平均値を取得
+  const medianForAge = budgetBaseMedian;
   const autoUpdateMap = getAutoUpdateCategories(settings);
 
   const handleMemberCountChange = (count: number) => {
@@ -930,6 +947,8 @@ export default function HomePageContainer({
       }
       showGuideAside={!isData}
       centerHeader
+      budgetBase={settings.budgetBase}
+      userAverageMonthsUsed={userAverageMonthsUsed}
       homeMode={homeMode}
       ageGroup={ageGroup}
       medianForAge={medianForAge}

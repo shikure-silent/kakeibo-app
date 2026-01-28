@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import SelectedDayDetailsCard from "./SelectedDayDetailsCard";
 import { DetailRecord } from "../../types/calendar";
 
@@ -25,11 +25,20 @@ export function DetailEditModal({
   onDeleteRecord,
   onAddRecord,
 }: Props) {
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
+
   if (!open || !selectedDay) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-3 py-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-4 sm:py-[calc(env(safe-area-inset-top)+2.5rem)] sm:pb-[calc(env(safe-area-inset-bottom)+2.5rem)] overflow-y-auto">
-      <div className="relative w-full max-w-2xl max-h-[calc(100vh-6rem)] overflow-y-auto bg-white rounded-2xl shadow-lg border border-slate-100 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="relative w-full max-w-2xl max-h-[calc(100vh-6rem)] overflow-y-auto bg-white rounded-2xl shadow-lg border border-slate-100 px-4 py-4 sm:px-5 sm:py-5 pr-6 sm:pr-7">
         <button
           type="button"
           onClick={onClose}
