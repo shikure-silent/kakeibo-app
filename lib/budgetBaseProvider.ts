@@ -20,7 +20,9 @@ export const registerNationalMedianFetcher = (
   nationalMedianFetcher = fetcher;
 };
 
-const isValidMedian = (value: ExpenseMedian | null | undefined): boolean => {
+const isValidMedian = (
+  value: ExpenseMedian | null | undefined
+): value is ExpenseMedian => {
   if (!value) return false;
   return (
     Number.isFinite(value.food) &&
