@@ -58,7 +58,7 @@ export default function MonthlySummaryCard({
     [amounts, daysInMonth]
   );
 
-  const handleBarClick = (entry: any) => {
+  const handleBarClick = (entry?: { payload?: { day?: number } }) => {
     if (!onSelectDayFromChart) return;
     const day = entry?.payload?.day;
     if (typeof day === "number") {
@@ -195,11 +195,15 @@ export default function MonthlySummaryCard({
               tickLine={false}
             />
             <Tooltip
-              formatter={(value: any) => {
-                const v = Number(value || 0);
+              formatter={(
+                value: number | string | Array<number | string> | null | undefined
+              ) => {
+                const raw =
+                  Array.isArray(value) ? value[0] : value ?? 0;
+                const v = typeof raw === "number" ? raw : Number(raw || 0);
                 return [`¥${v.toLocaleString()}`, "支出合計"];
               }}
-              labelFormatter={(label: any) => `${label}日`}
+              labelFormatter={(label: number | string) => `${label}日`}
             />
             {dailyTarget && (
               <ReferenceLine

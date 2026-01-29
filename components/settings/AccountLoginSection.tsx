@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
 import { clearKakeiboKeys } from "../../lib/cloudSync";
@@ -19,7 +18,6 @@ function maskEmail(email: string) {
 }
 
 export function AccountLoginSection() {
-  const router = useRouter();
   const { supabase, user, isLoading } = useSupabaseAuth();
 
   const [mounted, setMounted] = useState(false);

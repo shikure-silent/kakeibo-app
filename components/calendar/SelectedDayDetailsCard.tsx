@@ -22,20 +22,12 @@ type Props = {
   onCloseCalendar?: () => void; // 追加後にカレンダー画面に戻したいとき用（任意）
 };
 
-// 桁区切り（小数点なし）のフォーマット
-const formatAmountInt = (amount: number | null | undefined) => {
-  const n = Number(amount ?? 0);
-  if (Number.isNaN(n)) return "¥0";
-  return "¥" + n.toLocaleString("ja-JP");
-};
-
 export default function SelectedDayDetailsCard({
   selectedDay,
   selectedDateLabel,
   selectedDetails,
   onChangeRecord,
   onDeleteRecord,
-  onAddRecord, // 使っていないが props は維持
   onCloseCalendar,
 }: Props) {
   // 設定ページ由来のカテゴリ・支出元候補

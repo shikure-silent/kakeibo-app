@@ -382,6 +382,33 @@ export default function InputFormCard({
           </div>
         </div>
 
+        {/* 店舗/相手先 */}
+        <div className="space-y-1.5">
+          <label
+            className={`block text-[11px] font-medium ${
+              isDark ? "text-slate-200" : "text-slate-600"
+            }`}
+          >
+            店舗・相手先（任意）
+          </label>
+          <input
+            type="text"
+            value={shopName}
+            onChange={(e) => onChangeShopName(e.target.value)}
+            className="
+              w-full rounded-lg border
+              px-3 py-2 text-[12px]
+              focus:outline-none focus:ring-2 focus:ring-emerald-300
+            "
+            style={{
+              backgroundColor: isDark ? "#0f172a" : "white",
+              color: isDark ? "#e2e8f0" : "#334155",
+              borderColor: isDark ? "#475569" : "#e2e8f0",
+            }}
+            placeholder="例：スーパー〇〇 / Amazon / 給与振込 など"
+          />
+        </div>
+
         {/* メモ */}
         <div className="space-y-1.5">
           <label

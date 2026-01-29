@@ -63,8 +63,10 @@ export default function ResetPasswordPage() {
       setMessage("パスワードを更新しました。ログインし直してください。");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      setErrorText(err?.message ?? "パスワード更新に失敗しました。");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "パスワード更新に失敗しました。";
+      setErrorText(message);
     } finally {
       setBusy(false);
     }

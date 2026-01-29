@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSupabaseAuth } from "../lib/useSupabaseAuth"; // ←パス調整
 import { setFlashToast } from "../lib/flashToast";
 import SupportBell from "./support/SupportBell";

@@ -62,7 +62,7 @@ export function clearKakeiboKeys(options?: { includeSettings?: boolean }) {
 }
 
 export function importKakeiboDump(
-  dump: Record<string, any>,
+  dump: Record<string, unknown>,
   options?: { includeSettings?: boolean; clearBefore?: boolean }
 ) {
   if (typeof window === "undefined") return;

@@ -161,10 +161,11 @@ export function DetailListItem({
               const half = toHalfWidthNumber(e.target.value);
               const digitsOnly = half.replace(/[^\d]/g, "");
               const num = digitsOnly === "" ? NaN : Number(digitsOnly);
+              const amount = Number.isNaN(num) ? 0 : num;
 
               onChange(index, {
                 ...record,
-                amount: num as any,
+                amount,
               } as DetailRecord);
             }}
           />

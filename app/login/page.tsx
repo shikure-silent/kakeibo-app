@@ -93,8 +93,10 @@ function LoginPageInner() {
       router.push(nextUrl);
       router.refresh();
       return;
-    } catch (err: any) {
-      setErrorText(err?.message ?? "ログインに失敗しました。");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "ログインに失敗しました。";
+      setErrorText(message);
     } finally {
       setBusy(false);
     }

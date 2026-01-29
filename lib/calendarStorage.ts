@@ -11,9 +11,9 @@ export const loadAmountsFromStorage = (
   const raw = window.localStorage.getItem(key);
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw) as { amounts?: unknown };
     if (parsed && Array.isArray(parsed.amounts)) {
-      return parsed.amounts.map((v: any) => Number(v) || 0);
+      return parsed.amounts.map((v) => Number(v) || 0);
     }
   } catch {
     // noop
@@ -138,10 +138,10 @@ export const calcDayTotals = (details: DetailRecord[]) => {
   let income = 0;
 
   for (const rec of details) {
-    const amt = Number((rec as any).amount);
+    const amt = Number(rec.amount);
     if (!Number.isFinite(amt)) continue;
 
-    const mode = (rec as any).mode === "income" ? "income" : "expense";
+    const mode = rec.mode === "income" ? "income" : "expense";
     if (mode === "income") {
       income += amt;
     } else {
