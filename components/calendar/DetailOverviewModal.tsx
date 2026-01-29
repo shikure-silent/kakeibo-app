@@ -46,18 +46,8 @@ export function DetailOverviewModal({
   onClose,
   onEdit,
 }: Props) {
-  useEffect(() => {
-    if (!open) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, [open]);
-
-  if (!open || !selectedDay) return null;
-
   const payFromSummary = useMemo(() => {
+    if (!open || !selectedDay) return [];
     const totals = new Map<string, number>();
     selectedDetails.forEach((rec) => {
       const label = rec.payFrom?.trim()
@@ -72,7 +62,18 @@ export function DetailOverviewModal({
     return Array.from(totals.entries())
       .map(([label, amount]) => ({ label, amount }))
       .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
-  }, [selectedDetails]);
+  }, [open, selectedDay, selectedDetails]);
+
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
+
+  if (!open || !selectedDay) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-3 py-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] sm:px-4 sm:py-[calc(env(safe-area-inset-top)+2.5rem)] sm:pb-[calc(env(safe-area-inset-bottom)+2.5rem)] overflow-y-auto">
