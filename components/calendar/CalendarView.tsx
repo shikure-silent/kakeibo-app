@@ -43,7 +43,6 @@ export default function CalendarView(props: Props) {
     themeClass,
     // 表示系
     periodLabel,
-    hasPeriod,
     selectedDay,
     selectedDateLabel,
     isOverviewModalOpen,

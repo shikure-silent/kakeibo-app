@@ -23,8 +23,10 @@ export function CloudSyncSection() {
       const dump = exportKakeiboDump({ includeSettings: true });
       await saveKakeiboState(supabase, user.id, dump);
       setMsg("クラウドに保存しました（kakeibo_state）。");
-    } catch (e: any) {
-      setErr(e?.message ?? "保存に失敗しました。");
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "保存に失敗しました。";
+      setErr(message);
     } finally {
       setBusy(false);
     }
@@ -52,8 +54,10 @@ export function CloudSyncSection() {
       importKakeiboDump(dump, { includeSettings: true, clearBefore: true });
       setMsg("クラウドから復元しました。画面を更新します。");
       window.location.reload();
-    } catch (e: any) {
-      setErr(e?.message ?? "復元に失敗しました。");
+    } catch (e) {
+      const message =
+        e instanceof Error ? e.message : "復元に失敗しました。";
+      setErr(message);
     } finally {
       setBusy(false);
     }

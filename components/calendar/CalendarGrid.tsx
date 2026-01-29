@@ -79,14 +79,18 @@ export default function CalendarGrid({
     if (typeof document === "undefined") return;
     if (bodySelectionSnapshot.current) return;
     const body = document.body;
-    bodySelectionSnapshot.current = {
-      userSelect: body.style.userSelect,
-      webkitUserSelect: (body.style as any).webkitUserSelect ?? "",
-      webkitTouchCallout: (body.style as any).webkitTouchCallout ?? "",
+    const style = body.style as CSSStyleDeclaration & {
+      webkitUserSelect?: string;
+      webkitTouchCallout?: string;
     };
-    body.style.userSelect = "none";
-    (body.style as any).webkitUserSelect = "none";
-    (body.style as any).webkitTouchCallout = "none";
+    bodySelectionSnapshot.current = {
+      userSelect: style.userSelect,
+      webkitUserSelect: style.webkitUserSelect ?? "",
+      webkitTouchCallout: style.webkitTouchCallout ?? "",
+    };
+    style.userSelect = "none";
+    style.webkitUserSelect = "none";
+    style.webkitTouchCallout = "none";
   };
 
   const restoreBodySelection = () => {
@@ -94,9 +98,13 @@ export default function CalendarGrid({
     const snapshot = bodySelectionSnapshot.current;
     if (!snapshot) return;
     const body = document.body;
-    body.style.userSelect = snapshot.userSelect;
-    (body.style as any).webkitUserSelect = snapshot.webkitUserSelect;
-    (body.style as any).webkitTouchCallout = snapshot.webkitTouchCallout;
+    const style = body.style as CSSStyleDeclaration & {
+      webkitUserSelect?: string;
+      webkitTouchCallout?: string;
+    };
+    style.userSelect = snapshot.userSelect;
+    style.webkitUserSelect = snapshot.webkitUserSelect;
+    style.webkitTouchCallout = snapshot.webkitTouchCallout;
     bodySelectionSnapshot.current = null;
   };
 

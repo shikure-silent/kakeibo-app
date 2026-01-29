@@ -52,8 +52,9 @@ export default function ResetPasswordRequestPage() {
       setMessage(
         "再設定メールを送信しました。メール内リンクからパスワードを更新してください。"
       );
-    } catch (err: any) {
-      const rawMessage = err?.message ?? "再設定メールの送信に失敗しました。";
+    } catch (err) {
+      const rawMessage =
+        err instanceof Error ? err.message : "再設定メールの送信に失敗しました。";
       setErrorText(formatAuthErrorMessage(rawMessage));
     } finally {
       setBusy(false);

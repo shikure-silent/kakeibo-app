@@ -1,5 +1,4 @@
 import { ExpenseMedian } from "../data/prefectureData";
-import { AgeGroup } from "../data/ageGroupData";
 import { STORAGE_KEYS } from "./const";
 import { loadDetailsFromStorage } from "./calendarStorage";
 
@@ -85,9 +84,7 @@ export const buildExpenseInputsFromMedian = (
 };
 
 // 年代別のデフォルト値（文字列）を作る
-export const buildExpenseInputs = (
-  _ageGroup: AgeGroup
-): Record<keyof ExpenseMedian, string> => {
+export const buildExpenseInputs = (): Record<keyof ExpenseMedian, string> => {
   return {
     food: "",
     utilities: "",

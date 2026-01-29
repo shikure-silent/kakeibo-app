@@ -51,8 +51,11 @@ export default function ResetEmailPage() {
         "確認メールを送信しました。メール内リンクで変更を完了してください。"
       );
       setNewEmail("");
-    } catch (err: any) {
-      const rawMessage = err?.message ?? "メールアドレス更新に失敗しました。";
+    } catch (err) {
+      const rawMessage =
+        err instanceof Error
+          ? err.message
+          : "メールアドレス更新に失敗しました。";
       setErrorText(formatAuthErrorMessage(rawMessage));
     } finally {
       setBusy(false);

@@ -74,11 +74,6 @@ export default function CalendarPage() {
     [currentYear, currentMonth]
   );
 
-  const monthLabel = useMemo(
-    () => `${currentYear}年${currentMonth}月`,
-    [currentYear, currentMonth]
-  );
-
   const calendarCells: (number | null)[] = useMemo(() => {
     const cells: (number | null)[] = [];
     for (let i = 0; i < firstDayOfWeek; i++) {
@@ -462,6 +457,7 @@ export default function CalendarPage() {
     return state.cards;
   }, [
     isClient,
+    isViewingThisMonth,
     today,
     currentYear,
     currentMonth,

@@ -108,7 +108,7 @@ export default function HomePageContainer({
   // デフォルト8項目ぶんの支出予算（年代別データ＋固定費上書き）
   const [expenseInputs, setExpenseInputs] = useState<
     Record<keyof ExpenseMedian, string>
-  >(() => buildExpenseInputs("all"));
+  >(() => buildExpenseInputs());
   const [budgetBaseMedian, setBudgetBaseMedian] = useState<ExpenseMedian>(
     ageGroupMedians.all
   );
@@ -606,7 +606,7 @@ export default function HomePageContainer({
     setAgeGroup("all");
     setMemberCount(1);
     setIncomeMembers([{ name: displayName || "本人", value: "" }]);
-    setExpenseInputs(buildExpenseInputs("all"));
+    setExpenseInputs(buildExpenseInputs());
     setCustomExpenseItems([]);
     setLastAddedCustomItemId(null);
     setCopiedCustomFromPrev(false);

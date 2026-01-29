@@ -40,6 +40,13 @@ type EstatResponse = {
   };
 };
 
+type EstatClass = { "@code"?: string; "@name"?: string };
+type EstatClassObj = { CLASS?: EstatClass[] };
+type EstatValueRow = { $?: string; "@unit"?: string } & Record<
+  string,
+  string | undefined
+>;
+
 function toArray<T>(v: T | T[] | undefined): T[] {
   if (!v) return [];
   return Array.isArray(v) ? v : [v];
@@ -122,11 +129,11 @@ function findClassCode(
 /**
  * TIMEっぽいコード一覧を拾って「最新」を決める（コードが YYYYMM 形式である想定）
  */
-function pickLatestTimeCode(timeObj: any): string | null {
+function pickLatestTimeCode(timeObj: EstatClassObj | undefined): string | null {
   const classes = toArray(timeObj?.CLASS);
   const codes = classes
-    .map((c: any) => c?.["@code"])
-    .filter((x: any) => typeof x === "string") as string[];
+    .map((c) => c?.["@code"])
+    .filter((x): x is string => typeof x === "string");
 
   // "202312" のような数字6桁だけを優先
   const yyyymm = codes
@@ -239,7 +246,7 @@ export async function GET() {
   }
 
   // VALUEを抽出して整形
-  const values = toArray(stat?.DATA_INF?.VALUE);
+  const values = toArray(stat?.DATA_INF?.VALUE) as EstatValueRow[];
 
   // e-Stat VALUE の属性キーは "@cat01" 等になりがちだが、どのcatが年代/用途分類かは表依存。
   // ここでは「ageObj @id」「itemObj @id」「areaObj @id」「timeObj @id」から、
@@ -263,12 +270,12 @@ export async function GET() {
   const ageCodes = new Set(
     toArray(ageFull?.CLASS)
       .map((c) => c["@code"])
-      .filter(Boolean) as string[],
+      .filter((code): code is string => !!code),
   );
   const itemCodes = new Set(
     toArray(itemFull?.CLASS)
       .map((c) => c["@code"])
-      .filter(Boolean) as string[],
+      .filter((code): code is string => !!code),
   );
 
   const inferWhichCatIs = (codes: Set<string>) => {
@@ -277,7 +284,7 @@ export async function GET() {
     for (const ck of catKeys) {
       let score = 0;
       for (const v of values.slice(0, 500)) {
-        const code = (v as any)[ck];
+        const code = v[ck];
         if (code && codes.has(code)) score++;
       }
       if (!best || score > best.score) best = { key: ck, score };
@@ -312,12 +319,11 @@ export async function GET() {
 
   // 抽出：最新時点 × （全国なら全国） × 年代別 × 用途分類（費目）
   const filtered = values.filter((v) => {
-    if (timeKey && (v as any)[timeKey] !== latestTimeCode) return false;
-    if (areaKey && nationalAreaCode && (v as any)[areaKey] !== nationalAreaCode)
+    if (timeKey && v[timeKey] !== latestTimeCode) return false;
+    if (areaKey && nationalAreaCode && v[areaKey] !== nationalAreaCode)
       return false;
     // 年代コードが存在するもの
-    const a = (v as any)[ageKey];
-    const i = (v as any)[itemKey];
+    const a = v[ageKey];
     return typeof a === "string" && ageCodes.has(a);
   });
 
@@ -327,8 +333,8 @@ export async function GET() {
   const unmappedItems: Record<string, number> = {};
 
   for (const v of filtered) {
-    const ageCode = (v as any)[ageKey] as string;
-    const itemCode = (v as any)[itemKey] as string | undefined;
+    const ageCode = v[ageKey] as string;
+    const itemCode = v[itemKey] as string | undefined;
     if (!itemCode) continue;
     if (spendingCode && itemCode === spendingCode) continue;
 

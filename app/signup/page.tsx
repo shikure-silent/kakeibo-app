@@ -79,8 +79,9 @@ function SignupPageInner() {
         router.push(nextUrl);
         router.refresh();
       }
-    } catch (err: any) {
-      const rawMessage = err?.message ?? "新規登録に失敗しました。";
+    } catch (err) {
+      const rawMessage =
+        err instanceof Error ? err.message : "新規登録に失敗しました。";
       setErrorText(formatAuthErrorMessage(rawMessage));
     } finally {
       setBusy(false);
