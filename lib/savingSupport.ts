@@ -1,5 +1,9 @@
 // lib/savingSupport.ts
 import { AppSettings } from "./settingsStorage";
+import {
+  getDaysSinceLastHomeCycleConfirm,
+  isHomeCycleConfirmed,
+} from "./homeStorage";
 
 export type SavingSupportCardKind =
   | "inputGap"
@@ -8,7 +12,8 @@ export type SavingSupportCardKind =
   | "cycleEndReview"
   | "budgetAlert"
   | "targetProgress"
-  | "encouragement";
+  | "encouragement"
+  | "planUpdate";
 
 export type SavingSupportCard = {
   id: string; // 安定したユニークID（SSR/CSRでブレない）
@@ -95,6 +100,27 @@ export function buildSavingSupportState(
 
   // 「通知っぽいカード（A系）」は reminderTime 以降に表示
   const canShowTimedReminders = isAfterReminderTime(today, reminderTime);
+
+  // 0. 収入/予算の月次更新（30日経過）
+  if (canShowTimedReminders) {
+    const daysSincePlan = getDaysSinceLastHomeCycleConfirm(today);
+    const isConfirmedThisMonth = isHomeCycleConfirmed(
+      today.getFullYear(),
+      today.getMonth() + 1
+    );
+    if (
+      daysSincePlan !== null &&
+      daysSincePlan >= 30 &&
+      !isConfirmedThisMonth
+    ) {
+      cards.push(
+        buildPlanUpdateCard({
+          id: `planUpdate-${dateKey}`,
+          diffDays: daysSincePlan,
+        })
+      );
+    }
+  }
 
   // 1) 入力ギャップ
   if (enableInputGapReminder && canShowTimedReminders && lastInputDate) {
@@ -197,6 +223,7 @@ export function buildSavingSupportState(
 
   // 重要度順に軽く整列（好みで調整OK）
   const priority: Record<SavingSupportCardKind, number> = {
+    planUpdate: 1,
     budgetAlert: 1,
     inputGap: 2,
     cycleEndReview: 3,
@@ -232,9 +259,13 @@ export function maybeSendBrowserNotification(
   if (!isAfterReminderTime(now, settings.reminderTime ?? "21:00")) return;
 
   const notifiable = state.cards.find((c) =>
-    ["inputGap", "weeklySummary", "midPeriod", "cycleEndReview"].includes(
-      c.kind
-    )
+    [
+      "planUpdate",
+      "inputGap",
+      "weeklySummary",
+      "midPeriod",
+      "cycleEndReview",
+    ].includes(c.kind)
   );
   if (!notifiable) return;
 
@@ -388,6 +419,19 @@ function buildInputGapCard(params: {
       diffDays >= threshold
         ? `${diffDays}日ほど入力が空いています。思い出せる分だけでもOKなので、今日まとめて登録しておきましょう。`
         : "最近入力が少なめです。今日の分だけでもサクッと残しておきましょう。",
+  };
+}
+
+function buildPlanUpdateCard(params: {
+  id: string;
+  diffDays: number;
+}): SavingSupportCard {
+  const { id, diffDays } = params;
+  return {
+    id,
+    kind: "planUpdate",
+    title: "収入・予算の更新タイミング",
+    message: `前回の入力から${diffDays}日ほど経ちました。今月分を更新しますか？`,
   };
 }
 

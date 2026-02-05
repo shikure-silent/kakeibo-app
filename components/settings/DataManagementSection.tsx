@@ -37,10 +37,12 @@ export function DataManagementSection({
             isDark ? "text-slate-200" : "text-slate-700"
           }`}
         >
-          バックアップ（JSON）
+          バックアップの作成・復元
         </p>
-        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-          端末内の家計簿データと設定をJSONとして保存します。復元すると現在のデータが上書きされます。
+        <p
+          className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}
+        >
+          端末内の家計簿データと設定を「バックアップファイル」として保存します。復元すると現在のデータが上書きされます。
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <button
@@ -89,7 +91,9 @@ export function DataManagementSection({
         >
           家計簿データをリセット
         </p>
-        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+        <p
+          className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}
+        >
           この端末のブラウザに保存されている予算・日別の支出／収入明細・固定費などの
           家計簿データをすべて削除します。テーマや給料日、カテゴリ・支出元プリセットの設定は残ります。
         </p>
@@ -107,7 +111,9 @@ export function DataManagementSection({
         </button>
       </div>
 
-      <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
+      <p
+        className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}
+      >
         ※ 誤って削除した場合、データを元に戻すことはできません。
       </p>
     </section>

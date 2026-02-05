@@ -149,5 +149,15 @@ export default function ThemeRoot({ children }: Props) {
 
   const { themeClass } = useResolvedTheme(theme);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const tokens = themeClass.split(/\s+/).filter(Boolean);
+    document.body.classList.remove("theme-dark", "theme-light");
+    document.body.classList.add(...tokens);
+    return () => {
+      document.body.classList.remove(...tokens);
+    };
+  }, [themeClass]);
+
   return <div className={`min-h-screen ${themeClass}`}>{children}</div>;
 }

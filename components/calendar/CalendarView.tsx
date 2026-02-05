@@ -107,11 +107,46 @@ export default function CalendarView(props: Props) {
     }
   };
 
-  const containerClass = "mx-0 max-w-none px-0 py-6 lg:py-8 space-y-4";
+  const containerClass =
+    "mx-0 max-w-none px-0 py-6 lg:py-8 space-y-4 flex flex-col flex-1";
   const headerPaddingClass = "px-4 lg:px-6";
 
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const updateSpacer = () => {
+      const spacer = document.querySelector<HTMLElement>(".bottom-nav-spacer");
+      const spacerHeight = spacer?.getBoundingClientRect().height ?? 0;
+      const total = document.documentElement.scrollHeight - spacerHeight;
+      const viewport = window.innerHeight;
+      const shouldCompact = total <= viewport + 1;
+      if (shouldCompact) {
+        document.body.dataset.bottomSpacer = "none";
+        document.body.style.overflowY = "hidden";
+      } else {
+        delete document.body.dataset.bottomSpacer;
+        document.body.style.overflowY = "";
+      }
+    };
+
+    const id = window.setTimeout(updateSpacer, 0);
+    window.addEventListener("resize", updateSpacer);
+    window.addEventListener("orientationchange", updateSpacer);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("resize", updateSpacer);
+      window.removeEventListener("orientationchange", updateSpacer);
+      delete document.body.dataset.bottomSpacer;
+      document.body.style.overflowY = "";
+    };
+  }, [calendarCells.length, periodLabel, isOverviewModalOpen, isDetailModalOpen]);
+
   return (
-    <main className={`min-h-screen ${themeClass} overflow-x-hidden`}>
+    <main
+      ref={mainRef}
+      className={`min-h-[calc(100svh-8rem-env(safe-area-inset-bottom))] lg:min-h-screen ${themeClass} overflow-x-hidden flex flex-col`}
+    >
       <div className={containerClass}>
         {/* ヘッダー */}
         <div className={headerPaddingClass}>
@@ -137,28 +172,30 @@ export default function CalendarView(props: Props) {
         )}
 
         {/* レイアウト：左カレンダー／右サマリー */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 flex-1">
           {/* 左：カレンダー */}
           <div
-            className="lg:col-span-2 space-y-3"
+            className="lg:col-span-2 space-y-3 flex-1 min-h-0"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <CalendarGrid
-              calendarCells={calendarCells}
-              amounts={amounts}
-              incomeAmounts={incomeAmounts}
-              selectedDay={selectedDay}
-              onSelectDay={onSelectDay}
-              onLongPressDay={onLongPressDay}
-              today={today}
-              currentYear={currentYear}
-              currentMonth={currentMonth}
-              dailyDetails={dailyDetails}
-              periodStart={periodStart ?? null}
-              periodEnd={periodEnd ?? null}
-              isDark={isDark}
-            />
+            <div className="flex-1 min-h-0">
+              <CalendarGrid
+                calendarCells={calendarCells}
+                amounts={amounts}
+                incomeAmounts={incomeAmounts}
+                selectedDay={selectedDay}
+                onSelectDay={onSelectDay}
+                onLongPressDay={onLongPressDay}
+                today={today}
+                currentYear={currentYear}
+                currentMonth={currentMonth}
+                dailyDetails={dailyDetails}
+                periodStart={periodStart ?? null}
+                periodEnd={periodEnd ?? null}
+                isDark={isDark}
+              />
+            </div>
           </div>
 
         </div>

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../lib/supabaseClient";
 import { setFlashToast } from "../../lib/flashToast";
+import { getAuthRedirectUrl } from "../../lib/authRedirect";
 
 function safeNext(next: string | null) {
   if (!next) return "/";
@@ -18,6 +19,9 @@ function formatAuthErrorMessage(message: string) {
   }
   if (message.includes("For security purposes")) {
     return "セキュリティのため、しばらく待ってから再試行してください。";
+  }
+  if (/rate limit/i.test(message)) {
+    return "メール送信の回数が多いため一時的に制限されています。しばらく待ってから再試行してください。";
   }
   return message;
 }
@@ -62,6 +66,7 @@ function SignupPageInner() {
         email,
         password,
         options: {
+          emailRedirectTo: getAuthRedirectUrl("/auth/confirm"),
           data: {
             display_name: displayName || undefined,
           },
@@ -91,28 +96,60 @@ function SignupPageInner() {
   return (
     <main className="min-h-[calc(100vh-72px)] flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          新規登録
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          登録後はクラウド保存・複数端末利用に繋げられます。
-        </p>
+        {message && !errorText ? (
+          <>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              確認メールを送信しました
+            </h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+              {email} 宛てに確認メールを送信しました。メール内リンクから登録を完了してください。
+            </p>
+            <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
+              メール確認後は、この画面に戻ってログインしてください。
+            </div>
+            <div className="mt-5 flex flex-col gap-2">
+              <Link
+                href={`/login?next=${encodeURIComponent(nextUrl)}`}
+                className="w-full rounded-xl bg-emerald-600 px-4 py-2 text-center font-semibold text-white transition hover:bg-emerald-700"
+              >
+                ログイン画面へ
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMessage(null);
+                  setErrorText(null);
+                }}
+                className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                別のメールで登録する
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              新規登録
+            </h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              登録後はクラウド保存・複数端末利用に繋げられます。
+            </p>
 
-        <form onSubmit={onSubmit} className="mt-5 space-y-3">
-          <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              メールアドレス
-            </label>
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-              placeholder="example@gmail.com"
-              required
-            />
-          </div>
+            <form onSubmit={onSubmit} className="mt-5 space-y-3">
+              <div>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  メールアドレス
+                </label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  placeholder="example@gmail.com"
+                  required
+                />
+              </div>
 
           <div>
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
@@ -177,36 +214,41 @@ function SignupPageInner() {
             />
           </div>
 
-          {errorText && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
-              {errorText}
+              {errorText && (
+                <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
+                  {errorText}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!canSubmit || busy || !supabase}
+                className="w-full rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {busy ? "処理中…" : "新規登録"}
+              </button>
+
+              <div className="pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
+                すでにアカウントがある？{" "}
+                <Link
+                  href={`/login?next=${encodeURIComponent(nextUrl)}`}
+                  className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
+                >
+                  ログイン
+                </Link>
+              </div>
+            </form>
+
+            <div className="mt-4 text-right text-[11px]">
+              <Link
+                href="/privacy"
+                className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
+              >
+                プライバシーポリシー
+              </Link>
             </div>
-          )}
-
-          {message && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200">
-              {message}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={!canSubmit || busy || !supabase}
-            className="w-full rounded-xl bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {busy ? "処理中…" : "新規登録"}
-          </button>
-
-          <div className="pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
-            すでにアカウントがある？{" "}
-            <Link
-              href={`/login?next=${encodeURIComponent(nextUrl)}`}
-              className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
-            >
-              ログイン
-            </Link>
-          </div>
-        </form>
+          </>
+        )}
       </div>
     </main>
   );

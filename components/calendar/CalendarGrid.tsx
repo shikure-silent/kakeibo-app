@@ -37,6 +37,7 @@ export default function CalendarGrid({
   isDark = false,
 }: Props) {
   const [holidayMap, setHolidayMap] = useState<HolidayMap>({});
+  const rowCount = Math.max(1, Math.ceil(calendarCells.length / 7));
 
   useEffect(() => {
     let active = true;
@@ -146,7 +147,7 @@ export default function CalendarGrid({
 
   return (
     <section
-      className={`w-full box-border rounded-none border-0 overflow-hidden ${iosSurfaceClass}`}
+      className={`w-full h-full box-border rounded-none border-0 overflow-hidden ${iosSurfaceClass}`}
       style={{
         paddingRight: "env(safe-area-inset-right)",
         paddingLeft: "env(safe-area-inset-left)",
@@ -174,7 +175,12 @@ export default function CalendarGrid({
       </div>
 
       {/* 日付セル */}
-      <div className="grid w-full grid-cols-7">
+      <div
+        className="grid w-full h-full grid-cols-7"
+        style={{
+          gridTemplateRows: `repeat(${rowCount}, minmax(0, 1fr))`,
+        }}
+      >
         {calendarCells.map((day, index) => {
           const isLastCol = index % 7 === 6;
           const isLastRow = index >= calendarCells.length - 7;
@@ -184,12 +190,12 @@ export default function CalendarGrid({
           const iosCellPaddingClass = isLastCol ? "px-1.5" : "px-2";
           if (!day) {
             return (
-              <div
-                key={index}
-                className={
-                  `box-border min-h-[104px] ${iosCellBorderClass}`
-                }
-              />
+            <div
+              key={index}
+              className={
+                  `box-border h-full min-h-[120px] ${iosCellBorderClass}`
+              }
+            />
             );
           }
 
@@ -257,7 +263,7 @@ export default function CalendarGrid({
                 WebkitUserSelect: "none",
                 userSelect: "none",
               }}
-              className={`box-border relative w-full min-h-[104px] text-left align-top transition-colors select-none ${
+              className={`box-border relative w-full h-full min-h-[120px] text-left align-top transition-colors select-none ${
                 isSelected ? iosSelectedClass : ""
               } ${iosCellBorderClass}`}
             >

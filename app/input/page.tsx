@@ -135,7 +135,6 @@ export default function InputPage() {
   const [memo, setMemo] = useState<string>("");
   const [amountInput, setAmountInput] = useState<string>("");
   const [customCategory, setCustomCategory] = useState<string>("");
-  const [shopName, setShopName] = useState<string>("");
 
   // 選択日の明細
   const [dayRecords, setDayRecords] = useState<DetailRecord[]>([]);
@@ -201,7 +200,7 @@ export default function InputPage() {
       amount: numeric,
       category: categoryToSave,
       payFrom,
-      shopName: shopName.trim(),
+      shopName: "",
       memo: memo.trim(),
       date: dateStr,
       createdAt: now.toISOString(),
@@ -216,7 +215,6 @@ export default function InputPage() {
     // 入力欄は金額とメモだけリセット
     setAmountInput("");
     setMemo("");
-    setShopName("");
     setCustomCategory("");
   };
 
@@ -267,8 +265,6 @@ export default function InputPage() {
               category={category}
               onChangeCategory={setCategory}
               payFrom={payFrom}
-              shopName={shopName}
-              onChangeShopName={setShopName}
               onChangePayFrom={setPayFrom}
               memo={memo}
               onChangeMemo={setMemo}

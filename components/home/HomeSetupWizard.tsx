@@ -110,7 +110,7 @@ export default function HomeSetupWizard({
   const ageGroupWarningText =
     budgetBase === "userAverage"
       ? "年代は、過去データが少ない場合の補完に使われます（未選択でもOK）。"
-      : "年代を選ぶと予算の初期値がより自然になります（未選択でもOK）。";
+      : "年代を選ぶと、全国×年代別の支出平均値を使って予算の初期値がより自然になります（未選択でもOK）。";
   const warningIncomeZero = totalIncome === 0;
   const warningBudgetZero = totalExpense === 0;
 
@@ -186,6 +186,17 @@ export default function HomeSetupWizard({
             <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
               収入入力人数と年代を先に決めておくと、後の入力がスムーズになります。
             </p>
+          </div>
+
+          <div
+            className={`rounded-2xl border px-4 py-3 text-[11px] leading-snug ${
+              isDark
+                ? "border-slate-700 bg-slate-800 text-slate-200"
+                : "border-slate-100 bg-slate-50 text-slate-600"
+            }`}
+          >
+            このアプリはゲスト（未ログイン）でも使えます。
+            アカウントを作成してログインすると、データをクラウドに保存して引き継ぎができます。
           </div>
 
           <div className="space-y-1.5">

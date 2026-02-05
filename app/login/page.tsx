@@ -16,6 +16,27 @@ function safeNext(next: string | null) {
   return next.startsWith("/") ? next : "/";
 }
 
+function formatAuthErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+  const match = message.match(/after\s+(\d+)\s+seconds?/i);
+  if (message.includes("For security purposes") && match) {
+    return `セキュリティのため、次のリクエストは${match[1]}秒後に再試行してください。`;
+  }
+  if (message.includes("For security purposes")) {
+    return "セキュリティのため、しばらく待ってから再試行してください。";
+  }
+  if (normalized.includes("invalid login credentials")) {
+    return "メールアドレスまたはパスワードが正しくありません。";
+  }
+  if (normalized.includes("email not confirmed")) {
+    return "メール確認が完了していません。確認メールのリンクを開いてください。";
+  }
+  if (/rate limit/i.test(message)) {
+    return "メール送信の回数が多いため一時的に制限されています。しばらく待ってから再試行してください。";
+  }
+  return message;
+}
+
 function LoginPageInner() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -96,7 +117,7 @@ function LoginPageInner() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "ログインに失敗しました。";
-      setErrorText(message);
+      setErrorText(formatAuthErrorMessage(message));
     } finally {
       setBusy(false);
     }
@@ -195,7 +216,7 @@ function LoginPageInner() {
 
           <div className="text-center text-sm text-slate-500 dark:text-slate-400">
             <Link
-              href="/reset-password/request"
+              href="/reset-password/request/"
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
             >
               パスワード再設定
@@ -221,6 +242,15 @@ function LoginPageInner() {
             </Link>
           </div>
         </form>
+
+        <div className="mt-4 text-right text-[11px]">
+          <Link
+            href="/privacy"
+            className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
+          >
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </main>
   );

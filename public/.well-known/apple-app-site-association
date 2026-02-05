@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "P5F8B22Q7X.com.murinaku.kakeibo",
+        "paths": [
+          "/auth/confirm*",
+          "/reset-password*",
+          "/reset-password/*"
+        ]
+      }
+    ]
+  }
+}

@@ -153,7 +153,7 @@ export default function BottomNav() {
   return (
     <>
       <div
-        className="h-[calc(4rem+env(safe-area-inset-bottom))] lg:hidden"
+        className="bottom-nav-spacer h-[calc(4rem+env(safe-area-inset-bottom))] bg-slate-50 lg:hidden"
         aria-hidden="true"
       />
       <nav

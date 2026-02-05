@@ -11,6 +11,12 @@ body {
   padding-top: env(safe-area-inset-top);
 }
 
+body[data-bottom-spacer="none"] .bottom-nav-spacer {
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) {
     input,
