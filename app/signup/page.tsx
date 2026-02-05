@@ -151,68 +151,70 @@ function SignupPageInner() {
                 />
               </div>
 
-          <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              パスワード（6文字以上）
-            </label>
-            <div className="mt-1 relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 pr-12 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                placeholder="••••••••"
-                minLength={6}
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
-                aria-label={
-                  showPassword ? "パスワードを非表示にする" : "パスワードを表示する"
-                }
-              >
-                {showPassword ? (
-                  <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="h-5 w-5"
+              <div>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  パスワード（6文字以上）
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 pr-12 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                    placeholder="••••••••"
+                    minLength={6}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-slate-500 hover:text-slate-700 dark:text-slate-300 dark:hover:text-slate-100"
+                    aria-label={
+                      showPassword
+                        ? "パスワードを非表示にする"
+                        : "パスワードを表示する"
+                    }
                   >
-                    <path
-                      fill="currentColor"
-                      d="M12 5c5.3 0 9.8 3.3 11.6 8a1 1 0 0 1 0 .8C21.8 18.7 17.3 22 12 22S2.2 18.7.4 13.8a1 1 0 0 1 0-.8C2.2 8.3 6.7 5 12 5Zm0 2C7.7 7 4 9.4 2.5 13 4 16.6 7.7 19 12 19s8-2.4 9.5-6C20 9.4 16.3 7 12 7Zm0 2.5A3.5 3.5 0 1 1 8.5 13 3.5 3.5 0 0 1 12 9.5Zm0 2A1.5 1.5 0 1 0 13.5 13 1.5 1.5 0 0 0 12 11.5Z"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    className="h-5 w-5"
-                  >
-                    <path
-                      fill="currentColor"
-                      d="M2.1 3.5a1 1 0 0 1 1.4-1.4l17 17a1 1 0 1 1-1.4 1.4l-2.2-2.2A10.9 10.9 0 0 1 12 20C6.7 20 2.2 16.7.4 12a1 1 0 0 1 0-.8 11.8 11.8 0 0 1 4.2-5.1L2.1 3.5Zm7.4 7.4 2.9 2.9a2 2 0 0 0-2.9-2.9Zm4.1 4.1 2.3 2.3A6 6 0 0 1 6.6 7.4l2.1 2.1a4 4 0 0 0 5 5.5ZM12 4c5.3 0 9.8 3.3 11.6 8a1 1 0 0 1 0 .8 11.7 11.7 0 0 1-3.5 4.4l-1.4-1.4a9.8 9.8 0 0 0 2.9-3.8C20 8.3 16.3 6 12 6a8.7 8.7 0 0 0-2 .2L8.3 4.5A10.8 10.8 0 0 1 12 4Z"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
+                    {showPassword ? (
+                      <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="h-5 w-5"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M12 5c5.3 0 9.8 3.3 11.6 8a1 1 0 0 1 0 .8C21.8 18.7 17.3 22 12 22S2.2 18.7.4 13.8a1 1 0 0 1 0-.8C2.2 8.3 6.7 5 12 5Zm0 2C7.7 7 4 9.4 2.5 13 4 16.6 7.7 19 12 19s8-2.4 9.5-6C20 9.4 16.3 7 12 7Zm0 2.5A3.5 3.5 0 1 1 8.5 13 3.5 3.5 0 0 1 12 9.5Zm0 2A1.5 1.5 0 1 0 13.5 13 1.5 1.5 0 0 0 12 11.5Z"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="h-5 w-5"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M2.1 3.5a1 1 0 0 1 1.4-1.4l17 17a1 1 0 1 1-1.4 1.4l-2.2-2.2A10.9 10.9 0 0 1 12 20C6.7 20 2.2 16.7.4 12a1 1 0 0 1 0-.8 11.8 11.8 0 0 1 4.2-5.1L2.1 3.5Zm7.4 7.4 2.9 2.9a2 2 0 0 0-2.9-2.9Zm4.1 4.1 2.3 2.3A6 6 0 0 1 6.6 7.4l2.1 2.1a4 4 0 0 0 5 5.5ZM12 4c5.3 0 9.8 3.3 11.6 8a1 1 0 0 1 0 .8 11.7 11.7 0 0 1-3.5 4.4l-1.4-1.4a9.8 9.8 0 0 0 2.9-3.8C20 8.3 16.3 6 12 6a8.7 8.7 0 0 0-2 .2L8.3 4.5A10.8 10.8 0 0 1 12 4Z"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
 
-          <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              表示名（任意）
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-              placeholder="山田 太郎"
-            />
-          </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                  表示名（任意）
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+                  placeholder="山田 太郎"
+                />
+              </div>
 
               {errorText && (
                 <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200">
