@@ -126,14 +126,41 @@ function LoginPageInner() {
   return (
     <main className="min-h-[calc(100vh-72px)] flex items-center justify-center p-4">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          ログイン
-        </h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          クラウド保存・複数端末利用に向けたアカウント機能です。
-        </p>
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            ログイン
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            メールアドレスか外部アカウントでログインできます。
+          </p>
+        </div>
 
-        <form onSubmit={onSubmit} className="mt-5 space-y-3">
+        <div className="mt-6 space-y-3">
+          <button
+            type="button"
+            disabled
+            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-base font-bold text-slate-700 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200">
+              G
+            </div>
+            <div>
+              <div>Google でログイン</div>
+              <div className="text-xs font-normal text-slate-500 dark:text-slate-400">
+                近日対応
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div className="relative my-6">
+          <div className="h-px bg-slate-200 dark:bg-slate-700" />
+          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+            メールアドレスでログイン
+          </span>
+        </div>
+
+        <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
               メールアドレス
@@ -144,7 +171,7 @@ function LoginPageInner() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-              placeholder="example@gmail.com"
+              placeholder="メールアドレス"
               required
             />
           </div>
@@ -160,7 +187,7 @@ function LoginPageInner() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 pr-12 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                placeholder="••••••••"
+                placeholder="パスワード"
                 required
               />
               <button
@@ -229,6 +256,15 @@ function LoginPageInner() {
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
             >
               メールアドレスの再設定
+            </Link>
+          </div>
+
+          <div className="text-center text-sm text-slate-500 dark:text-slate-400">
+            <Link
+              href="/reset-email"
+              className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
+            >
+              登録メールアドレスがわからない方はこちら
             </Link>
           </div>
 
