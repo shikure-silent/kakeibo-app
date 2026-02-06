@@ -13,7 +13,7 @@ function maskEmail(email: string) {
   const head = local.slice(0, 2);
   const tail = local.length >= 3 ? local.slice(-1) : "";
   return `${head}${"*".repeat(
-    Math.max(1, local.length - (head.length + tail.length))
+    Math.max(1, local.length - (head.length + tail.length)),
   )}${tail}@${domain}`;
 }
 
@@ -70,7 +70,7 @@ export function AccountLoginSection() {
                   if (!supabase) return;
 
                   const ok = window.confirm(
-                    "ログアウトします。\nこの端末の家計簿データは、別ユーザーに混ざらないよう一旦クリアします。\n（クラウドに保存済みなら後で復元できます）\n\n続けますか？"
+                    "ログアウトします。\nこの端末の家計簿データは、別ユーザーに混ざらないよう一旦クリアします。\n（クラウドに保存済みなら後で復元できます）\n\n続けますか？",
                   );
                   if (!ok) return;
 
@@ -116,7 +116,7 @@ export function AccountLoginSection() {
         ) : (
           <>
             <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              未ログイン（ゲスト）
+              ゲストユーザーとして利用中
             </div>
             <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               ログインすると、ページを閉じる/切り替えるときに自動保存されます。

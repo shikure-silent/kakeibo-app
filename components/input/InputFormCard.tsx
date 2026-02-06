@@ -25,8 +25,6 @@ type Props = {
   onChangeCategory: (value: string) => void;
   payFrom: string;
   onChangePayFrom: (value: string) => void;
-  shopName: string;
-  onChangeShopName: (value: string) => void;
   memo: string;
   onChangeMemo: (value: string) => void;
   amount: string;
@@ -46,8 +44,6 @@ export default function InputFormCard({
   onChangeCategory,
   payFrom,
   onChangePayFrom,
-  shopName,
-  onChangeShopName,
   memo,
   onChangeMemo,
   amount,
@@ -56,7 +52,9 @@ export default function InputFormCard({
   isDark = false,
 }: Props) {
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
   const categoryRef = useRef<HTMLDivElement | null>(null);
+  const payFromRef = useRef<HTMLDivElement | null>(null);
 
   // ★ 設定に応じた候補リスト
   const [expenseCategoryOptions, setExpenseCategoryOptions] = useState<
@@ -87,6 +85,18 @@ export default function InputFormCard({
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [showCategorySuggestions]);
+
+  useEffect(() => {
+    if (!showPayFromSuggestions) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (payFromRef.current && !payFromRef.current.contains(target)) {
+        setShowPayFromSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [showPayFromSuggestions]);
 
   // 今表示するカテゴリ候補（モードによって切り替え）
   // 今表示するカテゴリ候補（モードによって切り替え）
@@ -370,6 +380,75 @@ export default function InputFormCard({
                   }}
                   placeholder="例: 給与、〇〇銀行、フリマ売上 など"
                 />
+                <div ref={payFromRef} className="relative inline-block">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowPayFromSuggestions((prev) => !prev)
+                    }
+                    className="
+                      rounded-full border
+                      px-4 py-1.5 text-[12px]
+                      hover:bg-slate-100
+                    "
+                    style={{
+                      backgroundColor: isDark ? "#0f172a" : "#f8fafc",
+                      color: isDark ? "#e2e8f0" : "#334155",
+                      borderColor: isDark ? "#475569" : "#cbd5e1",
+                    }}
+                  >
+                    候補から選ぶ
+                  </button>
+
+                  {showPayFromSuggestions && (
+                    <div
+                      className="
+                        absolute z-20 mt-1
+                        max-h-40 w-44 overflow-auto
+                        rounded-lg border
+                        bg-white shadow-lg
+                      "
+                      style={{
+                        backgroundColor: isDark ? "#0f172a" : "white",
+                        borderColor: isDark ? "#475569" : "#e2e8f0",
+                      }}
+                    >
+                      {payFromOptions.map((src) => (
+                        <button
+                          key={src}
+                          type="button"
+                          onClick={() => {
+                            onChangePayFrom(src);
+                            setShowPayFromSuggestions(false);
+                          }}
+                          className={`
+                            w-full px-2 py-1 text-left text-[11px]
+                            hover:bg-emerald-50
+                            ${src === payFrom ? "font-semibold" : ""}
+                          `}
+                          style={{
+                            backgroundColor:
+                              src === payFrom
+                                ? isDark
+                                  ? "#065f46"
+                                  : "#ecfdf3"
+                                : "transparent",
+                            color:
+                              src === payFrom
+                                ? isDark
+                                  ? "#bbf7d0"
+                                  : "#047857"
+                                : isDark
+                                ? "#e2e8f0"
+                                : "#334155",
+                          }}
+                        >
+                          {src}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <p
                   className={`text-[10px] ${
                     isDark ? "text-slate-400" : "text-slate-400"
@@ -380,33 +459,6 @@ export default function InputFormCard({
               </>
             )}
           </div>
-        </div>
-
-        {/* 店舗/相手先 */}
-        <div className="space-y-1.5">
-          <label
-            className={`block text-[11px] font-medium ${
-              isDark ? "text-slate-200" : "text-slate-600"
-            }`}
-          >
-            店舗・相手先（任意）
-          </label>
-          <input
-            type="text"
-            value={shopName}
-            onChange={(e) => onChangeShopName(e.target.value)}
-            className="
-              w-full rounded-lg border
-              px-3 py-2 text-[12px]
-              focus:outline-none focus:ring-2 focus:ring-emerald-300
-            "
-            style={{
-              backgroundColor: isDark ? "#0f172a" : "white",
-              color: isDark ? "#e2e8f0" : "#334155",
-              borderColor: isDark ? "#475569" : "#e2e8f0",
-            }}
-            placeholder="例：スーパー〇〇 / Amazon / 給与振込 など"
-          />
         </div>
 
         {/* メモ */}

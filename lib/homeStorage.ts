@@ -1,5 +1,5 @@
 import { ExpenseMedian } from "../data/prefectureData";
-import { STORAGE_KEYS } from "./const";
+import { STORAGE_KEYS, buildBudgetKey } from "./const";
 import { loadDetailsFromStorage } from "./calendarStorage";
 
 export type FixedExpenseKey = "rent" | "subscription";
@@ -194,6 +194,8 @@ export type HomeCycleConfirmState = {
 };
 
 const HOME_CYCLE_CONFIRM_PREFIX = "kakeibo_home_cycle_confirm";
+const HOME_CYCLE_CONFIRM_LAST_KEY = "kakeibo_home_cycle_confirm_last";
+export const OPEN_WIZARD_STEP_KEY = "kakeibo_open_wizard_step";
 
 /**
  * サイクル用のキーを生成
@@ -215,6 +217,12 @@ export function saveHomeCycleConfirmed(
     const key = buildHomeCycleConfirmKey(year, month);
     const state: HomeCycleConfirmState = { year, month, confirmed };
     window.localStorage.setItem(key, JSON.stringify(state));
+    if (confirmed) {
+      window.localStorage.setItem(
+        HOME_CYCLE_CONFIRM_LAST_KEY,
+        new Date().toISOString()
+      );
+    }
   } catch {
     // 失敗しても何もしない
   }
@@ -231,6 +239,130 @@ export function isHomeCycleConfirmed(year: number, month: number): boolean {
     if (!raw) return false;
     const parsed = JSON.parse(raw) as HomeCycleConfirmState;
     return !!parsed.confirmed;
+  } catch {
+    return false;
+  }
+}
+
+export function loadLastHomeCycleConfirmDate(): Date | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(HOME_CYCLE_CONFIRM_LAST_KEY);
+    if (raw) {
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) return d;
+    }
+  } catch {
+    // noop
+  }
+
+  // フォールバック：キーから最新の確定月を推測
+  try {
+    let latest: { year: number; month: number } | null = null;
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key || !key.startsWith(`${HOME_CYCLE_CONFIRM_PREFIX}_`)) continue;
+      const m = key.replace(`${HOME_CYCLE_CONFIRM_PREFIX}_`, "");
+      const match = /^(\d{4})-(\d{2})$/.exec(m);
+      if (!match) continue;
+      const year = Number(match[1]);
+      const month = Number(match[2]);
+      if (!Number.isFinite(year) || !Number.isFinite(month)) continue;
+      if (!latest || year > latest.year || (year === latest.year && month > latest.month)) {
+        latest = { year, month };
+      }
+    }
+    if (latest) {
+      return new Date(latest.year, latest.month - 1, 1);
+    }
+  } catch {
+    // noop
+  }
+
+  return null;
+}
+
+export function getDaysSinceLastHomeCycleConfirm(
+  today: Date = new Date()
+): number | null {
+  const last = loadLastHomeCycleConfirmDate();
+  if (!last) return null;
+  const startOfToday = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  ).getTime();
+  const startOfLast = new Date(
+    last.getFullYear(),
+    last.getMonth(),
+    last.getDate()
+  ).getTime();
+  const diff = Math.floor((startOfToday - startOfLast) / (1000 * 60 * 60 * 24));
+  return Number.isFinite(diff) ? diff : null;
+}
+
+type BudgetSnapshot = {
+  year?: number;
+  month?: number;
+  totalBudget?: number;
+  totalIncome?: number;
+  saving?: number;
+  items?: { label: string; amount: number }[];
+  planningState?: unknown;
+};
+
+const findLatestBudgetSnapshot = (): BudgetSnapshot | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    let latestKey: string | null = null;
+    let latestStamp = -1;
+    const prefix = STORAGE_KEYS.BUDGET_PREFIX;
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const key = window.localStorage.key(i);
+      if (!key || !key.startsWith(prefix)) continue;
+      const ym = key.replace(prefix, "");
+      const match = /^(\d{4})-(\d{2})$/.exec(ym);
+      if (!match) continue;
+      const year = Number(match[1]);
+      const month = Number(match[2]);
+      if (!Number.isFinite(year) || !Number.isFinite(month)) continue;
+      const stamp = year * 12 + (month - 1);
+      if (stamp > latestStamp) {
+        latestStamp = stamp;
+        latestKey = key;
+      }
+    }
+    if (!latestKey) return null;
+    const raw = window.localStorage.getItem(latestKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as BudgetSnapshot;
+    return parsed || null;
+  } catch {
+    return null;
+  }
+};
+
+export function confirmCurrentCycleWithLatestPlan(
+  today: Date = new Date()
+): boolean {
+  if (typeof window === "undefined") return false;
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  if (isHomeCycleConfirmed(year, month)) return false;
+
+  const latest = findLatestBudgetSnapshot();
+  if (!latest) return false;
+
+  const key = buildBudgetKey(year, month);
+  try {
+    const next: BudgetSnapshot = {
+      ...latest,
+      year,
+      month,
+    };
+    window.localStorage.setItem(key, JSON.stringify(next));
+    saveHomeCycleConfirmed(year, month, true);
+    return true;
   } catch {
     return false;
   }

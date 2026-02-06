@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ExpenseMedian } from "../../data/prefectureData";
 import { AgeGroup, ageGroupMedians } from "../../data/ageGroupData";
 import { buildBudgetKey, EXPENSE_CATEGORIES } from "../../lib/const";
@@ -13,6 +13,7 @@ import {
   saveFixedExpense,
   isHomeCycleConfirmed,
   saveHomeCycleConfirmed,
+  OPEN_WIZARD_STEP_KEY,
 } from "../../lib/homeStorage";
 import {
   HomeWizardDraft,
@@ -157,8 +158,12 @@ export default function HomePageContainer({
     customExpenseItems: CustomExpenseItem[];
   };
 
+  const displayName =
+    (user?.user_metadata?.display_name as string | undefined) ||
+    (user?.email ? maskEmail(user.email) : "");
+
   // 保存しておいた計画状態をフォームに復元する
-  const restorePlanningFromStorage = (): boolean => {
+  const restorePlanningFromStorage = useCallback((): boolean => {
     if (typeof window === "undefined") return false;
 
     const today = new Date();
@@ -225,11 +230,10 @@ export default function HomePageContainer({
       console.error("計画の復元に失敗しました", e);
       return false;
     }
-  };
+  }, [displayName]);
 
-  const applyPlanningFromConfirmedItems = (
-    items: ConfirmedBudgetItem[] | null | undefined
-  ): boolean => {
+  const applyPlanningFromConfirmedItems = useCallback(
+    (items: ConfirmedBudgetItem[] | null | undefined): boolean => {
     if (!items || items.length === 0) return false;
 
     const nextDefaults: Partial<Record<keyof ExpenseMedian, string>> = {};
@@ -258,57 +262,64 @@ export default function HomePageContainer({
     setCopiedDefaultsFromPrev(true);
     setCopiedCustomFromPrev(true);
     return true;
-  };
+    },
+    []
+  );
 
-  const clampWizardStep = (value: number) => Math.min(4, Math.max(1, value));
+  const clampWizardStep = useCallback(
+    (value: number) => Math.min(4, Math.max(1, value)),
+    []
+  );
 
-  const applyWizardDraft = (draft: HomeWizardDraft, preferredStep?: number) => {
-    setHomeMode("setup");
-    setWizardStep(clampWizardStep(preferredStep ?? draft.step ?? 1));
-    if (draft.ageGroup) {
-      setAgeGroup(draft.ageGroup);
-    }
-    if (typeof draft.memberCount === "number" && draft.memberCount > 0) {
-      const safeCount = Math.min(10, Math.max(1, draft.memberCount));
-      setMemberCount(safeCount);
-    }
-    if (Array.isArray(draft.incomeMembers) && draft.incomeMembers.length > 0) {
-      setIncomeMembers(
-        draft.incomeMembers.map((m, index) => ({
-          name: index === 0 && displayName ? displayName : m.name ?? "",
-          value: m.value ?? "",
-        }))
-      );
-    }
-    if (draft.expenseInputs) {
-      setExpenseInputs((prev) => ({
-        ...prev,
-        ...draft.expenseInputs,
-      }));
-    }
-    if (Array.isArray(draft.customExpenseItems)) {
-      setCustomExpenseItems(
-        draft.customExpenseItems.map((item, index) => ({
-          id: item.id ?? `draft-${index}`,
-          label: item.label ?? "",
-          value: item.value ?? "",
-          copyFromPrevious: item.copyFromPrevious ?? false,
-        }))
-      );
-    }
-    setCopiedDefaultsFromPrev(true);
-    setCopiedCustomFromPrev(true);
-    setShowOldDraftPrompt(false);
-    setPendingDraft(null);
-    setPendingDraftStep(null);
-  };
+  const applyWizardDraft = useCallback(
+    (draft: HomeWizardDraft, preferredStep?: number) => {
+      setHomeMode("setup");
+      setWizardStep(clampWizardStep(preferredStep ?? draft.step ?? 1));
+      if (draft.ageGroup) {
+        setAgeGroup(draft.ageGroup);
+      }
+      if (typeof draft.memberCount === "number" && draft.memberCount > 0) {
+        const safeCount = Math.min(10, Math.max(1, draft.memberCount));
+        setMemberCount(safeCount);
+      }
+      if (
+        Array.isArray(draft.incomeMembers) &&
+        draft.incomeMembers.length > 0
+      ) {
+        setIncomeMembers(
+          draft.incomeMembers.map((m, index) => ({
+            name: index === 0 && displayName ? displayName : m.name ?? "",
+            value: m.value ?? "",
+          }))
+        );
+      }
+      if (draft.expenseInputs) {
+        setExpenseInputs((prev) => ({
+          ...prev,
+          ...draft.expenseInputs,
+        }));
+      }
+      if (Array.isArray(draft.customExpenseItems)) {
+        setCustomExpenseItems(
+          draft.customExpenseItems.map((item, index) => ({
+            id: item.id ?? `draft-${index}`,
+            label: item.label ?? "",
+            value: item.value ?? "",
+            copyFromPrevious: item.copyFromPrevious ?? false,
+          }))
+        );
+      }
+      setCopiedDefaultsFromPrev(true);
+      setCopiedCustomFromPrev(true);
+      setShowOldDraftPrompt(false);
+      setPendingDraft(null);
+      setPendingDraftStep(null);
+    },
+    [clampWizardStep, displayName]
+  );
 
   const [confirmedBudget, setConfirmedBudget] =
     useState<ConfirmedBudget | null>(null);
-
-  const displayName =
-    (user?.user_metadata?.display_name as string | undefined) ||
-    (user?.email ? maskEmail(user.email) : "");
 
   // 初回マウント時に設定と「今サイクルが確定済みか」を読み込み
   useEffect(() => {
@@ -368,7 +379,7 @@ export default function HomePageContainer({
       setHomeMode("setup");
       setConfirmedBudget(null);
     }
-  }, [variant]);
+  }, [variant, restorePlanningFromStorage]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -386,7 +397,7 @@ export default function HomePageContainer({
     }
     setWizardEntryMode("full");
     applyWizardDraft(draft);
-  }, []);
+  }, [applyWizardDraft]);
 
   useEffect(() => {
     if (!user || !displayName) return;
@@ -778,11 +789,11 @@ export default function HomePageContainer({
     }
   };
 
-  const resolveEntryMode = (step?: number) => {
+  const resolveEntryMode = useCallback((step?: number) => {
     if (step === 2) return "income";
     if (step === 3) return "budget";
     return "full";
-  };
+  }, []);
 
   const handleResumeOldDraft = () => {
     if (!pendingDraft) return;
@@ -810,33 +821,53 @@ export default function HomePageContainer({
     }
   };
 
-  const openWizardAtStep = (step: number) => {
-    setWizardEntryMode(resolveEntryMode(step));
-    if (homeMode === "dashboard") {
-      clearHomeWizardDraft();
-      const restored = restorePlanningFromStorage();
-      if (!restored) {
-        applyPlanningFromConfirmedItems(confirmedBudget?.items);
-      }
-      setHomeMode("setup");
-      setWizardStep(step);
-      return;
-    }
-    const draft = loadHomeWizardDraft();
-    if (draft) {
-      if (isHomeWizardDraftOld(draft.updatedAt)) {
-        setPendingDraft(draft);
-        setPendingDraftStep(step);
-        setShowOldDraftPrompt(true);
+  const openWizardAtStep = useCallback(
+    (step: number) => {
+      setWizardEntryMode(resolveEntryMode(step));
+      if (homeMode === "dashboard") {
+        clearHomeWizardDraft();
+        const restored = restorePlanningFromStorage();
+        if (!restored) {
+          applyPlanningFromConfirmedItems(confirmedBudget?.items);
+        }
+        setHomeMode("setup");
+        setWizardStep(step);
         return;
       }
-      applyWizardDraft(draft, step);
-      return;
-    }
-    restorePlanningFromStorage();
-    setHomeMode("setup");
-    setWizardStep(step);
-  };
+      const draft = loadHomeWizardDraft();
+      if (draft) {
+        if (isHomeWizardDraftOld(draft.updatedAt)) {
+          setPendingDraft(draft);
+          setPendingDraftStep(step);
+          setShowOldDraftPrompt(true);
+          return;
+        }
+        applyWizardDraft(draft, step);
+        return;
+      }
+      restorePlanningFromStorage();
+      setHomeMode("setup");
+      setWizardStep(step);
+    },
+    [
+      applyPlanningFromConfirmedItems,
+      applyWizardDraft,
+      confirmedBudget?.items,
+      homeMode,
+      resolveEntryMode,
+      restorePlanningFromStorage,
+    ]
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = window.localStorage.getItem(OPEN_WIZARD_STEP_KEY);
+    if (!raw) return;
+    window.localStorage.removeItem(OPEN_WIZARD_STEP_KEY);
+    const step = Number(raw);
+    if (!Number.isFinite(step)) return;
+    openWizardAtStep(step);
+  }, [openWizardAtStep]);
 
   // デフォルト8項目を前月からコピー（自動更新オンの項目のみ）
   useEffect(() => {

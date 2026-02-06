@@ -2,7 +2,13 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { SavingSupportCard } from "../../lib/savingSupport";
+import {
+  confirmCurrentCycleWithLatestPlan,
+  OPEN_WIZARD_STEP_KEY,
+} from "../../lib/homeStorage";
+import { setFlashToast } from "../../lib/flashToast";
 
 type Props = {
   cards: SavingSupportCard[];
@@ -31,6 +37,8 @@ function getCardMeta(kind: SavingSupportCard["kind"]) {
   switch (kind) {
     case "budgetAlert":
       return { badge: "予算", icon: "⚠️" };
+    case "planUpdate":
+      return { badge: "更新", icon: "🗓️" };
     case "inputGap":
       return { badge: "入力", icon: "📝" };
     case "weeklySummary":
@@ -48,6 +56,7 @@ function getCardMeta(kind: SavingSupportCard["kind"]) {
 }
 
 export default function SupportBell({ cards }: Props) {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<PanelStyle | null>(null);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
@@ -171,6 +180,33 @@ export default function SupportBell({ cards }: Props) {
     setActiveSupportCard(null);
   };
 
+  const handlePlanEdit = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(OPEN_WIZARD_STEP_KEY, "2");
+    }
+    setActiveSupportCard(null);
+    router.push("/data");
+  };
+
+  const handlePlanSameOk = () => {
+    const ok = confirmCurrentCycleWithLatestPlan(new Date());
+    if (ok) {
+      setFlashToast({
+        message: "今月分を前回と同じ内容で確定しました。",
+        tone: "success",
+      });
+      if (activeSupportCard) dismissOne(activeSupportCard.id);
+      setActiveSupportCard(null);
+      return;
+    }
+
+    setFlashToast({
+      message: "前回の内容が見つからないため、編集画面を開きます。",
+      tone: "info",
+    });
+    handlePlanEdit();
+  };
+
   return (
     <div ref={bellRef} className="relative">
       <button
@@ -233,6 +269,16 @@ export default function SupportBell({ cards }: Props) {
               </div>
             )}
           </div>
+          <div className="border-b border-slate-100 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
+            通知の設定は
+            <Link
+              href="/settings#osnotify"
+              className="ml-1 font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
+              onClick={() => setIsOpen(false)}
+            >
+              こちら
+            </Link>
+          </div>
 
           {visibleSupportCards.length > 0 ? (
             <div className="max-h-[60vh] space-y-2 overflow-auto p-2">
@@ -282,14 +328,6 @@ export default function SupportBell({ cards }: Props) {
           ) : (
             <div className="p-3 text-[11px] text-slate-500 dark:text-slate-400">
               <p>通知サポートは現在表示されていません。</p>
-              <div className="mt-2">
-                <Link
-                  href="/settings#saving"
-                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-white dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
-                >
-                  設定を開く
-                </Link>
-              </div>
             </div>
           )}
         </div>
@@ -331,6 +369,25 @@ export default function SupportBell({ cards }: Props) {
                 >
                   入力へ
                 </Link>
+              </div>
+            )}
+
+            {activeSupportCard.kind === "planUpdate" && (
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={handlePlanSameOk}
+                  className="inline-flex items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200 dark:hover:bg-emerald-500/20"
+                >
+                  同じでOK
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePlanEdit}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-1.5 text-[12px] font-semibold text-slate-700 hover:bg-white dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  編集する
+                </button>
               </div>
             )}
           </div>

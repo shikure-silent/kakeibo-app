@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/privacy",
+      "destination": "/privacy/",
+      "permanent": true
+    }
+  ]
+}

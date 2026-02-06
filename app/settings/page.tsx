@@ -26,6 +26,7 @@ import {
 
 import { ThemeSettingsSection } from "../../components/settings/ThemeSettingsSection";
 import { SavingSupportSection } from "../../components/settings/SavingSupportSection";
+import { OsNotificationSection } from "../../components/settings/OsNotificationSection";
 import { CategorySettingsSection } from "../../components/settings/CategorySettingsSection";
 import { AggregationSettingsSection } from "../../components/settings/AggregationSettingsSection";
 import { AccountLoginSection } from "../../components/settings/AccountLoginSection";
@@ -248,6 +249,7 @@ export default function SettingsPage() {
     { id: "account", label: "アカウント" },
     { id: "theme", label: "テーマ設定" },
     { id: "saving", label: "貯金サポート" },
+    { id: "osnotify", label: "OS通知" },
     { id: "category", label: "カテゴリ・項目" },
     { id: "aggregation", label: "集計・予算" },
     { id: "data", label: "データ管理" },
@@ -386,6 +388,10 @@ export default function SettingsPage() {
               showHeader={false}
             />
           )}
+        </section>
+
+        <section id="osnotify">
+          <OsNotificationSection isDark={isDark} />
         </section>
 
         <section id="category" className="space-y-2">

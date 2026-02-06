@@ -86,6 +86,24 @@ export function AppInfoSection({ version, isDark = false }: Props) {
           まだベータ版のため、仕様は今後も変更される可能性があります。
         </p>
       </div>
+
+      <div className="space-y-1">
+        <p
+          className={`text-[11px] font-medium ${
+            isDark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
+          ポリシー
+        </p>
+        <a
+          href="/privacy"
+          className={`text-[12px] font-semibold ${
+            isDark ? "text-emerald-200" : "text-emerald-700"
+          } hover:underline`}
+        >
+          プライバシーポリシー
+        </a>
+      </div>
     </section>
   );
 }

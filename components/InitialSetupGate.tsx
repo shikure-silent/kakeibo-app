@@ -6,6 +6,7 @@ import {
   INITIAL_SETUP_EVENT,
   isInitialSetupComplete,
 } from "../lib/initialSetupStorage";
+import { requestInitialNotificationPermissionOnce } from "../lib/notifications";
 
 const ALLOWED_PREFIXES = [
   "/setup",
@@ -34,6 +35,7 @@ export default function InitialSetupGate({
   useEffect(() => {
     if (typeof window === "undefined") return;
     setSetupComplete(isInitialSetupComplete());
+    requestInitialNotificationPermissionOnce();
     const handleComplete = () => setSetupComplete(true);
     window.addEventListener(INITIAL_SETUP_EVENT, handleComplete);
     return () => {

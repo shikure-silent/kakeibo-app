@@ -147,12 +147,26 @@ function pickLatestTimeCode(timeObj: EstatClassObj | undefined): string | null {
 }
 
 export async function GET() {
+  const fallback = (reason: string) =>
+    NextResponse.json(
+      {
+        source: {
+          statsDataId: STATS_DATA_ID,
+          timeCode: null,
+          areaCode: null,
+          itemCode: null,
+        },
+        unit: "円",
+        items: [],
+        unmappedItems: {},
+        error: reason,
+      },
+      { status: 200 }
+    );
+
   const appId = process.env.ESTAT_APP_ID;
   if (!appId) {
-    return NextResponse.json(
-      { error: "ESTAT_APP_ID が未設定です（.env.local を確認）" },
-      { status: 500 },
-    );
+    return fallback("ESTAT_APP_ID が未設定です（.env.local を確認）");
   }
 
   // まずはメタ込みで取得（開発 & 自動判別用）
@@ -163,16 +177,18 @@ export async function GET() {
   url.searchParams.set("metaGetFlg", "Y");
   url.searchParams.set("cntGetFlg", "N");
 
-  const res = await fetch(url.toString(), {
-    // お好みで。まずは1日キャッシュくらいが安全
-    next: { revalidate: 60 * 60 * 24 },
-  });
+  let res: Response;
+  try {
+    res = await fetch(url.toString(), {
+      // お好みで。まずは1日キャッシュくらいが安全
+      next: { revalidate: 60 * 60 * 24 },
+    });
+  } catch {
+    return fallback("e-Stat fetch failed");
+  }
 
   if (!res.ok) {
-    return NextResponse.json(
-      { error: `e-Stat fetch failed: ${res.status} ${res.statusText}` },
-      { status: 502 },
-    );
+    return fallback(`e-Stat fetch failed: ${res.status} ${res.statusText}`);
   }
 
   const json = (await res.json()) as EstatResponse;

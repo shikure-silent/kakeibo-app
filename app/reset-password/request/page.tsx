@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../../lib/supabaseClient";
+import { getAuthRedirectUrl } from "../../../lib/authRedirect";
 
 function formatAuthErrorMessage(message: string) {
   const match = message.match(/after\s+(\d+)\s+seconds?/i);
@@ -43,7 +44,7 @@ export default function ResetPasswordRequestPage() {
 
     setBusy(true);
     try {
-      const redirectTo = `${window.location.origin}/reset-password`;
+      const redirectTo = getAuthRedirectUrl("/reset-password");
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
       });
