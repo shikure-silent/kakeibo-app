@@ -32,6 +32,9 @@ export default function PrivacyPolicyPage() {
                 <li>
                   ログイン機能を利用した場合のアカウント情報（メールアドレス等）
                 </li>
+                <li>
+                  クラウド同期時の識別情報（ユーザーID）
+                </li>
               </ul>
             </div>
 
@@ -71,7 +74,16 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <h2 className="text-[12px] font-semibold text-slate-900 dark:text-slate-100">
-                5. 外部サービス
+                5. 追跡・広告識別子
+              </h2>
+              <p className="mt-1 text-[12px]">
+                本アプリは、他社アプリやWebサイトを横断したトラッキング、広告配信目的の識別子取得は行いません。
+              </p>
+            </div>
+
+            <div>
+              <h2 className="text-[12px] font-semibold text-slate-900 dark:text-slate-100">
+                6. 外部サービス
               </h2>
               <p className="mt-1 text-[12px]">
                 ログインやクラウド同期に Supabase を利用します。年代別支出の参考データ取得に e-Stat
@@ -81,7 +93,7 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <h2 className="text-[12px] font-semibold text-slate-900 dark:text-slate-100">
-                6. データの削除
+                7. データの削除
               </h2>
               <p className="mt-1 text-[12px]">
                 設定ページのデータ管理機能から、端末内データの削除が可能です。クラウド同期を利用している場合は、ログアウトや再同期時に上書きされることがあります。
@@ -90,7 +102,7 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <h2 className="text-[12px] font-semibold text-slate-900 dark:text-slate-100">
-                7. 改定
+                8. 改定
               </h2>
               <p className="mt-1 text-[12px]">
                 本ポリシーは必要に応じて変更されることがあります。重要な変更がある場合は、アプリ内で告知します。
