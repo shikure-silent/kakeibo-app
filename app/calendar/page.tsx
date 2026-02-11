@@ -19,7 +19,10 @@ import {
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
-import { buildSavingSupportState } from "../../lib/savingSupport";
+import {
+  buildSavingSupportState,
+  maybeSendBrowserNotification,
+} from "../../lib/savingSupport";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 import { useSupportBell } from "../../components/support/SupportBellProvider";
 
@@ -472,6 +475,11 @@ export default function CalendarPage() {
   useEffect(() => {
     setCards(supportCards);
   }, [setCards, supportCards]);
+
+  useEffect(() => {
+    if (!isClient) return;
+    maybeSendBrowserNotification({ cards: supportCards }, settings);
+  }, [isClient, settings, supportCards]);
 
   const { themeClass } = useResolvedTheme(settings.theme);
 

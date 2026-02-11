@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { useSupabaseAuth } from "../lib/useSupabaseAuth"; // ←パス調整
 import { setFlashToast } from "../lib/flashToast";
 import SupportBell from "./support/SupportBell";
@@ -23,7 +24,7 @@ function maskEmail(email: string) {
   const head = local.slice(0, 2);
   const tail = local.length >= 3 ? local.slice(-1) : "";
   return `${head}${"*".repeat(
-    Math.max(1, local.length - (head.length + tail.length))
+    Math.max(1, local.length - (head.length + tail.length)),
   )}${tail}@${domain}`;
 }
 
@@ -60,15 +61,20 @@ export default function TopNav() {
   const { cards } = useSupportBell();
 
   const [openMenu, setOpenMenu] = useState(false);
+  const [isIosNative, setIsIosNative] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(() => setOpenMenu(false));
-  const isSetup = pathname.startsWith("/setup");
+  const isSetupFlow =
+    pathname.startsWith("/setup") || pathname.startsWith("/welcome");
+  const isPasswordRecoveryFlow =
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/auth/confirm");
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
     (user?.email ? maskEmail(user.email) : "");
 
   const avatarText = getInitials(
-    (user?.user_metadata?.display_name as string | undefined) || user?.email
+    (user?.user_metadata?.display_name as string | undefined) || user?.email,
   );
 
   const onLogout = async () => {
@@ -79,7 +85,13 @@ export default function TopNav() {
     router.push("/");
   };
 
-  if (isSetup) {
+  useEffect(() => {
+    setIsIosNative(
+      Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios",
+    );
+  }, []);
+
+  if (isIosNative || isSetupFlow || isPasswordRecoveryFlow) {
     return null;
   }
 
@@ -189,7 +201,7 @@ export default function TopNav() {
                   href="/signup"
                   className="inline-flex items-center whitespace-nowrap rounded-full bg-emerald-600 px-2.5 py-2 text-[10px] font-semibold text-white hover:bg-emerald-700 sm:px-4 sm:text-sm"
                 >
-                  初めての方はこちら
+                  アカウントを作成
                 </Link>
                 <Link
                   href="/login"
@@ -201,7 +213,6 @@ export default function TopNav() {
             )}
           </div>
         </div>
-
       </div>
     </header>
   );

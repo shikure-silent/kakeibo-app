@@ -7,6 +7,7 @@ import {
   loadAppSettings,
   saveAppSettings,
 } from "../../lib/settingsStorage";
+import { requestInitialNotificationPermissionOnce } from "../../lib/notifications";
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
 
 const normalizeDigits = (value: string) =>
@@ -132,9 +133,13 @@ export default function InitialSetupSettingsCard() {
             type="checkbox"
             className="h-5 w-5 accent-emerald-600"
             checked={!!settings.enableInputGapReminder}
-            onChange={(e) =>
-              handleChangeSetting("enableInputGapReminder", e.target.checked)
-            }
+            onChange={(e) => {
+              const checked = e.target.checked;
+              handleChangeSetting("enableInputGapReminder", checked);
+              if (checked) {
+                void requestInitialNotificationPermissionOnce();
+              }
+            }}
           />
         </div>
 

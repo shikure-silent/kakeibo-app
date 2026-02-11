@@ -168,30 +168,32 @@ export default function BudgetSettingsCard({
           )}
         </div>
 
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 pt-1">
+        <div className="space-y-2 pt-1">
           <p className="text-[11px] text-slate-500">
             詳細な内訳や金額を変えたい場合は、「予算を見直す」から編集できます。
           </p>
-          {onRequestEdit && (
-            <button
-              type="button"
-              onClick={onRequestEdit}
-              className="
-                inline-flex items-center justify-center gap-2
-                rounded-full
-                border
-                text-[11px] font-medium
-                px-3 py-1.5
-              "
-              style={{
-                borderColor: isDark ? "#475569" : "#cbd5e1",
-                color: isDark ? "#e2e8f0" : "#334155",
-                backgroundColor: isDark ? "transparent" : "white",
-              }}
-            >
-              <span>予算を見直す</span>
-            </button>
-          )}
+          <div className="flex justify-end">
+            {onRequestEdit && (
+              <button
+                type="button"
+                onClick={onRequestEdit}
+                className="
+                  inline-flex w-40 items-center justify-center gap-2
+                  rounded-full
+                  border
+                  text-[11px] font-medium
+                  px-3 py-1.5
+                "
+                style={{
+                  borderColor: isDark ? "#475569" : "#cbd5e1",
+                  color: isDark ? "#e2e8f0" : "#334155",
+                  backgroundColor: isDark ? "transparent" : "white",
+                }}
+              >
+                <span>予算を見直す</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );

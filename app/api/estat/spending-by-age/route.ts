@@ -180,8 +180,8 @@ export async function GET() {
   let res: Response;
   try {
     res = await fetch(url.toString(), {
-      // お好みで。まずは1日キャッシュくらいが安全
-      next: { revalidate: 60 * 60 * 24 },
+      // e-Statレスポンスは2MBを超えるため、Next.jsのデータキャッシュ対象にしない
+      cache: "no-store",
     });
   } catch {
     return fallback("e-Stat fetch failed");

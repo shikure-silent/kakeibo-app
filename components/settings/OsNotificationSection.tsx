@@ -7,6 +7,7 @@ import {
   getPushToken,
   isNativePlatform,
   openAppSettings,
+  registerPushNotifications,
   scheduleTestLocalNotification,
 } from "../../lib/notifications";
 
@@ -23,6 +24,7 @@ const statusLabel = (status: string) => {
 };
 
 export function OsNotificationSection({ isDark = false }: Props) {
+  const [mounted, setMounted] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const [pushStatus, setPushStatus] = useState("prompt");
   const [localStatus, setLocalStatus] = useState("prompt");
@@ -30,6 +32,7 @@ export function OsNotificationSection({ isDark = false }: Props) {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const native = isNativePlatform();
     setIsNative(native);
     if (!native) return;
@@ -39,6 +42,10 @@ export function OsNotificationSection({ isDark = false }: Props) {
     );
     setPushToken(getPushToken());
   }, []);
+
+  if (!mounted || !isNative) {
+    return null;
+  }
 
   const handleTestLocal = async () => {
     setBusy(true);
@@ -63,6 +70,27 @@ export function OsNotificationSection({ isDark = false }: Props) {
     }
   };
 
+  const handleRegisterPush = async () => {
+    setBusy(true);
+    try {
+      const result = await registerPushNotifications();
+      const nextStatus = await checkPushPermission();
+      setPushStatus(nextStatus.receive ?? "prompt");
+      const token = result.token ?? getPushToken();
+      setPushToken(token ?? null);
+
+      if (result.registered) {
+        window.alert("Push通知の端末登録が完了しました。");
+      } else {
+        window.alert(
+          "Push通知の登録に失敗しました。Apple Developer Program加入後に再度お試しください。"
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section
       className={`rounded-2xl border px-4 py-4 shadow-sm ${
@@ -80,57 +108,62 @@ export function OsNotificationSection({ isDark = false }: Props) {
         通知がオフの場合は、iPhone本体の設定から変更できます。Apple Developer Program加入後に本番Push通知を有効化します。
       </p>
 
-      {!isNative && (
-        <p className={`mt-3 text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-          OS通知はモバイルアプリでのみ利用できます。
-        </p>
-      )}
-
-      {isNative && (
-        <div className="mt-4 space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-medium">Push通知:</span>
-            <span className="text-[11px]">{statusLabel(pushStatus)}</span>
-            {pushToken && (
-              <span className="text-[10px] text-slate-500">登録済み</span>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-medium">ローカル通知:</span>
-            <span className="text-[11px]">{statusLabel(localStatus)}</span>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleOpenSettings}
-              className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold"
-              style={{
-                borderColor: isDark ? "#0f766e" : "#10b981",
-                backgroundColor: isDark ? "#064e3b" : "#ecfdf5",
-                color: isDark ? "#a7f3d0" : "#047857",
-              }}
-            >
-              設定を開く
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={handleTestLocal}
-              className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold"
-              style={{
-                borderColor: isDark ? "#7c3aed" : "#a78bfa",
-                backgroundColor: isDark ? "#2e1065" : "#f5f3ff",
-                color: isDark ? "#ddd6fe" : "#6d28d9",
-              }}
-            >
-              テスト通知
-            </button>
-          </div>
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-medium">Push通知:</span>
+          <span className="text-[11px]">{statusLabel(pushStatus)}</span>
+          {pushToken && (
+            <span className="text-[10px] text-slate-500">登録済み</span>
+          )}
         </div>
-      )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-medium">ローカル通知:</span>
+          <span className="text-[11px]">{statusLabel(localStatus)}</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleRegisterPush}
+            className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold"
+            style={{
+              borderColor: isDark ? "#1d4ed8" : "#93c5fd",
+              backgroundColor: isDark ? "#172554" : "#eff6ff",
+              color: isDark ? "#bfdbfe" : "#1d4ed8",
+            }}
+          >
+            Push登録
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleOpenSettings}
+            className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold"
+            style={{
+              borderColor: isDark ? "#0f766e" : "#10b981",
+              backgroundColor: isDark ? "#064e3b" : "#ecfdf5",
+              color: isDark ? "#a7f3d0" : "#047857",
+            }}
+          >
+            設定を開く
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={handleTestLocal}
+            className="inline-flex items-center rounded-full border px-3 py-1.5 text-[11px] font-semibold"
+            style={{
+              borderColor: isDark ? "#7c3aed" : "#a78bfa",
+              backgroundColor: isDark ? "#2e1065" : "#f5f3ff",
+              color: isDark ? "#ddd6fe" : "#6d28d9",
+            }}
+          >
+            テスト通知
+          </button>
+        </div>
+      </div>
     </section>
   );
 }

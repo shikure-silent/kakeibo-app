@@ -63,54 +63,66 @@ export function AccountLoginSection() {
               ページを閉じる/切り替えるときに、端末データが自動でクラウド保存されます。
             </div>
 
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!supabase) return;
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  アカウント情報の変更
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <Link
+                    href="/reset-email"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    メールアドレス再設定
+                  </Link>
 
-                  const ok = window.confirm(
-                    "ログアウトします。\nこの端末の家計簿データは、別ユーザーに混ざらないよう一旦クリアします。\n（クラウドに保存済みなら後で復元できます）\n\n続けますか？",
-                  );
-                  if (!ok) return;
+                  <Link
+                    href="/reset-password"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    パスワード再設定
+                  </Link>
+                </div>
+              </div>
 
-                  // ✅ 端末内の家計簿データを消して分離
-                  clearKakeiboKeys({ includeSettings: true }); // ←設定も含めて分離したいなら true 推奨
-                  clearActiveUserId();
+              <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
+                <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                  セッション
+                </p>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!supabase) return;
 
-                  await supabase.auth.signOut();
+                      const ok = window.confirm(
+                        "ログアウトします。\nこの端末の家計簿データは、別ユーザーに混ざらないよう一旦クリアします。\n（クラウドに保存済みなら後で復元できます）\n\n続けますか？",
+                      );
+                      if (!ok) return;
 
-                  setFlashToast({
-                    message: "ログアウトしました。",
-                    tone: "info",
-                  });
-                }}
-                className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
-              >
-                ログアウト
-              </button>
+                      clearKakeiboKeys({ includeSettings: true });
+                      clearActiveUserId();
 
-              <Link
-                href="/reset-email"
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                メールアドレス再設定
-              </Link>
+                      await supabase.auth.signOut();
 
-              <Link
-                href="/reset-password"
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                パスワード再設定
-              </Link>
+                      setFlashToast({
+                        message: "ログアウトしました。",
+                        tone: "info",
+                      });
+                    }}
+                    className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                  >
+                    ログアウト
+                  </button>
 
-              {/* ✅ 専用ページに分けたのでクエリは不要 */}
-              <Link
-                href="/login"
-                className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                ログイン画面を開く
-              </Link>
+                  <Link
+                    href="/login"
+                    className="text-xs font-medium text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                  >
+                    別アカウントでログイン
+                  </Link>
+                </div>
+              </div>
             </div>
           </>
         ) : (
@@ -119,7 +131,7 @@ export function AccountLoginSection() {
               ゲストユーザーとして利用中
             </div>
             <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              ログインすると、ページを閉じる/切り替えるときに自動保存されます。
+              ログインすると、家計簿データは自動でクラウド保存されます。機種変更時などに便利です。
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -127,7 +139,7 @@ export function AccountLoginSection() {
                 href="/signup"
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
-                初めての方はこちら
+                アカウントを作成
               </Link>
               <Link
                 href="/login"

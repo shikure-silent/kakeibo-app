@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -18,6 +18,11 @@ type WeeklySummary = {
   average: number;
 };
 
+type SummaryItem = {
+  label: string;
+  amount: number;
+};
+
 type Props = {
   monthlyTotal: number;
   budget: MonthlyBudget | null;
@@ -28,13 +33,76 @@ type Props = {
   dailyTarget: number | null;
   weeklySummary: WeeklySummary | null;
   periodLabel?: string;
+  expenseCategorySummary?: { label: string; amount: number }[];
   payFromSummary?: { label: string; amount: number }[];
+  incomeFromSummary?: { label: string; amount: number }[];
   onSelectDayFromChart?: (day: number) => void;
   isDark?: boolean;
 };
 
 const formatYen = (value: number | null | undefined) =>
   `¥${Number(value ?? 0).toLocaleString()}`;
+
+const TOP_ITEMS_COUNT = 5;
+
+function BreakdownList({
+  title,
+  emptyText,
+  items,
+  expanded,
+  onToggleExpanded,
+  isDark,
+}: {
+  title: string;
+  emptyText: string;
+  items: SummaryItem[];
+  expanded: boolean;
+  onToggleExpanded: () => void;
+  isDark: boolean;
+}) {
+  const hiddenCount = Math.max(0, items.length - TOP_ITEMS_COUNT);
+  const visibleItems = expanded ? items : items.slice(0, TOP_ITEMS_COUNT);
+
+  return (
+    <div className="space-y-1.5">
+      <p className={isDark ? "text-slate-300 text-[11px]" : "text-slate-500 text-[11px]"}>
+        {title}
+      </p>
+
+      {items.length === 0 ? (
+        <p className={isDark ? "text-slate-400 text-[11px]" : "text-slate-400 text-[11px]"}>
+          {emptyText}
+        </p>
+      ) : (
+        <>
+          <div className="space-y-1 pr-1">
+            {visibleItems.map((item, idx) => (
+              <div
+                key={`${item.label}-${idx}`}
+                className={`flex items-center justify-between text-[11px] ${
+                  isDark ? "text-slate-200" : "text-slate-700"
+                }`}
+              >
+                <span className="truncate">{item.label}</span>
+                <span className="font-semibold">{formatYen(item.amount)}</span>
+              </div>
+            ))}
+          </div>
+
+          {hiddenCount > 0 && (
+            <button
+              type="button"
+              onClick={onToggleExpanded}
+              className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700"
+            >
+              {expanded ? "閉じる" : `もっと見る（他${hiddenCount}件）`}
+            </button>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function MonthlySummaryCard({
   monthlyTotal,
@@ -45,7 +113,9 @@ export default function MonthlySummaryCard({
   dailyTarget,
   weeklySummary,
   periodLabel,
+  expenseCategorySummary,
   payFromSummary,
+  incomeFromSummary,
   onSelectDayFromChart,
   isDark = false,
 }: Props) {
@@ -77,6 +147,13 @@ export default function MonthlySummaryCard({
 
   const axisTickColor = isDark ? "#cbd5f5" : "#64748b";
   const axisLineColor = isDark ? "#475569" : "#cbd5f5";
+  const [showAllExpenseCategory, setShowAllExpenseCategory] = useState(false);
+  const [showAllPayFrom, setShowAllPayFrom] = useState(false);
+  const [showAllIncomeFrom, setShowAllIncomeFrom] = useState(false);
+  const hasBreakdownSection =
+    expenseCategorySummary !== undefined ||
+    payFromSummary !== undefined ||
+    incomeFromSummary !== undefined;
 
   return (
     <section
@@ -154,36 +231,6 @@ export default function MonthlySummaryCard({
         </div>
       </div>
 
-      {/* 支出元別サマリー */}
-      {payFromSummary && (
-        <div className="space-y-1">
-          <p className={isDark ? "text-slate-300 text-[11px]" : "text-slate-500 text-[11px]"}>
-            支出元別の合計
-          </p>
-          {payFromSummary.length === 0 ? (
-            <p className={isDark ? "text-slate-400 text-[11px]" : "text-slate-400 text-[11px]"}>
-              支出元の記録がありません。
-            </p>
-          ) : (
-            <div className="max-h-28 overflow-auto space-y-1 pr-1">
-              {payFromSummary.map((item) => (
-                <div
-                  key={item.label}
-                  className={`flex items-center justify-between text-[11px] ${
-                    isDark ? "text-slate-200" : "text-slate-700"
-                  }`}
-                >
-                  <span className="truncate">{item.label}</span>
-                  <span className="font-semibold">
-                    {formatYen(item.amount)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* 棒グラフ */}
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
@@ -223,6 +270,51 @@ export default function MonthlySummaryCard({
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      {hasBreakdownSection && (
+        <div
+          className={`pt-3 border-t space-y-3 ${
+            isDark ? "border-slate-700" : "border-slate-100"
+          }`}
+        >
+          <h3 className="text-xs font-semibold">内訳</h3>
+
+          {expenseCategorySummary && (
+            <BreakdownList
+              title="支出カテゴリ別の合計"
+              emptyText="支出カテゴリの記録がありません。"
+              items={expenseCategorySummary}
+              expanded={showAllExpenseCategory}
+              onToggleExpanded={() =>
+                setShowAllExpenseCategory((prev) => !prev)
+              }
+              isDark={isDark}
+            />
+          )}
+
+          {payFromSummary && (
+            <BreakdownList
+              title="支出元別の合計"
+              emptyText="支出元の記録がありません。"
+              items={payFromSummary}
+              expanded={showAllPayFrom}
+              onToggleExpanded={() => setShowAllPayFrom((prev) => !prev)}
+              isDark={isDark}
+            />
+          )}
+
+          {incomeFromSummary && (
+            <BreakdownList
+              title="入金元別の合計"
+              emptyText="入金元の記録がありません。"
+              items={incomeFromSummary}
+              expanded={showAllIncomeFrom}
+              onToggleExpanded={() => setShowAllIncomeFrom((prev) => !prev)}
+              isDark={isDark}
+            />
+          )}
+        </div>
+      )}
     </section>
   );
 }

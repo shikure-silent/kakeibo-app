@@ -12,6 +12,7 @@ import { setFlashToast } from "../../lib/flashToast";
 
 type Props = {
   cards: SavingSupportCard[];
+  mode?: "nav" | "floating";
 };
 
 type PanelStyle = {
@@ -55,13 +56,14 @@ function getCardMeta(kind: SavingSupportCard["kind"]) {
   }
 }
 
-export default function SupportBell({ cards }: Props) {
+export default function SupportBell({ cards, mode = "nav" }: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<PanelStyle | null>(null);
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
   const [activeSupportCard, setActiveSupportCard] =
     useState<SavingSupportCard | null>(null);
+  const [hasBlockingModal, setHasBlockingModal] = useState(false);
   const bellRef = useRef<HTMLDivElement | null>(null);
 
   const storageKey = useMemo(() => {
@@ -114,6 +116,31 @@ export default function SupportBell({ cards }: Props) {
       document.body.style.overflow = original;
     };
   }, [activeSupportCard]);
+
+  useEffect(() => {
+    if (mode !== "floating") return;
+    const checkModal = () => {
+      const hasOverlay =
+        !!document.querySelector("div.fixed.inset-0[class*='bg-black']");
+      setHasBlockingModal(hasOverlay);
+    };
+
+    checkModal();
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, [mode]);
+
+  useEffect(() => {
+    if (!hasBlockingModal) return;
+    setIsOpen(false);
+  }, [hasBlockingModal]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -207,12 +234,21 @@ export default function SupportBell({ cards }: Props) {
     handlePlanEdit();
   };
 
+  if (mode === "floating" && hasBlockingModal) {
+    return null;
+  }
+
+  const buttonClass =
+    mode === "floating"
+      ? "relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-700 shadow-md transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+      : "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800";
+
   return (
     <div ref={bellRef} className="relative">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-sm text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+        className={buttonClass}
         aria-label="今日のサポート"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">

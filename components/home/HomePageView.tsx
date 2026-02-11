@@ -54,6 +54,8 @@ type Props = {
   wizardEntryMode: "full" | "income" | "budget";
   wizardStep: number;
   onWizardStepChange: (step: number) => void;
+  showSetupIntro?: boolean;
+  onStartSetupWizard?: () => void;
   onWizardStartOver: () => void;
   onWizardConfirmStart: () => void;
   showOldDraftPrompt: boolean;
@@ -105,6 +107,8 @@ export function HomePageView({
   wizardEntryMode,
   wizardStep,
   onWizardStepChange,
+  showSetupIntro = false,
+  onStartSetupWizard,
   onWizardStartOver,
   onWizardConfirmStart,
   showOldDraftPrompt,
@@ -123,7 +127,7 @@ export function HomePageView({
 
   return (
     <main className={`min-h-screen ${themeClass}`}>
-      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-2 pb-6 lg:pt-3 lg:pb-8 space-y-6">
         {/* ヘッダー */}
         <header
           className={`space-y-2 ${centerHeader ? "text-center" : ""}`}
@@ -131,13 +135,15 @@ export function HomePageView({
           <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">
             {pageTitle}
           </h1>
-          <p
-            className={`text-xs lg:text-sm ${
-              isDark ? "text-slate-300" : "text-slate-500"
-            } ${centerHeader ? "mx-auto max-w-xl" : ""}`}
-          >
-            {pageDescription}
-          </p>
+          {pageDescription ? (
+            <p
+              className={`text-xs lg:text-sm ${
+                isDark ? "text-slate-300" : "text-slate-500"
+              } ${centerHeader ? "mx-auto max-w-xl" : ""}`}
+            >
+              {pageDescription}
+            </p>
+          ) : null}
         </header>
 
         {showSavingHighlight && (
@@ -158,41 +164,55 @@ export function HomePageView({
 
         {homeMode === "setup" ? (
           <div className="space-y-4">
-            {setupExtraContent}
-            <HomeSetupWizard
-              entryMode={wizardEntryMode}
-              step={wizardStep}
-              onStepChange={onWizardStepChange}
-              onStartOver={onWizardStartOver}
-              onConfirmStart={onWizardConfirmStart}
-              ageGroup={ageGroup}
-              onAgeGroupChange={onAgeGroupChange}
-              memberCount={memberCount}
-              onMemberCountChange={onMemberCountChange}
-              incomeMembers={incomeMembers}
-              onMemberNameChange={onMemberNameChange}
-              onMemberValueChange={onMemberValueChange}
-              budgetBase={budgetBase}
-              expenseInputs={expenseInputs}
-              onExpenseChange={onExpenseChange}
-              medianForAge={medianForAge}
-              customExpenseItems={customExpenseItems}
-              onAddCustomExpenseItem={onAddCustomExpenseItem}
-              onChangeCustomExpenseLabel={onChangeCustomExpenseLabel}
-              onChangeCustomExpenseAmount={onChangeCustomExpenseAmount}
-              onRemoveCustomExpenseItem={onRemoveCustomExpenseItem}
-              onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
-              autoUpdateMap={autoUpdateMap}
-              onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
-              totalIncome={displayTotalIncome}
-              totalExpense={displayTotalExpense}
-              saving={displaySaving}
-              savingRate={displaySavingRate}
-              customTemplates={customTemplates}
-              lastAddedCustomItemId={lastAddedCustomItemId}
-              onClearLastAddedCustomItemId={onClearLastAddedCustomItemId}
-              isDark={isDark}
-            />
+            {showSetupIntro ? (
+              <>
+                {setupExtraContent}
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={onStartSetupWizard}
+                    className="inline-flex items-center rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+                  >
+                    次へ
+                  </button>
+                </div>
+              </>
+            ) : (
+              <HomeSetupWizard
+                entryMode={wizardEntryMode}
+                step={wizardStep}
+                onStepChange={onWizardStepChange}
+                onStartOver={onWizardStartOver}
+                onConfirmStart={onWizardConfirmStart}
+                ageGroup={ageGroup}
+                onAgeGroupChange={onAgeGroupChange}
+                memberCount={memberCount}
+                onMemberCountChange={onMemberCountChange}
+                incomeMembers={incomeMembers}
+                onMemberNameChange={onMemberNameChange}
+                onMemberValueChange={onMemberValueChange}
+                budgetBase={budgetBase}
+                expenseInputs={expenseInputs}
+                onExpenseChange={onExpenseChange}
+                medianForAge={medianForAge}
+                customExpenseItems={customExpenseItems}
+                onAddCustomExpenseItem={onAddCustomExpenseItem}
+                onChangeCustomExpenseLabel={onChangeCustomExpenseLabel}
+                onChangeCustomExpenseAmount={onChangeCustomExpenseAmount}
+                onRemoveCustomExpenseItem={onRemoveCustomExpenseItem}
+                onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
+                autoUpdateMap={autoUpdateMap}
+                onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
+                totalIncome={displayTotalIncome}
+                totalExpense={displayTotalExpense}
+                saving={displaySaving}
+                savingRate={displaySavingRate}
+                customTemplates={customTemplates}
+                lastAddedCustomItemId={lastAddedCustomItemId}
+                onClearLastAddedCustomItemId={onClearLastAddedCustomItemId}
+                isDark={isDark}
+              />
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">

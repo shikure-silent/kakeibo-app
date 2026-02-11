@@ -93,6 +93,7 @@ export default function HomePageContainer({
 
   // データページのモード：初期はセットアップモード
   const [homeMode, setHomeMode] = useState<HomeMode>("setup");
+  const [setupIntroCompleted, setSetupIntroCompleted] = useState(false);
   const [wizardStep, setWizardStep] = useState<number>(1);
   const [wizardEntryMode, setWizardEntryMode] = useState<
     "full" | "income" | "budget"
@@ -333,6 +334,7 @@ export default function HomePageContainer({
 
     if (variant === "data" && isHomeCycleConfirmed(year, month)) {
       setHomeMode("dashboard");
+      setSetupIntroCompleted(true);
       restorePlanningFromStorage();
 
       if (typeof window !== "undefined") {
@@ -377,12 +379,14 @@ export default function HomePageContainer({
       }
     } else {
       setHomeMode("setup");
+      setSetupIntroCompleted(variant !== "setup");
       setConfirmedBudget(null);
     }
   }, [variant, restorePlanningFromStorage]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (variant === "setup") return;
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth() + 1;
@@ -395,9 +399,10 @@ export default function HomePageContainer({
       setShowOldDraftPrompt(true);
       return;
     }
+    setSetupIntroCompleted(true);
     setWizardEntryMode("full");
     applyWizardDraft(draft);
-  }, [applyWizardDraft]);
+  }, [applyWizardDraft, variant]);
 
   useEffect(() => {
     if (!user || !displayName) return;
@@ -613,6 +618,7 @@ export default function HomePageContainer({
     setPendingDraftStep(null);
     setShowOldDraftPrompt(false);
     setWizardEntryMode("full");
+    setSetupIntroCompleted(variant !== "setup");
     setWizardStep(1);
     setAgeGroup("all");
     setMemberCount(1);
@@ -797,6 +803,7 @@ export default function HomePageContainer({
 
   const handleResumeOldDraft = () => {
     if (!pendingDraft) return;
+    setSetupIntroCompleted(true);
     setWizardEntryMode(resolveEntryMode(pendingDraftStep ?? undefined));
     applyWizardDraft(pendingDraft, pendingDraftStep ?? undefined);
   };
@@ -808,6 +815,7 @@ export default function HomePageContainer({
     const step = pendingDraftStep;
     setPendingDraftStep(null);
     if (typeof step === "number") {
+      setSetupIntroCompleted(true);
       setWizardEntryMode(resolveEntryMode(step));
       const restored = restorePlanningFromStorage();
       if (!restored) {
@@ -816,6 +824,7 @@ export default function HomePageContainer({
       setHomeMode("setup");
       setWizardStep(step);
     } else if (homeMode === "setup") {
+      setSetupIntroCompleted(true);
       setWizardEntryMode("full");
       setWizardStep(1);
     }
@@ -823,6 +832,7 @@ export default function HomePageContainer({
 
   const openWizardAtStep = useCallback(
     (step: number) => {
+      setSetupIntroCompleted(true);
       setWizardEntryMode(resolveEntryMode(step));
       if (homeMode === "dashboard") {
         clearHomeWizardDraft();
@@ -1012,6 +1022,12 @@ export default function HomePageContainer({
       wizardEntryMode={wizardEntryMode}
       wizardStep={wizardStep}
       onWizardStepChange={setWizardStep}
+      showSetupIntro={variant === "setup" && homeMode === "setup" && !setupIntroCompleted}
+      onStartSetupWizard={() => {
+        setSetupIntroCompleted(true);
+        setWizardEntryMode("full");
+        setWizardStep(1);
+      }}
       onWizardStartOver={handleWizardStartOver}
       onWizardConfirmStart={handleConfirmStart}
       showOldDraftPrompt={showOldDraftPrompt}

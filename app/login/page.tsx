@@ -9,32 +9,12 @@ import { getActiveUserId, setActiveUserId } from "../../lib/accountScope";
 import { clearKakeiboKeys, importKakeiboDump } from "../../lib/cloudSync";
 import { loadKakeiboState } from "../../lib/kakeiboStateRepo";
 import type { User } from "@supabase/supabase-js";
+import { toJapaneseAuthErrorMessage } from "../../lib/authErrorMessageJa";
 
 function safeNext(next: string | null) {
   // 外部URLへのopen redirectを避けるため、アプリ内パスだけ許可
   if (!next) return "/";
   return next.startsWith("/") ? next : "/";
-}
-
-function formatAuthErrorMessage(message: string) {
-  const normalized = message.toLowerCase();
-  const match = message.match(/after\s+(\d+)\s+seconds?/i);
-  if (message.includes("For security purposes") && match) {
-    return `セキュリティのため、次のリクエストは${match[1]}秒後に再試行してください。`;
-  }
-  if (message.includes("For security purposes")) {
-    return "セキュリティのため、しばらく待ってから再試行してください。";
-  }
-  if (normalized.includes("invalid login credentials")) {
-    return "メールアドレスまたはパスワードが正しくありません。";
-  }
-  if (normalized.includes("email not confirmed")) {
-    return "メール確認が完了していません。確認メールのリンクを開いてください。";
-  }
-  if (/rate limit/i.test(message)) {
-    return "メール送信の回数が多いため一時的に制限されています。しばらく待ってから再試行してください。";
-  }
-  return message;
 }
 
 function LoginPageInner() {
@@ -62,7 +42,7 @@ function LoginPageInner() {
 
   const canSubmit = useMemo(
     () => email.length > 0 && password.length > 0,
-    [email, password]
+    [email, password],
   );
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -117,7 +97,9 @@ function LoginPageInner() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "ログインに失敗しました。";
-      setErrorText(formatAuthErrorMessage(message));
+      setErrorText(
+        toJapaneseAuthErrorMessage(message, "ログインに失敗しました。"),
+      );
     } finally {
       setBusy(false);
     }
@@ -130,37 +112,9 @@ function LoginPageInner() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
             ログイン
           </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            メールアドレスか外部アカウントでログインできます。
-          </p>
         </div>
 
-        <div className="mt-6 space-y-3">
-          <button
-            type="button"
-            disabled
-            className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-700 shadow-sm opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-base font-bold text-slate-700 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-200">
-              G
-            </div>
-            <div>
-              <div>Google でログイン</div>
-              <div className="text-xs font-normal text-slate-500 dark:text-slate-400">
-                近日対応
-              </div>
-            </div>
-          </button>
-        </div>
-
-        <div className="relative my-6">
-          <div className="h-px bg-slate-200 dark:bg-slate-700" />
-          <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-xs font-semibold text-slate-500 dark:bg-slate-900 dark:text-slate-400">
-            メールアドレスでログイン
-          </span>
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-3">
+        <form onSubmit={onSubmit} className="mt-6 space-y-3">
           <div>
             <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
               メールアドレス
@@ -256,15 +210,6 @@ function LoginPageInner() {
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
             >
               メールアドレスの再設定
-            </Link>
-          </div>
-
-          <div className="text-center text-sm text-slate-500 dark:text-slate-400">
-            <Link
-              href="/reset-email"
-              className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
-            >
-              登録メールアドレスがわからない方はこちら
             </Link>
           </div>
 

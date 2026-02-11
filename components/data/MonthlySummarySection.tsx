@@ -219,6 +219,36 @@ export default function MonthlySummarySection() {
       .sort((a, b) => b.amount - a.amount);
   }, [dailyDetails]);
 
+  const monthlyExpenseCategorySummary = useMemo(() => {
+    const totals = new Map<string, number>();
+    dailyDetails.forEach((day) => {
+      day.forEach((rec) => {
+        if (rec.mode !== "expense") return;
+        const label = rec.category?.trim() ? rec.category : "カテゴリなし";
+        const next = (totals.get(label) || 0) + Number(rec.amount || 0);
+        totals.set(label, next);
+      });
+    });
+    return Array.from(totals.entries())
+      .map(([label, amount]) => ({ label, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [dailyDetails]);
+
+  const monthlyIncomeFromSummary = useMemo(() => {
+    const totals = new Map<string, number>();
+    dailyDetails.forEach((day) => {
+      day.forEach((rec) => {
+        if (rec.mode !== "income") return;
+        const label = rec.payFrom?.trim() ? rec.payFrom : "入金元なし";
+        const next = (totals.get(label) || 0) + Number(rec.amount || 0);
+        totals.set(label, next);
+      });
+    });
+    return Array.from(totals.entries())
+      .map(([label, amount]) => ({ label, amount }))
+      .sort((a, b) => b.amount - a.amount);
+  }, [dailyDetails]);
+
   const { isDark } = useResolvedTheme(settings.theme);
 
   return (
@@ -236,7 +266,9 @@ export default function MonthlySummarySection() {
       dailyTarget={hasPeriod ? periodDailyTarget : dailyTarget}
       weeklySummary={hasPeriod ? periodWeeklySummary : weeklySummary}
       periodLabel={hasPeriod ? periodLabel : undefined}
+      expenseCategorySummary={monthlyExpenseCategorySummary}
       payFromSummary={monthlyPayFromSummary}
+      incomeFromSummary={monthlyIncomeFromSummary}
       isDark={isDark}
     />
   );
