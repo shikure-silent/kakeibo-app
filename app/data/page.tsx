@@ -8,7 +8,7 @@ export default function DataPage() {
     <HomePageContainer
       variant="data"
       pageTitle="データ"
-      pageDescription="収入・支出の計画と今月の集計をまとめて確認できます。"
+      pageDescription=""
       extraSection={<MonthlySummarySection />}
     />
   );

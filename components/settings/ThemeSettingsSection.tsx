@@ -47,8 +47,8 @@ export function ThemeSettingsSection({
                     ? "bg-emerald-900/40 border-emerald-400 text-emerald-100"
                     : "bg-emerald-50 border-emerald-400 text-emerald-700"
                   : isDark
-                  ? "bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
-                  : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
+                    ? "bg-slate-800 border-slate-600 text-slate-200 hover:bg-slate-700"
+                    : "bg-white border-slate-300 text-slate-600 hover:bg-slate-50"
               }`}
             >
               {opt === "system" && "端末の設定に合わせる"}
@@ -57,9 +57,6 @@ export function ThemeSettingsSection({
             </button>
           ))}
         </div>
-        <p className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>
-          ※ テーマの切り替えは今後のアップデートで反映予定です。
-        </p>
       </div>
     </section>
   );

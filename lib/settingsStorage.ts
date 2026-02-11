@@ -17,6 +17,11 @@ export type ExpenseCategoryKey = (typeof EXPENSE_CATEGORY_KEYS)[number];
 
 // 追加：入力タブのデフォルトモード
 export type DefaultInputModeOption = "expense" | "income";
+export type NotificationPresetOption =
+  | "recommended"
+  | "minimal"
+  | "intensive"
+  | "custom";
 
 // 設定の保存キー
 const SETTINGS_KEY = "kakeibo_app_settings_v1";
@@ -69,6 +74,7 @@ export type AppSettings = {
 
   /** Webでも試しにブラウザ通知を出す（タブが開いてる間だけ） */
   enableBrowserNotifications?: boolean;
+  notificationPreset?: NotificationPresetOption;
 
   // --- C. 貯金目標・メンタルサポート ---
   targetSavingRate?: number;
@@ -86,7 +92,7 @@ export const defaultSettings: AppSettings = {
   defaultInputMode: "expense",
 
   // 貯金サポート
-  enableInputGapReminder: true,
+  enableInputGapReminder: false,
   enableWeeklySummaryReminder: true,
   enableMidPeriodCheckReminder: true,
   enableCycleEndReviewReminder: true,
@@ -99,6 +105,7 @@ export const defaultSettings: AppSettings = {
   midPeriodOffsetDays: 14,
   cycleEndReviewDaysBefore: 2,
   enableBrowserNotifications: false,
+  notificationPreset: "recommended",
 
   targetSavingRate: 0.1,
   enableEncouragingMessages: true,
@@ -134,7 +141,14 @@ export function loadAppSettings(): AppSettings {
         ...(isAllOn ? defaultAutoUpdateCategories : normalizedAuto),
       },
     };
-    if (isAllOn) {
+    let migrated = false;
+    if (!parsed.notificationPreset) {
+      mergedSettings.notificationPreset = "recommended";
+      mergedSettings.enableMidPeriodCheckReminder = false;
+      mergedSettings.enableCycleEndReviewReminder = false;
+      migrated = true;
+    }
+    if (isAllOn || migrated) {
       saveAppSettings(mergedSettings);
     }
     return mergedSettings;
@@ -230,7 +244,30 @@ export function saveIncomeCategories(list: string[]) {
 
 // 支出元・入金元プリセット
 export function loadPayFromPresets(defaults: string[]): string[] {
-  return loadStringList(PAY_FROM_PRESETS_KEY, defaults);
+  const stored = loadStringList(PAY_FROM_PRESETS_KEY, defaults);
+
+  // 旧名称 "QRコード決済" を新名称 "コード決済" に統一
+  const normalized = stored.map((item) =>
+    item === "QRコード決済" ? "コード決済" : item
+  );
+  const deduped = Array.from(new Set(normalized));
+
+  // 既存ユーザーの保存済みリストにも、新しいデフォルト候補を不足分だけ補完する
+  const next = [...deduped];
+  let changed = false;
+  defaults.forEach((item) => {
+    if (!next.includes(item)) {
+      next.push(item);
+      changed = true;
+    }
+  });
+  if (deduped.length !== stored.length || deduped.some((v, i) => v !== stored[i])) {
+    changed = true;
+  }
+  if (changed) {
+    savePayFromPresets(next);
+  }
+  return next;
 }
 
 export function savePayFromPresets(list: string[]) {

@@ -12,6 +12,11 @@ import {
 const PUSH_TOKEN_KEY = "kakeibo_push_token";
 const NOTIFICATION_PROMPTED_KEY = "kakeibo_notification_prompted_v1";
 let listenersRegistered = false;
+let registrationPromise: Promise<{ registered: boolean; token?: string }> | null =
+  null;
+let activeRegistrationResolver:
+  | ((result: { registered: boolean; token?: string }) => void)
+  | null = null;
 
 export function isNativePlatform() {
   return Capacitor.isNativePlatform();
@@ -40,35 +45,68 @@ export async function requestPushPermission() {
 export async function registerPushNotifications() {
   if (!isNativePlatform()) return { registered: false };
 
+  if (registrationPromise) {
+    return registrationPromise;
+  }
+
   const permission = await PushNotifications.requestPermissions();
   if (permission.receive !== "granted") {
     return { registered: false };
   }
 
-  if (!listenersRegistered) {
-    listenersRegistered = true;
-    PushNotifications.addListener("registration", (token) => {
-      setPushToken(token.value);
-    });
-    PushNotifications.addListener("registrationError", (error) => {
-      console.error("Push registration error", error);
-    });
-    PushNotifications.addListener(
-      "pushNotificationReceived",
-      (notification: PushNotificationSchema) => {
-        console.log("Push received", notification);
-      }
-    );
-    PushNotifications.addListener(
-      "pushNotificationActionPerformed",
-      (action: ActionPerformed) => {
-        console.log("Push action", action);
-      }
-    );
-  }
+  registrationPromise = new Promise(async (resolve) => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  await PushNotifications.register();
-  return { registered: true };
+    const finish = (result: { registered: boolean; token?: string }) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      activeRegistrationResolver = null;
+      registrationPromise = null;
+      resolve(result);
+    };
+
+    activeRegistrationResolver = finish;
+
+    if (!listenersRegistered) {
+      listenersRegistered = true;
+      PushNotifications.addListener("registration", (token) => {
+        setPushToken(token.value);
+        activeRegistrationResolver?.({ registered: true, token: token.value });
+      });
+      PushNotifications.addListener("registrationError", (error) => {
+        console.error("Push registration error", error);
+        activeRegistrationResolver?.({ registered: false });
+      });
+      PushNotifications.addListener(
+        "pushNotificationReceived",
+        (notification: PushNotificationSchema) => {
+          console.log("Push received", notification);
+        }
+      );
+      PushNotifications.addListener(
+        "pushNotificationActionPerformed",
+        (action: ActionPerformed) => {
+          console.log("Push action", action);
+        }
+      );
+    }
+
+    try {
+      await PushNotifications.register();
+    } catch (error) {
+      console.error("Push register call failed", error);
+      finish({ registered: false });
+      return;
+    }
+
+    timeoutId = setTimeout(() => {
+      const token = getPushToken() ?? undefined;
+      finish({ registered: !!token, token });
+    }, 4000);
+  });
+
+  return registrationPromise;
 }
 
 export async function checkLocalNotificationPermission(): Promise<PermissionStatus> {

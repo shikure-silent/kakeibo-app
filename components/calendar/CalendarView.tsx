@@ -108,7 +108,7 @@ export default function CalendarView(props: Props) {
   };
 
   const containerClass =
-    "mx-0 max-w-none px-0 py-6 lg:py-8 space-y-4 flex flex-col flex-1";
+    "mx-0 max-w-none px-0 pt-2 pb-6 lg:pt-3 lg:pb-8 space-y-4 flex flex-col flex-1";
   const headerPaddingClass = "px-4 lg:px-6";
 
   const mainRef = useRef<HTMLElement | null>(null);
@@ -215,6 +215,7 @@ export default function CalendarView(props: Props) {
         selectedDay={selectedDay}
         selectedDateLabel={selectedDateLabel}
         selectedDetails={selectedDetails}
+        isDark={isDark}
         onClose={onCloseDetail}
         onChangeRecord={onChangeRecord}
         onDeleteRecord={onDeleteRecord}

@@ -17,6 +17,17 @@ body[data-bottom-spacer="none"] .bottom-nav-spacer {
   margin: 0 !important;
 }
 
+body[data-ios-standalone-bell="1"] .app-main-content {
+  padding-top: 0;
+}
+
+.ios-standalone-bell {
+  position: absolute !important;
+  left: 1rem !important;
+  top: 0.65rem !important;
+  z-index: 30;
+}
+
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 640px) {
     input,

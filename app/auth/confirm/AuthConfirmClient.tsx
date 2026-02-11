@@ -4,6 +4,7 @@ import { type EmailOtpType } from "@supabase/supabase-js";
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
+import { setFlashToast } from "../../../lib/flashToast";
 
 export default function AuthConfirmClient() {
   const router = useRouter();
@@ -13,6 +14,21 @@ export default function AuthConfirmClient() {
     const token_hash = searchParams.get("token_hash");
     const type = searchParams.get("type") as EmailOtpType | null;
     const next = searchParams.get("next") ?? "/";
+    const hash =
+      typeof window !== "undefined" ? window.location.hash.slice(1) : "";
+    const hashParams = new URLSearchParams(hash);
+    const hashType = hashParams.get("type") as EmailOtpType | null;
+    const hasHashTokens =
+      !!hashType &&
+      !!hashParams.get("access_token") &&
+      !!hashParams.get("refresh_token");
+
+    // Some links arrive with access/refresh tokens in hash instead of token_hash query.
+    if ((!token_hash || !type) && hasHashTokens) {
+      setSuccessToastIfNeeded(hashType);
+      router.replace(hashType === "recovery" ? "/reset-password" : next);
+      return;
+    }
 
     if (!token_hash || !type) {
       router.replace("/error");
@@ -30,7 +46,14 @@ export default function AuthConfirmClient() {
     void (async () => {
       const { error } = await supabase.auth.verifyOtp({ type, token_hash });
       if (cancelled) return;
-      router.replace(error ? "/error" : next);
+      if (error) {
+        // Avoid leaving a partial session if verification failed.
+        await supabase.auth.signOut();
+        router.replace("/error");
+        return;
+      }
+      setSuccessToastIfNeeded(type);
+      router.replace(next);
     })();
 
     return () => {
@@ -47,3 +70,10 @@ export default function AuthConfirmClient() {
     </main>
   );
 }
+    const setSuccessToastIfNeeded = (otpType: EmailOtpType | null) => {
+      if (otpType !== "signup") return;
+      setFlashToast({
+        message: "メール確認が完了し、ログインしました。",
+        tone: "success",
+      });
+    };

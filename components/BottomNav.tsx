@@ -101,7 +101,10 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const isSetup = pathname.startsWith("/setup");
+  const isSetupFlow =
+    pathname.startsWith("/setup") || pathname.startsWith("/welcome");
+  const isPasswordRecoveryFlow =
+    pathname.startsWith("/reset-password") || pathname.startsWith("/auth/confirm");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -146,7 +149,7 @@ export default function BottomNav() {
     };
   }, []);
 
-  if (isSetup) {
+  if (isSetupFlow || isPasswordRecoveryFlow) {
     return null;
   }
 

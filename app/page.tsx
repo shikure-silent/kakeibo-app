@@ -12,7 +12,7 @@ export default function RootPage() {
     if (isInitialSetupComplete()) {
       router.replace("/calendar");
     } else {
-      router.replace("/setup");
+      router.replace("/welcome");
     }
   }, [router]);
 

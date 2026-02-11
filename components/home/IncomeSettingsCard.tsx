@@ -121,7 +121,7 @@ export default function IncomeSettingsCard({
             <button
               type="button"
               onClick={onRequestEdit}
-              className={`inline-flex items-center justify-center rounded-full border px-3 py-1.5 text-[11px] font-medium ${
+              className={`inline-flex w-40 items-center justify-center rounded-full border px-3 py-1.5 text-[11px] font-medium ${
                 isDark
                   ? "border-slate-500 text-slate-200 hover:bg-slate-800"
                   : "border-slate-300 text-slate-700 hover:bg-slate-50"

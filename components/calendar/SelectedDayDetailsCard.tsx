@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { DetailRecord } from "../../types/calendar";
+import { DetailRecord, Mode } from "../../types/calendar";
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PAY_FROM_OPTIONS } from "../../lib/const";
 import {
   loadExpenseCategories,
   loadIncomeCategories,
   loadPayFromPresets,
+  saveExpenseCategories,
+  saveIncomeCategories,
 } from "../../lib/settingsStorage";
 import { DetailAddModal } from "./DetailAddModal";
 import { DetailConfirmModal } from "./DetailConfirmModal";
@@ -16,6 +18,7 @@ type Props = {
   selectedDay: number | null;
   selectedDateLabel: string;
   selectedDetails: DetailRecord[];
+  isDark?: boolean;
   onChangeRecord: (index: number, record: DetailRecord) => void;
   onDeleteRecord: (index: number) => void;
   onAddRecord: () => void; // 互換性のため残しておく（内部では使用しない）
@@ -26,6 +29,7 @@ export default function SelectedDayDetailsCard({
   selectedDay,
   selectedDateLabel,
   selectedDetails,
+  isDark = false,
   onChangeRecord,
   onDeleteRecord,
   onCloseCalendar,
@@ -94,6 +98,33 @@ export default function SelectedDayDetailsCard({
     }
   };
 
+  const normalizeCategoryList = (list: string[]) => {
+    const seen = new Set<string>();
+    const out: string[] = [];
+    list.forEach((item) => {
+      const t = item.trim();
+      if (!t || seen.has(t)) return;
+      seen.add(t);
+      out.push(t);
+    });
+    return out;
+  };
+
+  const handleSaveCategoryOptions = (targetMode: Mode, list: string[]) => {
+    const normalized = normalizeCategoryList(list);
+    if (normalized.length === 0) {
+      window.alert("カテゴリは最低1件必要です。");
+      return;
+    }
+    if (targetMode === "expense") {
+      setExpenseCategoryOptions(normalized);
+      saveExpenseCategories(normalized);
+      return;
+    }
+    setIncomeCategoryOptions(normalized);
+    saveIncomeCategories(normalized);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-3 py-3 sm:px-4 sm:py-4 max-h-[80vh] overflow-y-auto">
       {/* ヘッダー */}
@@ -129,11 +160,13 @@ export default function SelectedDayDetailsCard({
                 key={idx}
                 record={rec}
                 index={idx}
+                isDark={isDark}
                 onChange={onChangeRecord}
                 onDelete={handleOpenDeleteConfirm}
                 expenseCategoryOptions={expenseCategoryOptions}
                 incomeCategoryOptions={incomeCategoryOptions}
                 payFromOptions={payFromOptions}
+                onSaveCategoryOptions={handleSaveCategoryOptions}
               />
             ))}
           </div>
@@ -154,6 +187,7 @@ export default function SelectedDayDetailsCard({
       <DetailAddModal
         open={isAddModalOpen}
         onClose={handleCloseAddModal}
+        isDark={isDark}
         onConfirm={(rec) => {
           const digits = Number(rec.amount ?? 0);
           const normalized: DetailRecord = {
@@ -163,6 +197,9 @@ export default function SelectedDayDetailsCard({
           } as DetailRecord;
           handleConfirmAdd(normalized);
         }}
+        expenseCategoryOptions={expenseCategoryOptions}
+        incomeCategoryOptions={incomeCategoryOptions}
+        onSaveCategoryOptions={handleSaveCategoryOptions}
       />
 
       <DetailConfirmModal

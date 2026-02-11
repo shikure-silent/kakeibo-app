@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732" role="img" aria-label="無理なく家計簿 スプラッシュ">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ECFDF5"/>
+      <stop offset="100%" stop-color="#F8FAFC"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect width="2732" height="2732" fill="url(#bg)"/>
+
+  <circle cx="1366" cy="1160" r="395" fill="#34D399"/>
+  <circle cx="1366" cy="1160" r="342" fill="#10B981"/>
+
+  <text x="1366" y="1248" text-anchor="middle" font-size="360" font-family="'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif" font-weight="600" fill="#ECFEFF">¥</text>
+
+  <text x="1366" y="1730" text-anchor="middle" font-size="130" font-family="'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif" font-weight="700" fill="#0F172A">無理なく家計簿</text>
+  <text x="1366" y="1860" text-anchor="middle" font-size="66" font-family="'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif" font-weight="500" fill="#334155">入力・確認・見直しを毎日に</text>
+
+  <ellipse cx="1366" cy="1960" rx="380" ry="24" fill="#94A3B8" opacity="0.25" filter="url(#soft)"/>
+</svg>

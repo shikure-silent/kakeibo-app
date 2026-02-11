@@ -1,36 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
-import { exportKakeiboDump, importKakeiboDump } from "../../lib/cloudSync";
-import { loadKakeiboState, saveKakeiboState } from "../../lib/kakeiboStateRepo";
+import { importKakeiboDump } from "../../lib/cloudSync";
+import { loadKakeiboState } from "../../lib/kakeiboStateRepo";
+import {
+  CLOUD_AUTO_SAVED_EVENT,
+  LAST_CLOUD_SAVE_AT_KEY,
+} from "../../lib/useCloudAutoSaveOnLeave";
 
 export function CloudSyncSection() {
   const { supabase, user, isLoading } = useSupabaseAuth();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
 
   const canUse = !!supabase && !!user;
+  const lastSavedLabel = useMemo(() => {
+    if (!lastSavedAt) return "未保存";
+    return new Date(lastSavedAt).toLocaleString("ja-JP");
+  }, [lastSavedAt]);
 
-  const onSave = async () => {
-    setMsg(null);
-    setErr(null);
-    if (!supabase || !user) return;
-
-    setBusy(true);
-    try {
-      const dump = exportKakeiboDump({ includeSettings: true });
-      await saveKakeiboState(supabase, user.id, dump);
-      setMsg("クラウドに保存しました（kakeibo_state）。");
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "保存に失敗しました。";
-      setErr(message);
-    } finally {
-      setBusy(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = localStorage.getItem(LAST_CLOUD_SAVE_AT_KEY);
+    if (raw) {
+      const parsed = Number(raw);
+      if (!Number.isNaN(parsed)) {
+        setLastSavedAt(parsed);
+      }
     }
-  };
+
+    const onSaved = (event: Event) => {
+      const custom = event as CustomEvent<{ at?: number }>;
+      const at = custom.detail?.at;
+      if (typeof at === "number" && Number.isFinite(at)) {
+        setLastSavedAt(at);
+      } else {
+        const latest = localStorage.getItem(LAST_CLOUD_SAVE_AT_KEY);
+        const parsed = latest ? Number(latest) : NaN;
+        if (!Number.isNaN(parsed)) setLastSavedAt(parsed);
+      }
+    };
+
+    window.addEventListener(CLOUD_AUTO_SAVED_EVENT, onSaved);
+    return () => window.removeEventListener(CLOUD_AUTO_SAVED_EVENT, onSaved);
+  }, []);
 
   const onRestore = async () => {
     setMsg(null);
@@ -46,9 +62,7 @@ export function CloudSyncSection() {
     try {
       const dump = await loadKakeiboState(supabase, user.id);
       if (!dump) {
-        setErr(
-          "クラウドに保存データが見つかりませんでした。先に『保存』してください。"
-        );
+        setErr("クラウドに保存データが見つかりませんでした。");
         return;
       }
       importKakeiboDump(dump, { includeSettings: true, clearBefore: true });
@@ -65,11 +79,9 @@ export function CloudSyncSection() {
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-      <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-        クラウド同期
-      </h2>
+      <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">クラウド復元</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        ログインしている場合、現在の端末データをクラウドに保存/復元できます。
+        ログイン中は家計簿データが自動でクラウド保存されます。必要なときだけ復元してください。
       </p>
 
       <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-950/30">
@@ -81,18 +93,16 @@ export function CloudSyncSection() {
           </p>
         ) : (
           <>
-            <p className="text-sm text-slate-700 dark:text-slate-200">
-              ログイン中：<span className="font-semibold">{user.email}</span>
-            </p>
+            <div className="space-y-1 text-sm text-slate-700 dark:text-slate-200">
+              <p>
+                ログイン中：<span className="font-semibold">{user.email}</span>
+              </p>
+              <p>
+                自動クラウド保存：<span className="font-semibold">{lastSavedLabel}</span>
+              </p>
+            </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                disabled={busy}
-                onClick={onSave}
-                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-              >
-                クラウドに保存
-              </button>
               <button
                 disabled={busy}
                 onClick={onRestore}

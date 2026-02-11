@@ -32,6 +32,7 @@ import { AggregationSettingsSection } from "../../components/settings/Aggregatio
 import { AccountLoginSection } from "../../components/settings/AccountLoginSection";
 import { DataManagementSection } from "../../components/settings/DataManagementSection";
 import { AppInfoSection } from "../../components/settings/AppInfoSection";
+import { CloudSyncSection } from "../../components/settings/CloudSyncSection";
 import {
   createLocalBackup,
   parseLocalBackup,
@@ -47,7 +48,6 @@ export default function SettingsPage() {
   const [expenseCategories, setExpenseCategories] = useState<string[]>([]);
   const [incomeCategories, setIncomeCategories] = useState<string[]>([]);
   const [payFromPresets, setPayFromPresets] = useState<string[]>([]);
-  const [isSavingOpen, setIsSavingOpen] = useState(true);
   const [isCategoryOpen, setIsCategoryOpen] = useState(true);
 
   // 初期読み込み
@@ -62,18 +62,20 @@ export default function SettingsPage() {
 
   const handleChangeSetting = <K extends keyof AppSettings>(
     key: K,
-    value: AppSettings[K]
+    value: AppSettings[K],
   ) => {
-    const next = { ...settings, [key]: value };
-    setSettings(next);
-    saveAppSettings(next);
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      saveAppSettings(next);
+      return next;
+    });
   };
 
   const handleResetKakeiboData = () => {
     if (typeof window === "undefined") return;
 
     const ok = window.confirm(
-      "ブラウザに保存されている家計簿データ（予算・日別の明細・固定費など）をすべて削除します。\n※ テーマやカテゴリなどの設定は残ります。\n\n本当に削除してよろしいですか？"
+      "ブラウザに保存されている家計簿データ（予算・日別の明細・固定費など）をすべて削除します。\n※ テーマやカテゴリなどの設定は残ります。\n\n本当に削除してよろしいですか？",
     );
     if (!ok) return;
 
@@ -87,7 +89,7 @@ export default function SettingsPage() {
     if (typeof window === "undefined") return;
 
     const ok = window.confirm(
-      "支出カテゴリを最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？"
+      "支出カテゴリを最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？",
     );
     if (!ok) return;
 
@@ -102,7 +104,7 @@ export default function SettingsPage() {
     if (typeof window === "undefined") return;
 
     const ok = window.confirm(
-      "収入カテゴリを最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？"
+      "収入カテゴリを最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？",
     );
     if (!ok) return;
 
@@ -117,7 +119,7 @@ export default function SettingsPage() {
     if (typeof window === "undefined") return;
 
     const ok = window.confirm(
-      "支出元・入金元の候補を最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？"
+      "支出元・入金元の候補を最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？",
     );
     if (!ok) return;
 
@@ -158,7 +160,7 @@ export default function SettingsPage() {
         return;
       }
       const ok = window.confirm(
-        "バックアップを復元します。現在のデータは上書きされます。\n\n本当に復元してよろしいですか？"
+        "バックアップを復元します。現在のデータは上書きされます。\n\n本当に復元してよろしいですか？",
       );
       if (!ok) return;
       restoreLocalBackup(parsed.backup, {
@@ -185,7 +187,7 @@ export default function SettingsPage() {
     setList: (v: string[]) => void,
     from: number,
     to: number,
-    kind: "expense" | "income" | "payfrom"
+    kind: "expense" | "income" | "payfrom",
   ) => {
     const reordered = reorderList(list, from, to);
     setList(reordered);
@@ -200,7 +202,7 @@ export default function SettingsPage() {
     setList: (v: string[]) => void,
     index: number,
     value: string,
-    kind: "expense" | "income" | "payfrom"
+    kind: "expense" | "income" | "payfrom",
   ) => {
     const newList = [...list];
     newList[index] = value;
@@ -214,7 +216,7 @@ export default function SettingsPage() {
   const handleAddItem = (
     list: string[],
     setList: (v: string[]) => void,
-    kind: "expense" | "income" | "payfrom"
+    kind: "expense" | "income" | "payfrom",
   ) => {
     const newList = [...list, ""];
     setList(newList);
@@ -228,7 +230,7 @@ export default function SettingsPage() {
     list: string[],
     setList: (v: string[]) => void,
     index: number,
-    kind: "expense" | "income" | "payfrom"
+    kind: "expense" | "income" | "payfrom",
   ) => {
     if (typeof window !== "undefined") {
       const ok = window.confirm("この項目を削除しますか？");
@@ -277,10 +279,10 @@ export default function SettingsPage() {
 
   return (
     <main
-      className={`min-h-screen max-w-5xl mx-auto px-4 py-6 lg:py-8 space-y-6 ${containerClass}`}
+      className={`min-h-screen max-w-5xl mx-auto px-4 pt-2 pb-6 lg:pt-3 lg:pb-8 space-y-6 ${containerClass}`}
     >
       <header className="space-y-2">
-        <div className="relative flex items-start justify-center gap-3">
+        <div className="relative flex min-h-[3rem] items-start justify-center gap-3">
           <h1
             className={`text-lg lg:text-xl font-semibold text-center ${
               isDark ? "text-slate-100" : "text-slate-900"
@@ -288,11 +290,11 @@ export default function SettingsPage() {
           >
             設定
           </h1>
-          <div className="absolute right-0 top-0 shrink-0">
+          <div className="absolute right-0 -top-0.5 shrink-0">
             <button
               type="button"
               onClick={() => setMenuOpen((prev) => !prev)}
-              className="inline-flex items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold shadow-sm"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border shadow-sm"
               style={{
                 borderColor: isDark ? "#475569" : "#e2e8f0",
                 backgroundColor: isDark ? "#0f172a" : "#ffffff",
@@ -300,7 +302,19 @@ export default function SettingsPage() {
               }}
               aria-label="設定メニューを開く"
             >
-              &#9776;
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                aria-hidden="true"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <path d="M4 7h16" />
+                <path d="M4 12h16" />
+                <path d="M4 17h16" />
+              </svg>
             </button>
             {menuOpen && (
               <div
@@ -334,13 +348,6 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
-        <p
-          className={`text-[12px] leading-snug text-center mx-auto max-w-xl ${
-            isDark ? "text-slate-300" : "text-slate-500"
-          }`}
-        >
-          アプリの表示やカテゴリ、集計方法などをカスタマイズできます。
-        </p>
       </header>
 
       <div className="space-y-6">
@@ -358,36 +365,12 @@ export default function SettingsPage() {
           />
         </section>
 
-        <section id="saving" className="space-y-2">
-          <div
-            className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${
-              isDark
-                ? "bg-slate-900 border-slate-700 text-slate-100"
-                : "bg-white border-slate-100 text-slate-900"
-            }`}
-          >
-            <h2 className="text-sm font-semibold">貯金サポート・通知設定</h2>
-            <button
-              type="button"
-              onClick={() => setIsSavingOpen((prev) => !prev)}
-              className={`inline-flex h-8 w-8 items-center justify-center rounded-full border text-lg ${
-                isDark
-                  ? "border-slate-600 text-slate-200 hover:bg-slate-800"
-                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
-              }`}
-              aria-label="貯金サポート・通知設定の開閉"
-              aria-expanded={isSavingOpen}
-            >
-              {isSavingOpen ? "−" : "+"}
-            </button>
-          </div>
-          {isSavingOpen && (
-            <SavingSupportSection
-              settings={settings}
-              onChangeSetting={handleChangeSetting}
-              showHeader={false}
-            />
-          )}
+        <section id="saving">
+          <SavingSupportSection
+            settings={settings}
+            onChangeSetting={handleChangeSetting}
+            showHeader={true}
+          />
         </section>
 
         <section id="osnotify">
@@ -428,18 +411,22 @@ export default function SettingsPage() {
                   setExpenseCategories,
                   idx,
                   val,
-                  "expense"
+                  "expense",
                 )
               }
               onAddExpenseCategory={() =>
-                handleAddItem(expenseCategories, setExpenseCategories, "expense")
+                handleAddItem(
+                  expenseCategories,
+                  setExpenseCategories,
+                  "expense",
+                )
               }
               onRemoveExpenseCategory={(idx) =>
                 handleRemoveItem(
                   expenseCategories,
                   setExpenseCategories,
                   idx,
-                  "expense"
+                  "expense",
                 )
               }
               onReorderExpenseCategory={(from, to) =>
@@ -448,7 +435,7 @@ export default function SettingsPage() {
                   setExpenseCategories,
                   from,
                   to,
-                  "expense"
+                  "expense",
                 )
               }
               onEditIncomeCategory={(idx, val) =>
@@ -457,7 +444,7 @@ export default function SettingsPage() {
                   setIncomeCategories,
                   idx,
                   val,
-                  "income"
+                  "income",
                 )
               }
               onAddIncomeCategory={() =>
@@ -468,7 +455,7 @@ export default function SettingsPage() {
                   incomeCategories,
                   setIncomeCategories,
                   idx,
-                  "income"
+                  "income",
                 )
               }
               onReorderIncomeCategory={(from, to) =>
@@ -477,7 +464,7 @@ export default function SettingsPage() {
                   setIncomeCategories,
                   from,
                   to,
-                  "income"
+                  "income",
                 )
               }
               onEditPayFrom={(idx, val) =>
@@ -486,7 +473,7 @@ export default function SettingsPage() {
                   setPayFromPresets,
                   idx,
                   val,
-                  "payfrom"
+                  "payfrom",
                 )
               }
               onAddPayFrom={() =>
@@ -497,7 +484,7 @@ export default function SettingsPage() {
                   payFromPresets,
                   setPayFromPresets,
                   idx,
-                  "payfrom"
+                  "payfrom",
                 )
               }
               onReorderPayFrom={(from, to) =>
@@ -506,7 +493,7 @@ export default function SettingsPage() {
                   setPayFromPresets,
                   from,
                   to,
-                  "payfrom"
+                  "payfrom",
                 )
               }
               onResetExpenseCategories={handleResetExpenseCategoriesToDefault}
@@ -531,12 +518,15 @@ export default function SettingsPage() {
         </section>
 
         <section id="data">
-          <DataManagementSection
-            onResetKakeiboData={handleResetKakeiboData}
-            onCreateBackup={handleCreateBackup}
-            onImportBackup={handleImportBackup}
-            isDark={isDark}
-          />
+          <div className="space-y-4">
+            <DataManagementSection
+              onResetKakeiboData={handleResetKakeiboData}
+              onCreateBackup={handleCreateBackup}
+              onImportBackup={handleImportBackup}
+              isDark={isDark}
+            />
+            <CloudSyncSection />
+          </div>
         </section>
 
         <section id="appinfo">

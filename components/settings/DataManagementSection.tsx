@@ -42,7 +42,7 @@ export function DataManagementSection({
         <p
           className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}
         >
-          端末内の家計簿データと設定を「バックアップファイル」として保存します。復元すると現在のデータが上書きされます。
+          この端末の家計簿データと設定を、バックアップファイルとして端末内に保存します。復元すると現在の端末データは上書きされます。
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <button

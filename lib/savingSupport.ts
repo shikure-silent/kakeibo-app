@@ -67,7 +67,7 @@ export function buildSavingSupportState(
 
   const {
     // A: トグル
-    enableInputGapReminder = true,
+    enableInputGapReminder = false,
     enableWeeklySummaryReminder = true,
     enableMidPeriodCheckReminder = true,
     enableCycleEndReviewReminder = true,
@@ -251,7 +251,7 @@ export function maybeSendBrowserNotification(
 ) {
   if (!settings.enableBrowserNotifications) return;
   if (typeof window === "undefined") return;
-  if (!("Notification" in window)) return;
+  if (!isBrowserNotificationSupportedPlatform()) return;
   if (Notification.permission !== "granted") return;
 
   // “通知っぽさ”を出すなら reminderTime 以降だけ鳴らす
@@ -285,9 +285,41 @@ export function maybeSendBrowserNotification(
 export async function requestBrowserNotificationPermission(): Promise<
   NotificationPermission | "unsupported"
 > {
-  if (typeof window === "undefined") return "unsupported";
-  if (!("Notification" in window)) return "unsupported";
+  if (!isBrowserNotificationSupportedPlatform()) return "unsupported";
   return await Notification.requestPermission();
+}
+
+export function getBrowserNotificationPermissionStatus():
+  | NotificationPermission
+  | "unsupported" {
+  if (typeof window === "undefined") return "unsupported";
+  if (!isBrowserNotificationSupportedPlatform()) return "unsupported";
+  return Notification.permission;
+}
+
+export function isBrowserNotificationSupportedPlatform(): boolean {
+  if (typeof window === "undefined") return false;
+  if (!("Notification" in window)) return false;
+  if (isCapacitorNativeRuntime()) return false;
+
+  const ua = window.navigator.userAgent || "";
+  const isIos = /iPad|iPhone|iPod/.test(ua);
+  if (isIos) return false;
+
+  return true;
+}
+
+function isCapacitorNativeRuntime(): boolean {
+  if (typeof window === "undefined") return false;
+
+  const anyWindow = window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+  };
+  const nativeByApi = anyWindow.Capacitor?.isNativePlatform?.();
+  if (nativeByApi === true) return true;
+
+  const ua = window.navigator.userAgent || "";
+  return /Capacitor/i.test(ua);
 }
 
 /** ========== Helpers ========== */

@@ -6,24 +6,11 @@ import { Suspense, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../lib/supabaseClient";
 import { setFlashToast } from "../../lib/flashToast";
 import { getAuthRedirectUrl } from "../../lib/authRedirect";
+import { toJapaneseAuthErrorMessage } from "../../lib/authErrorMessageJa";
 
 function safeNext(next: string | null) {
   if (!next) return "/";
   return next.startsWith("/") ? next : "/";
-}
-
-function formatAuthErrorMessage(message: string) {
-  const match = message.match(/after\s+(\d+)\s+seconds?/i);
-  if (message.includes("For security purposes") && match) {
-    return `セキュリティのため、次のリクエストは${match[1]}秒後に再試行してください。`;
-  }
-  if (message.includes("For security purposes")) {
-    return "セキュリティのため、しばらく待ってから再試行してください。";
-  }
-  if (/rate limit/i.test(message)) {
-    return "メール送信の回数が多いため一時的に制限されています。しばらく待ってから再試行してください。";
-  }
-  return message;
 }
 
 function SignupPageInner() {
@@ -36,9 +23,6 @@ function SignupPageInner() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  // 任意：表示名（TopNavで表示名優先にしてるなら便利）
-  const [displayName, setDisplayName] = useState("");
 
   const [busy, setBusy] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -67,9 +51,6 @@ function SignupPageInner() {
         password,
         options: {
           emailRedirectTo: getAuthRedirectUrl("/auth/confirm"),
-          data: {
-            display_name: displayName || undefined,
-          },
         },
       });
       if (error) throw error;
@@ -87,7 +68,9 @@ function SignupPageInner() {
     } catch (err) {
       const rawMessage =
         err instanceof Error ? err.message : "新規登録に失敗しました。";
-      setErrorText(formatAuthErrorMessage(rawMessage));
+      setErrorText(
+        toJapaneseAuthErrorMessage(rawMessage, "新規登録に失敗しました。")
+      );
     } finally {
       setBusy(false);
     }
@@ -193,19 +176,6 @@ function SignupPageInner() {
                     )}
                   </button>
                 </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  表示名（任意）
-                </label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
-                  placeholder="山田 太郎"
-                />
               </div>
 
               {errorText && (

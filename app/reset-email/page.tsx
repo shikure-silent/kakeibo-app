@@ -3,17 +3,8 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
-
-function formatAuthErrorMessage(message: string) {
-  const match = message.match(/after\s+(\d+)\s+seconds?/i);
-  if (message.includes("For security purposes") && match) {
-    return `セキュリティのため、次のリクエストは${match[1]}秒後に再試行してください。`;
-  }
-  if (message.includes("For security purposes")) {
-    return "セキュリティのため、しばらく待ってから再試行してください。";
-  }
-  return message;
-}
+import { toJapaneseAuthErrorMessage } from "../../lib/authErrorMessageJa";
+import { getAuthRedirectUrl } from "../../lib/authRedirect";
 
 export default function ResetEmailPage() {
   const { supabase, user, isLoading } = useSupabaseAuth();
@@ -42,8 +33,11 @@ export default function ResetEmailPage() {
 
     setBusy(true);
     try {
+      const emailRedirectTo = getAuthRedirectUrl("/auth/confirm?next=/settings");
       const { error } = await supabase.auth.updateUser({
         email: newEmail.trim(),
+      }, {
+        emailRedirectTo,
       });
       if (error) throw error;
 
@@ -56,7 +50,12 @@ export default function ResetEmailPage() {
         err instanceof Error
           ? err.message
           : "メールアドレス更新に失敗しました。";
-      setErrorText(formatAuthErrorMessage(rawMessage));
+      setErrorText(
+        toJapaneseAuthErrorMessage(
+          rawMessage,
+          "メールアドレス更新に失敗しました。"
+        )
+      );
     } finally {
       setBusy(false);
     }

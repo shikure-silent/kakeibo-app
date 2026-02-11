@@ -24,17 +24,10 @@ export default function CalendarHeader({
 
   return (
     <header className="space-y-3">
-      <div className="space-y-0.5 text-center">
+      <div className="text-center">
         <h1 className="text-lg lg:text-xl font-semibold tracking-tight">
           カレンダー
         </h1>
-        <p
-          className={`text-xs lg:text-sm ${
-            isDark ? "text-slate-300" : "text-slate-500"
-          } mx-auto max-w-xl`}
-        >
-          日々の支出・収入を確認しながら、給料日サイクル単位での予算管理ができます。
-        </p>
       </div>
 
       <div className="flex items-center justify-center gap-3">

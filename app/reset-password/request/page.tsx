@@ -4,17 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../../lib/supabaseClient";
 import { getAuthRedirectUrl } from "../../../lib/authRedirect";
-
-function formatAuthErrorMessage(message: string) {
-  const match = message.match(/after\s+(\d+)\s+seconds?/i);
-  if (message.includes("For security purposes") && match) {
-    return `セキュリティのため、次のリクエストは${match[1]}秒後に再試行してください。`;
-  }
-  if (message.includes("For security purposes")) {
-    return "セキュリティのため、しばらく待ってから再試行してください。";
-  }
-  return message;
-}
+import { toJapaneseAuthErrorMessage } from "../../../lib/authErrorMessageJa";
 
 export default function ResetPasswordRequestPage() {
   const supabase = getSupabaseClient();
@@ -44,7 +34,9 @@ export default function ResetPasswordRequestPage() {
 
     setBusy(true);
     try {
-      const redirectTo = getAuthRedirectUrl("/reset-password");
+      const redirectTo = getAuthRedirectUrl(
+        "/auth/confirm?next=/reset-password"
+      );
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
       });
@@ -56,7 +48,9 @@ export default function ResetPasswordRequestPage() {
     } catch (err) {
       const rawMessage =
         err instanceof Error ? err.message : "再設定メールの送信に失敗しました。";
-      setErrorText(formatAuthErrorMessage(rawMessage));
+      setErrorText(
+        toJapaneseAuthErrorMessage(rawMessage, "再設定メールの送信に失敗しました。")
+      );
     } finally {
       setBusy(false);
     }

@@ -45,7 +45,7 @@ const getDaysInMonth = (year: number, month: number) =>
 const normalizeAmountInput = (raw: string): string => {
   if (!raw) return "";
   const zenkakuToHankaku = raw.replace(/[０-９]/g, (ch) =>
-    String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+    String.fromCharCode(ch.charCodeAt(0) - 0xfee0),
   );
   const noComma = zenkakuToHankaku.replace(/,/g, "");
   const digitsOnly = noComma.replace(/[^0-9]/g, "");
@@ -156,6 +156,8 @@ export default function InputPage() {
 
   const handleChangeMode = (next: Mode) => {
     setMode(next);
+    setCategory("");
+    setCustomCategory("");
 
     if (next === "expense") {
       setPayFrom("");
@@ -227,6 +229,15 @@ export default function InputPage() {
     });
   };
 
+  const handleUpdateRecord = (index: number, updated: DetailRecord) => {
+    if (!isClient) return;
+    setDayRecords((prev) => {
+      const next = prev.map((item, i) => (i === index ? updated : item));
+      saveDetailsForDate(dateStr, next);
+      return next;
+    });
+  };
+
   const selectedDateLabel = useMemo(() => {
     if (!dateStr) return "";
     const { year, month, day } = parseDateString(dateStr);
@@ -237,19 +248,12 @@ export default function InputPage() {
 
   return (
     <main className={`min-h-screen overflow-x-hidden ${themeClass}`}>
-      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-6 lg:py-8 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 lg:px-8 pt-2 pb-6 lg:pt-3 lg:pb-8 space-y-6">
         {/* ヘッダー */}
         <header className="space-y-2 text-center">
           <h1 className="text-xl lg:text-2xl font-semibold tracking-tight">
             入力
           </h1>
-          <p
-            className={`text-xs lg:text-sm ${
-              isDark ? "text-slate-300" : "text-slate-500"
-            } mx-auto max-w-xl`}
-          >
-            毎日の支出や収入を記録する画面です。入力した内容はカレンダーページにも反映されます。
-          </p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
@@ -281,6 +285,7 @@ export default function InputPage() {
               dateLabel={selectedDateLabel}
               records={dayRecords}
               onDeleteRecord={handleDeleteRecord}
+              onUpdateRecord={handleUpdateRecord}
               isDark={isDark}
             />
           </section>

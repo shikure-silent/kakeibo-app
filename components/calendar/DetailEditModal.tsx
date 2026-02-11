@@ -9,6 +9,7 @@ type Props = {
   selectedDay: number | null;
   selectedDateLabel: string;
   selectedDetails: DetailRecord[];
+  isDark?: boolean;
   onClose: () => void;
   onChangeRecord: (index: number, record: DetailRecord) => void;
   onDeleteRecord: (index: number) => void;
@@ -20,6 +21,7 @@ export function DetailEditModal({
   selectedDay,
   selectedDateLabel,
   selectedDetails,
+  isDark = false,
   onClose,
   onChangeRecord,
   onDeleteRecord,
@@ -52,6 +54,7 @@ export function DetailEditModal({
           selectedDay={selectedDay}
           selectedDateLabel={selectedDateLabel}
           selectedDetails={selectedDetails}
+          isDark={isDark}
           onChangeRecord={onChangeRecord}
           onDeleteRecord={onDeleteRecord}
           onAddRecord={onAddRecord}
