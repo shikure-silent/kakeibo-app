@@ -21,6 +21,7 @@ export function AccountLoginSection() {
   const { supabase, user, isLoading } = useSupabaseAuth();
 
   const [mounted, setMounted] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const displayName = useMemo(() => {
@@ -113,6 +114,66 @@ export function AccountLoginSection() {
                     className="inline-flex items-center justify-center rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                   >
                     ログアウト
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={deletingAccount}
+                    onClick={async () => {
+                      if (!supabase || !user || deletingAccount) return;
+
+                      const ok = window.confirm(
+                        "アカウントを削除します。\n\n削除後はログインできなくなり、クラウド保存データ（復元用）も削除されます。\nこの操作は取り消せません。\n\n本当に削除しますか？"
+                      );
+                      if (!ok) return;
+
+                      setDeletingAccount(true);
+                      try {
+                        const { data, error: sessionError } =
+                          await supabase.auth.getSession();
+                        if (sessionError || !data.session?.access_token) {
+                          throw new Error(
+                            "認証セッションを確認できませんでした。再ログインしてお試しください。"
+                          );
+                        }
+
+                        const res = await fetch("/api/account/delete", {
+                          method: "DELETE",
+                          headers: {
+                            Authorization: `Bearer ${data.session.access_token}`,
+                          },
+                        });
+                        if (!res.ok) {
+                          const body = (await res.json().catch(() => null)) as
+                            | { error?: string }
+                            | null;
+                          throw new Error(
+                            body?.error ??
+                              "アカウント削除に失敗しました。時間をおいて再度お試しください。"
+                          );
+                        }
+
+                        clearKakeiboKeys({ includeSettings: true });
+                        clearActiveUserId();
+                        await supabase.auth.signOut();
+                        setFlashToast({
+                          message: "アカウントを削除しました。",
+                          tone: "info",
+                        });
+                        window.location.href = "/signup";
+                      } catch (e) {
+                        const message =
+                          e instanceof Error
+                            ? e.message
+                            : "アカウント削除に失敗しました。";
+                        window.alert(message);
+                      } finally {
+                        setDeletingAccount(false);
+                      }
+                    }}
+                    className="inline-flex items-center justify-center rounded-full border border-rose-300 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950/30"
+                  >
+                    {deletingAccount ? "削除中…" : "アカウント削除"}
                   </button>
 
                   <Link

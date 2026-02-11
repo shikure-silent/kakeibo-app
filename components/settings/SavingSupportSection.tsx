@@ -167,7 +167,7 @@ export function SavingSupportSection({
           </div>
           <Link
             href="/settings/notifications"
-            className="inline-flex items-center rounded-full border border-emerald-500 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-400 dark:bg-emerald-950/40 dark:text-emerald-200"
+            className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-emerald-300/70 bg-emerald-50/70 px-2.5 py-1.5 text-[11px] font-semibold leading-none text-emerald-700/90 transition-colors hover:bg-emerald-100/70 dark:border-emerald-400/50 dark:bg-emerald-900/20 dark:text-emerald-200/90 dark:hover:bg-emerald-900/35"
           >
             詳細設定を開く
           </Link>

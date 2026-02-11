@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type Props = {
   version: string;
   isDark?: boolean;
@@ -61,13 +63,13 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         <p
           className={`text-[11px] leading-snug ${isDark ? "text-slate-300" : "text-slate-500"}`}
         >
-          このアプリの家計簿データは、この端末のブラウザ内（localStorage）にのみ保存されます。
-          開発者側のサーバーには送信されません。
+          ログインしていない場合、家計簿データはこの端末内に保存されます。
+          ログインしている場合は、端末内保存に加えてクラウドへ自動保存され、機種変更時も同じアカウントで引き継げます。
         </p>
         <p
           className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}
         >
-          ブラウザの「サイトデータの削除」などを行うと家計簿データも消えるため、ご注意ください。
+          端末データはブラウザの「サイトデータの削除」で消えるためご注意ください。必要なときは「クラウド復元」を利用できます。
         </p>
       </div>
 
@@ -83,7 +85,6 @@ export function AppInfoSection({ version, isDark = false }: Props) {
           className={`text-[11px] leading-snug ${isDark ? "text-slate-300" : "text-slate-500"}`}
         >
           「全国×年代別の支出平均値」をベースに、無理なく貯金できるペースをつかむことを目指した家計簿アプリです。
-          まだベータ版のため、仕様は今後も変更される可能性があります。
         </p>
       </div>
 
@@ -95,14 +96,32 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         >
           ポリシー
         </p>
-        <a
-          href="/privacy"
-          className={`text-[12px] font-semibold ${
-            isDark ? "text-emerald-200" : "text-emerald-700"
-          } hover:underline`}
-        >
-          プライバシーポリシー
-        </a>
+        <div className="flex flex-wrap items-center gap-3 text-[12px]">
+          <Link
+            href="/terms"
+            className={`font-semibold ${
+              isDark ? "text-emerald-200" : "text-emerald-700"
+            } hover:underline`}
+          >
+            利用規約
+          </Link>
+          <Link
+            href="/privacy"
+            className={`font-semibold ${
+              isDark ? "text-emerald-200" : "text-emerald-700"
+            } hover:underline`}
+          >
+            プライバシーポリシー
+          </Link>
+          <Link
+            href="/contact"
+            className={`font-semibold ${
+              isDark ? "text-emerald-200" : "text-emerald-700"
+            } hover:underline`}
+          >
+            お問い合わせ
+          </Link>
+        </div>
       </div>
     </section>
   );

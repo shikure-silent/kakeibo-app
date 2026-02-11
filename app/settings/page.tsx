@@ -40,7 +40,7 @@ import {
 } from "../../lib/localBackup";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
-const APP_VERSION = "0.7.0-beta";
+const APP_VERSION = "0.9.0-beta";
 
 export default function SettingsPage() {
   useCloudAutoSaveOnLeave();

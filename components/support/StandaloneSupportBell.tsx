@@ -3,23 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
+import { shouldShowSupportBell } from "../../lib/supportBellVisibility";
 import SupportBell from "./SupportBell";
 import { useSupportBell } from "./SupportBellProvider";
-
-const HIDE_PREFIXES = [
-  "/setup",
-  "/welcome",
-  "/login",
-  "/signup",
-  "/reset-email",
-  "/reset-password",
-  "/auth",
-  "/error",
-];
-
-function shouldHide(pathname: string) {
-  return HIDE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
-}
 
 export default function StandaloneSupportBell() {
   const pathname = usePathname();
@@ -32,8 +18,8 @@ export default function StandaloneSupportBell() {
     );
   }, []);
 
-  const hidden = useMemo(() => shouldHide(pathname), [pathname]);
-  const showStandaloneBell = isIosNative && !hidden;
+  const canShowOnPath = useMemo(() => shouldShowSupportBell(pathname), [pathname]);
+  const showStandaloneBell = isIosNative && canShowOnPath;
 
   useEffect(() => {
     if (typeof document === "undefined") return;
