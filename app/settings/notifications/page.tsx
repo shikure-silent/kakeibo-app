@@ -11,6 +11,17 @@ import {
 import { requestInitialNotificationPermissionOnce } from "../../../lib/notifications";
 import { useResolvedTheme } from "../../../lib/useResolvedTheme";
 
+function formatTimeLabel(value: string) {
+  const matched = /^(\d{1,2}):(\d{2})$/.exec(value);
+  if (!matched) return "21:00";
+  const h = Number(matched[1]);
+  const m = Number(matched[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return "21:00";
+  const hh = String(Math.max(0, Math.min(23, h))).padStart(2, "0");
+  const mm = String(Math.max(0, Math.min(59, m))).padStart(2, "0");
+  return `${hh}:${mm}`;
+}
+
 export default function NotificationDetailPage() {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const { isDark, themeClass } = useResolvedTheme(settings.theme);
@@ -33,6 +44,9 @@ export default function NotificationDetailPage() {
     setSettings(next);
     saveAppSettings(next);
   };
+
+  const reminderTimeValue = settings.reminderTime ?? "21:00";
+  const reminderTimeLabel = formatTimeLabel(reminderTimeValue);
 
   return (
     <main
@@ -130,13 +144,19 @@ export default function NotificationDetailPage() {
             <p className="text-xs text-slate-500 dark:text-slate-400">
               すべての通知に共通で使う時間
             </p>
-            <input
-              id="notification-time"
-              type="time"
-              value={settings.reminderTime ?? "21:00"}
-              onChange={(e) => updateSetting("reminderTime", e.target.value)}
-              className="mt-2 h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-emerald-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-            />
+            <div className="relative mt-2 h-10 overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+              <div className="pointer-events-none flex h-full items-center justify-between px-3 text-sm text-slate-700 dark:text-slate-200">
+                <span>{reminderTimeLabel}</span>
+                <span className="text-slate-400 dark:text-slate-500">›</span>
+              </div>
+              <input
+                id="notification-time"
+                type="time"
+                value={reminderTimeValue}
+                onChange={(e) => updateSetting("reminderTime", e.target.value)}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+            </div>
           </div>
         </div>
       </section>

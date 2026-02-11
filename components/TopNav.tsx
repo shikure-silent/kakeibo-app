@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { useSupabaseAuth } from "../lib/useSupabaseAuth"; // ←パス調整
 import { setFlashToast } from "../lib/flashToast";
+import { shouldShowSupportBell } from "../lib/supportBellVisibility";
 import SupportBell from "./support/SupportBell";
 import { useSupportBell } from "./support/SupportBellProvider";
 
@@ -68,6 +69,7 @@ export default function TopNav() {
   const isPasswordRecoveryFlow =
     pathname.startsWith("/reset-password") ||
     pathname.startsWith("/auth/confirm");
+  const showSupportBell = shouldShowSupportBell(pathname);
 
   const displayName =
     (user?.user_metadata?.display_name as string | undefined) ||
@@ -139,7 +141,7 @@ export default function TopNav() {
 
           {/* 右：認証 */}
           <div className="flex items-center gap-1.5 ml-auto">
-            <SupportBell cards={cards} />
+            {showSupportBell ? <SupportBell cards={cards} /> : null}
             {isLoading ? (
               <div className="h-10 w-32 animate-pulse rounded-full bg-slate-100 dark:bg-slate-800" />
             ) : user ? (

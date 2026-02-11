@@ -226,7 +226,7 @@ function LoginPageInner() {
 
         <div className="mt-4 text-right text-[11px]">
           <Link
-            href="/privacy"
+            href="/privacy/"
             className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
           >
             プライバシーポリシー
