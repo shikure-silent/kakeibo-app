@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { Capacitor } from "@capacitor/core";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { DetailRecord, Mode } from "../../types/calendar";
 import {
   EXPENSE_CATEGORIES,
@@ -42,10 +43,17 @@ export function DetailListItem({
   payFromOptions = [...PAY_FROM_OPTIONS],
   onSaveCategoryOptions,
 }: Props) {
+  const PICKER_ROW_HEIGHT = 48;
+  const PICKER_SHEET_HEIGHT = 192;
+  const PICKER_EDGE_SPACE = (PICKER_SHEET_HEIGHT - PICKER_ROW_HEIGHT) / 2;
+
   const [isEditing, setIsEditing] = useState(false);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isCategoryManagerEdit, setIsCategoryManagerEdit] = useState(false);
+  const [dragCategoryIndex, setDragCategoryIndex] = useState<number | null>(null);
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  const [dragGhostY, setDragGhostY] = useState<number | null>(null);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryManagerTab, setCategoryManagerTab] = useState<Mode>("expense");
@@ -53,6 +61,16 @@ export function DetailListItem({
   const [incomeCategoryDraft, setIncomeCategoryDraft] = useState<string[]>([]);
   const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
   const payFromRef = useRef<HTMLDivElement | null>(null);
+  const touchDragTimerRef = useRef<number | null>(null);
+  const touchDragStartedRef = useRef(false);
+  const touchDragStartYRef = useRef(0);
+  const pickerScrollRef = useRef<HTMLDivElement | null>(null);
+  const pickerScrollStopTimerRef = useRef<number | null>(null);
+  const pickerScrollRafRef = useRef<number | null>(null);
+  const pickerTouchingRef = useRef(false);
+  const lastPickerIndexRef = useRef<number>(-1);
+  const [pickerIndex, setPickerIndex] = useState(0);
+  const [pickerVisualCenter, setPickerVisualCenter] = useState(0);
 
   useEffect(() => {
     if (isEditing) return;
@@ -86,6 +104,20 @@ export function DetailListItem({
       document.body.style.overflow = original;
     };
   }, [isCategoryPickerOpen, isCategoryManagerOpen, isAddCategoryModalOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (touchDragTimerRef.current !== null) {
+        window.clearTimeout(touchDragTimerRef.current);
+      }
+      if (pickerScrollStopTimerRef.current !== null) {
+        window.clearTimeout(pickerScrollStopTimerRef.current);
+      }
+      if (pickerScrollRafRef.current !== null) {
+        window.cancelAnimationFrame(pickerScrollRafRef.current);
+      }
+    };
+  }, []);
 
   const normalizeCategoryList = (list: string[]) => {
     const seen = new Set<string>();
@@ -128,6 +160,81 @@ export function DetailListItem({
     setIncomeCategoryDraft((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const moveCategoryDraft = (tab: Mode, from: number, to: number) => {
+    if (from === to) return;
+    const move = (list: string[]) => {
+      const next = [...list];
+      const [picked] = next.splice(from, 1);
+      next.splice(to, 0, picked);
+      return next;
+    };
+    if (tab === "expense") {
+      setExpenseCategoryDraft((prev) => move(prev));
+      return;
+    }
+    setIncomeCategoryDraft((prev) => move(prev));
+  };
+
+  const clearTouchDragTimer = () => {
+    if (touchDragTimerRef.current !== null) {
+      window.clearTimeout(touchDragTimerRef.current);
+      touchDragTimerRef.current = null;
+    }
+  };
+
+  const startTouchDrag = (event: React.TouchEvent, index: number) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchDragStartedRef.current = false;
+    touchDragStartYRef.current = touch.clientY;
+    clearTouchDragTimer();
+    touchDragTimerRef.current = window.setTimeout(() => {
+      touchDragStartedRef.current = true;
+      setDragCategoryIndex(index);
+      setTouchDragIndex(index);
+      setDragGhostY(touch.clientY);
+    }, 260);
+  };
+
+  const handleTouchDragMove = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    if (!touchDragStartedRef.current) {
+      event.preventDefault();
+      if (Math.abs(touch.clientY - touchDragStartYRef.current) > 8) {
+        clearTouchDragTimer();
+      }
+      return;
+    }
+    event.preventDefault();
+    setDragGhostY(touch.clientY);
+    const target = document.elementFromPoint(touch.clientX, touch.clientY) as
+      | HTMLElement
+      | null;
+    const row = target?.closest("[data-category-row-index]") as
+      | HTMLElement
+      | null;
+    if (!row) return;
+    const to = Number(row.dataset.categoryRowIndex);
+    if (touchDragIndex == null || Number.isNaN(to) || to === touchDragIndex) {
+      return;
+    }
+    moveCategoryDraft(categoryManagerTab, touchDragIndex, to);
+    setTouchDragIndex(to);
+    setDragCategoryIndex(to);
+  };
+
+  const endTouchDrag = () => {
+    clearTouchDragTimer();
+    if (touchDragStartedRef.current) {
+      setDragCategoryIndex(null);
+      setTouchDragIndex(null);
+      setDragGhostY(null);
+    }
+    touchDragStartedRef.current = false;
+  };
+
   const saveCategoryManager = () => {
     if (!onSaveCategoryOptions) {
       setIsCategoryManagerOpen(false);
@@ -160,6 +267,168 @@ export function DetailListItem({
     setIsAddCategoryModalOpen(false);
     setNewCategoryName("");
   };
+
+  const pickerOptions =
+    record.mode === "expense" ? expenseCategoryOptions : incomeCategoryOptions;
+
+  const runSelectionHaptic = async (
+    type: "selectionStart" | "selectionChanged" | "selectionEnd"
+  ) => {
+    if (!Capacitor.isNativePlatform() || Capacitor.getPlatform() !== "ios") {
+      return;
+    }
+    type HapticsPluginLike = {
+      selectionStart?: () => Promise<void> | void;
+      selectionChanged?: () => Promise<void> | void;
+      selectionEnd?: () => Promise<void> | void;
+    };
+    const plugins = (
+      window as typeof window & {
+        Capacitor?: { Plugins?: { Haptics?: HapticsPluginLike } };
+      }
+    ).Capacitor?.Plugins;
+    const haptics = plugins?.Haptics;
+    if (!haptics || typeof haptics[type] !== "function") return;
+    try {
+      await haptics[type]();
+    } catch {
+      // ignore
+    }
+  };
+
+  const syncPickerSelection = (idx: number, updateVisual = true) => {
+    const next = Math.max(0, Math.min(idx, pickerOptions.length - 1));
+    setPickerIndex((prev) => (prev === next ? prev : next));
+    if (updateVisual) {
+      setPickerVisualCenter(next);
+    }
+    if (lastPickerIndexRef.current !== next) {
+      lastPickerIndexRef.current = next;
+      void runSelectionHaptic("selectionChanged");
+    }
+  };
+
+  const commitPickerSelection = (idx: number) => {
+    const value = pickerOptions[idx];
+    if (value && record.category !== value) {
+      onChange(index, { ...record, category: value } as DetailRecord);
+    }
+  };
+
+  const snapToNearestIndex = (scrollTop: number) => {
+    if (pickerOptions.length === 0) return 0;
+    return Math.max(
+      0,
+      Math.min(Math.round(scrollTop / PICKER_ROW_HEIGHT), pickerOptions.length - 1)
+    );
+  };
+
+  const getNearestPickerIndexFromDom = useCallback(() => {
+    const el = pickerScrollRef.current;
+    if (!el || pickerOptions.length === 0) return 0;
+    const centerY = el.getBoundingClientRect().top + el.clientHeight / 2;
+    const items = el.querySelectorAll<HTMLElement>("[data-picker-item-index]");
+    let nearest = 0;
+    let minDistance = Number.POSITIVE_INFINITY;
+    items.forEach((node) => {
+      const idx = Number(node.dataset.pickerItemIndex);
+      if (Number.isNaN(idx)) return;
+      const rect = node.getBoundingClientRect();
+      const nodeCenter = rect.top + rect.height / 2;
+      const distance = Math.abs(centerY - nodeCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = idx;
+      }
+    });
+    return Math.max(0, Math.min(nearest, pickerOptions.length - 1));
+  }, [pickerOptions.length]);
+
+  const scrollPickerToIndex = (idx: number, smooth = true) => {
+    const el = pickerScrollRef.current;
+    if (!el) return;
+    const top = Math.max(0, idx) * PICKER_ROW_HEIGHT;
+    el.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
+  };
+
+  const snapPickerToNearest = (smooth = true) => {
+    const el = pickerScrollRef.current;
+    if (!el || pickerOptions.length === 0) return;
+    const next = getNearestPickerIndexFromDom();
+    syncPickerSelection(next);
+    commitPickerSelection(next);
+    scrollPickerToIndex(next, smooth);
+  };
+
+  const closeCategoryPicker = () => {
+    const el = pickerScrollRef.current;
+    const next =
+      el != null
+        ? getNearestPickerIndexFromDom()
+        : snapToNearestIndex(pickerIndex * PICKER_ROW_HEIGHT);
+    syncPickerSelection(next);
+    commitPickerSelection(next);
+    scrollPickerToIndex(next, false);
+    setIsCategoryPickerOpen(false);
+  };
+
+  const openCategoryManagerFromPickerWithCommit = () => {
+    const el = pickerScrollRef.current;
+    const next =
+      el != null
+        ? getNearestPickerIndexFromDom()
+        : snapToNearestIndex(pickerIndex * PICKER_ROW_HEIGHT);
+    syncPickerSelection(next);
+    commitPickerSelection(next);
+    openCategoryManagerFromPicker();
+  };
+
+  const startPickerInteraction = () => {
+    if (!pickerTouchingRef.current) {
+      pickerTouchingRef.current = true;
+      void runSelectionHaptic("selectionStart");
+    }
+  };
+
+  const endPickerInteraction = () => {
+    if (!pickerTouchingRef.current) return;
+    pickerTouchingRef.current = false;
+    snapPickerToNearest();
+    void runSelectionHaptic("selectionEnd");
+  };
+
+  const handlePickerScroll = () => {
+    const el = pickerScrollRef.current;
+    if (!el || pickerOptions.length === 0) return;
+    if (pickerScrollRafRef.current === null) {
+      pickerScrollRafRef.current = window.requestAnimationFrame(() => {
+        pickerScrollRafRef.current = null;
+        const next = getNearestPickerIndexFromDom();
+        setPickerVisualCenter(next);
+        syncPickerSelection(next, false);
+      });
+    }
+    if (pickerScrollStopTimerRef.current !== null) {
+      window.clearTimeout(pickerScrollStopTimerRef.current);
+    }
+    pickerScrollStopTimerRef.current = window.setTimeout(() => {
+      if (!pickerTouchingRef.current) {
+        snapPickerToNearest();
+      }
+    }, 90);
+  };
+
+  useEffect(() => {
+    if (!isCategoryPickerOpen) return;
+    const idx = Math.max(0, pickerOptions.indexOf(record.category ?? ""));
+    setPickerIndex(idx);
+    setPickerVisualCenter(idx);
+    lastPickerIndexRef.current = idx;
+    requestAnimationFrame(() => {
+      scrollPickerToIndex(idx, false);
+      setPickerVisualCenter(getNearestPickerIndexFromDom());
+    });
+  }, [isCategoryPickerOpen, pickerOptions, record.category, getNearestPickerIndexFromDom]);
 
   if (!isEditing) {
     return (
@@ -401,9 +670,9 @@ export function DetailListItem({
       </div>
     </div>
     {isCategoryPickerOpen && (
-      <div className="fixed inset-0 z-[70] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4">
+      <div className="fixed inset-0 z-[70] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center">
         <div
-          className={`mx-auto w-full max-w-xl max-h-[calc(100vh-3rem)] rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
+          className={`mx-auto w-full max-w-sm rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
             isDark
               ? "border-slate-700 bg-slate-900 text-slate-100"
               : "border-slate-200 bg-white text-slate-900"
@@ -416,7 +685,7 @@ export function DetailListItem({
           <div className={`flex items-center justify-between gap-2 border-b px-4 py-3 shrink-0 ${isDark ? "border-slate-700" : "border-slate-200"}`}>
             <button
               type="button"
-              onClick={() => setIsCategoryPickerOpen(false)}
+              onClick={closeCategoryPicker}
               className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
                 isDark
                   ? "border-slate-600 text-slate-200 hover:bg-slate-800"
@@ -427,38 +696,95 @@ export function DetailListItem({
             </button>
             <button
               type="button"
-              onClick={openCategoryManagerFromPicker}
+              onClick={openCategoryManagerFromPickerWithCommit}
               className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-100"
             >
               追加・編集
             </button>
           </div>
-          <div className="px-4 py-4 overflow-y-auto overscroll-contain flex-1 min-h-0">
+          <div className="px-3 py-3 overflow-y-auto overscroll-contain flex-1 min-h-0">
             <p className={`mb-3 text-xs ${isDark ? "text-slate-300" : "text-slate-500"}`}>
               {record.mode === "expense" ? "支出" : "収入"}カテゴリを選択
             </p>
-            <div className={`rounded-xl border overflow-hidden ${isDark ? "border-slate-700" : "border-slate-200"}`}>
-              {(record.mode === "expense"
-                ? expenseCategoryOptions
-                : incomeCategoryOptions
-              ).map((cat, idx) => (
-                <button
-                  key={`${record.mode}-${cat}-${idx}`}
-                  type="button"
-                  onClick={() => {
-                    onChange(index, { ...record, category: cat } as DetailRecord);
-                    setIsCategoryPickerOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-between border-b last:border-b-0 px-3 py-3 text-left ${
-                    isDark
-                      ? "border-slate-700 hover:bg-slate-800"
-                      : "border-slate-100 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className={`text-sm ${isDark ? "text-slate-100" : "text-slate-800"}`}>{cat}</span>
-                  <span className="text-slate-400">›</span>
-                </button>
-              ))}
+            <div className="relative mx-auto w-full max-w-sm">
+              <div
+                className={`pointer-events-none absolute inset-x-0 top-1/2 z-10 h-12 -translate-y-1/2 rounded-xl border bg-transparent ${
+                  isDark
+                    ? "border-slate-600"
+                    : "border-slate-300"
+                }`}
+              />
+              <div
+                className={`pointer-events-none absolute inset-x-0 top-0 z-10 h-12 rounded-t-xl ${
+                  isDark
+                    ? "bg-gradient-to-b from-slate-900 to-transparent"
+                    : "bg-gradient-to-b from-white to-transparent"
+                }`}
+              />
+              <div
+                className={`pointer-events-none absolute inset-x-0 bottom-0 z-10 h-12 rounded-b-xl ${
+                  isDark
+                    ? "bg-gradient-to-t from-slate-900 to-transparent"
+                    : "bg-gradient-to-t from-white to-transparent"
+                }`}
+              />
+              <div
+                ref={pickerScrollRef}
+                onScroll={handlePickerScroll}
+                onTouchStart={startPickerInteraction}
+                onTouchEnd={endPickerInteraction}
+                onTouchCancel={endPickerInteraction}
+                onMouseDown={startPickerInteraction}
+                onMouseUp={endPickerInteraction}
+                onMouseLeave={endPickerInteraction}
+                className={`h-48 overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
+                  isDark ? "border-slate-700" : "border-slate-200"
+                }`}
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
+                <div style={{ height: PICKER_EDGE_SPACE }} />
+                {(record.mode === "expense"
+                  ? expenseCategoryOptions
+                  : incomeCategoryOptions
+                ).map((cat, idx) => {
+                  const distance = Math.abs(pickerVisualCenter - idx);
+                  const isCenter = distance === 0;
+                  return (
+                  <button
+                    key={`${record.mode}-${cat}-${idx}`}
+                    data-picker-item-index={idx}
+                    type="button"
+                    onClick={() => {
+                      syncPickerSelection(idx);
+                      scrollPickerToIndex(idx);
+                      commitPickerSelection(idx);
+                    }}
+                    className={`h-12 w-full snap-center px-3 text-center leading-none transition-all duration-150 ${
+                      isCenter
+                        ? isDark
+                          ? "text-slate-100 font-medium"
+                          : "text-slate-800 font-medium"
+                        : distance === 1
+                        ? isDark
+                          ? "text-slate-400"
+                          : "text-slate-600"
+                        : isDark
+                        ? "text-slate-600"
+                        : "text-slate-500"
+                    }`}
+                    style={{
+                      fontSize: isCenter ? "28px" : distance === 1 ? "22px" : "18px",
+                      opacity: isCenter ? 1 : distance === 1 ? 0.96 : 0.9,
+                    }}
+                  >
+                    {cat}
+                  </button>
+                );
+                })}
+                <div style={{ height: PICKER_EDGE_SPACE }} />
+              </div>
             </div>
           </div>
         </div>
@@ -474,6 +800,8 @@ export function DetailListItem({
               : "border-slate-200 bg-white text-slate-900"
           }`}
           style={{
+            height:
+              "min(42rem, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem))",
             maxHeight:
               "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
           }}
@@ -561,10 +889,41 @@ export function DetailListItem({
                 return (
                   <div
                     key={`${categoryManagerTab}-${idx}`}
+                    draggable
+                    data-category-row-index={idx}
+                    onDragStart={() => setDragCategoryIndex(idx)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (dragCategoryIndex == null) return;
+                      moveCategoryDraft(categoryManagerTab, dragCategoryIndex, idx);
+                      setDragCategoryIndex(idx);
+                    }}
+                    onDragEnd={() => setDragCategoryIndex(null)}
                     className={`flex items-center gap-2 border-b last:border-b-0 px-3 py-2 ${
                       isDark ? "border-slate-700" : "border-slate-100"
-                    }`}
+                    } ${dragCategoryIndex === idx ? "opacity-40" : ""}`}
                   >
+                    <button
+                      type="button"
+                      onTouchStart={(e) => startTouchDrag(e, idx)}
+                      onTouchMove={handleTouchDragMove}
+                      onTouchEnd={endTouchDrag}
+                      onTouchCancel={endTouchDrag}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className={`shrink-0 cursor-grab active:cursor-grabbing text-sm select-none touch-none ${
+                        isDark ? "text-slate-400" : "text-slate-500"
+                      }`}
+                      style={{
+                        userSelect: "none",
+                        WebkitUserSelect: "none",
+                        WebkitTouchCallout: "none",
+                      }}
+                      aria-label="ドラッグで並び替え"
+                      title="ドラッグで並び替え"
+                    >
+                      ⋮⋮
+                    </button>
                     <input
                       type="text"
                       value={item}
@@ -593,7 +952,25 @@ export function DetailListItem({
               })}
             </div>
           </div>
-          <div className={`sticky bottom-0 z-10 flex justify-end gap-2 border-t px-4 py-3 shrink-0 backdrop-blur-sm ${
+          {touchDragIndex !== null && dragGhostY !== null && (
+            <div
+              className="pointer-events-none fixed left-1/2 z-[95] -translate-x-1/2"
+              style={{ top: dragGhostY - 24 }}
+            >
+              <div
+                className={`rounded-lg border px-4 py-2 text-sm font-medium shadow-lg ${
+                  isDark
+                    ? "border-slate-600 bg-slate-800 text-slate-100"
+                    : "border-slate-300 bg-white text-slate-800"
+                }`}
+              >
+                {(categoryManagerTab === "expense"
+                  ? expenseCategoryDraft
+                  : incomeCategoryDraft)[touchDragIndex] ?? "カテゴリ"}
+              </div>
+            </div>
+          )}
+          <div className={`flex justify-end gap-2 border-t px-4 py-3 shrink-0 backdrop-blur-sm ${
             isDark ? "border-slate-700 bg-slate-900/95" : "border-slate-200 bg-white/95"
           }`}>
             <button

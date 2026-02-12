@@ -45,21 +45,21 @@ const EMPTY_EXPENSE_MEDIAN: ExpenseMedian = {
 };
 
 const CATEGORY_TO_EXPENSE_KEY: Record<string, keyof ExpenseMedian> = {
-  食費: "food",
-  水道・光熱費: "utilities",
-  光熱費: "utilities",
-  日用品: "dailyGoods",
-  家賃・住居: "rent",
-  家賃: "rent",
-  交通費: "transport",
-  サブスク: "subscription",
-  通信費: "subscription",
-  趣味・娯楽: "entertainment",
-  娯楽費: "entertainment",
+  "食費": "food",
+  "水道・光熱費": "utilities",
+  "光熱費": "utilities",
+  "日用品": "dailyGoods",
+  "家賃・住居": "rent",
+  "家賃": "rent",
+  "交通費": "transport",
+  "サブスク": "subscription",
+  "通信費": "subscription",
+  "趣味・娯楽": "entertainment",
+  "娯楽費": "entertainment",
   "娯楽費（趣味娯楽）": "entertainment",
-  医療・保険: "medicalInsurance",
-  医療・美容: "medicalInsurance",
-  保険料: "medicalInsurance",
+  "医療・保険": "medicalInsurance",
+  "医療・美容": "medicalInsurance",
+  "保険料": "medicalInsurance",
 };
 
 const normalizeCategory = (category?: string | null) =>
