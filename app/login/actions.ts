@@ -19,7 +19,7 @@ export async function login(formData: FormData) {
     );
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
@@ -46,8 +46,9 @@ export async function signup(formData: FormData) {
     );
   }
 
-  const origin = headers().get("origin") ?? "http://localhost:3000";
-  const supabase = createClient();
+  const requestHeaders = await headers();
+  const origin = requestHeaders.get("origin") ?? "http://localhost:3000";
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.signUp({
     email,
