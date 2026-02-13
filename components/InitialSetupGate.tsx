@@ -5,7 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   INITIAL_SETUP_EVENT,
   isInitialSetupComplete,
+  saveInitialSetupComplete,
 } from "../lib/initialSetupStorage";
+import { isHomeCycleConfirmed } from "../lib/homeStorage";
 
 const ALLOWED_PREFIXES = [
   "/setup",
@@ -22,6 +24,21 @@ function isAllowedPath(pathname: string) {
   return ALLOWED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
+function resolveSetupComplete(): boolean {
+  if (isInitialSetupComplete()) return true;
+  const now = new Date();
+  const cycleConfirmed = isHomeCycleConfirmed(
+    now.getFullYear(),
+    now.getMonth() + 1
+  );
+  if (cycleConfirmed) {
+    // 初期設定フラグが欠けていても、予算確定済みなら完了扱いに戻す。
+    saveInitialSetupComplete();
+    return true;
+  }
+  return false;
+}
+
 export default function InitialSetupGate({
   children,
 }: {
@@ -34,11 +51,19 @@ export default function InitialSetupGate({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setSetupComplete(isInitialSetupComplete());
+    const syncSetupState = () => setSetupComplete(resolveSetupComplete());
+    syncSetupState();
     const handleComplete = () => setSetupComplete(true);
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") syncSetupState();
+    };
     window.addEventListener(INITIAL_SETUP_EVENT, handleComplete);
+    window.addEventListener("focus", syncSetupState);
+    document.addEventListener("visibilitychange", handleVisible);
     return () => {
       window.removeEventListener(INITIAL_SETUP_EVENT, handleComplete);
+      window.removeEventListener("focus", syncSetupState);
+      document.removeEventListener("visibilitychange", handleVisible);
     };
   }, []);
 
