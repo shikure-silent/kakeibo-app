@@ -41,6 +41,7 @@ import {
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
 const APP_VERSION = "0.9.0-beta";
+const SHOW_DATA_MANAGEMENT = false;
 
 export default function SettingsPage() {
   useCloudAutoSaveOnLeave();
@@ -259,7 +260,7 @@ export default function SettingsPage() {
     { id: "osnotify", label: "OS通知" },
     { id: "category", label: "カテゴリ・項目" },
     { id: "aggregation", label: "集計・予算" },
-    { id: "data", label: "データ管理" },
+    ...(SHOW_DATA_MANAGEMENT ? [{ id: "data", label: "データ管理" }] : []),
     { id: "appinfo", label: "アプリ情報" },
   ];
   const [menuOpen, setMenuOpen] = useState(false);
@@ -522,16 +523,18 @@ export default function SettingsPage() {
           />
         </section>
 
-        <section id="data">
-          <div className="space-y-4">
-          <DataManagementSection
-            onCreateBackup={handleCreateBackup}
-            onImportBackup={handleImportBackup}
-            isDark={isDark}
-          />
-            <CloudSyncSection />
-          </div>
-        </section>
+        {SHOW_DATA_MANAGEMENT && (
+          <section id="data">
+            <div className="space-y-4">
+              <DataManagementSection
+                onCreateBackup={handleCreateBackup}
+                onImportBackup={handleImportBackup}
+                isDark={isDark}
+              />
+              <CloudSyncSection />
+            </div>
+          </section>
+        )}
 
         <section id="appinfo">
           <AppInfoSection version={APP_VERSION} isDark={isDark} />
