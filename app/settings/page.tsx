@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import {
   AppSettings,
   BudgetBaseOption,
@@ -14,7 +15,6 @@ import {
   saveIncomeCategories,
   loadPayFromPresets,
   savePayFromPresets,
-  clearAllKakeiboData,
 } from "../../lib/settingsStorage";
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
@@ -71,20 +71,6 @@ export default function SettingsPage() {
     });
   };
 
-  const handleResetKakeiboData = () => {
-    if (typeof window === "undefined") return;
-
-    const ok = window.confirm(
-      "ブラウザに保存されている家計簿データ（予算・日別の明細・固定費など）をすべて削除します。\n※ テーマやカテゴリなどの設定は残ります。\n\n本当に削除してよろしいですか？",
-    );
-    if (!ok) return;
-
-    clearAllKakeiboData({ includeSettings: false });
-
-    window.alert("家計簿データを削除しました。");
-    window.location.reload();
-  };
-
   const handleResetExpenseCategoriesToDefault = () => {
     if (typeof window === "undefined") return;
 
@@ -130,7 +116,7 @@ export default function SettingsPage() {
     window.alert("支出元の候補をデフォルトに戻しました。");
   };
 
-  const handleCreateBackup = () => {
+  const handleCreateBackup = async () => {
     if (typeof window === "undefined") return;
     const backup = createLocalBackup({
       appVersion: APP_VERSION,
@@ -138,11 +124,30 @@ export default function SettingsPage() {
     });
     const json = JSON.stringify(backup, null, 2);
     const blob = new Blob([json], { type: "application/json" });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const filename = `kakeibo-backup-${timestamp}.json`;
+
+    // iOS 実機 (Capacitor) では download 属性が効かないことがあるため、
+    // 共有シート経由で「ファイルに保存」を促す。
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const file = new File([blob], filename, { type: "application/json" });
+        if (navigator.canShare?.({ files: [file] })) {
+          await navigator.share({
+            title: "家計簿バックアップ",
+            files: [file],
+          });
+          return;
+        }
+      } catch {
+        // fallback to download path
+      }
+    }
+
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     a.href = url;
-    a.download = `kakeibo-backup-${timestamp}.json`;
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -519,12 +524,11 @@ export default function SettingsPage() {
 
         <section id="data">
           <div className="space-y-4">
-            <DataManagementSection
-              onResetKakeiboData={handleResetKakeiboData}
-              onCreateBackup={handleCreateBackup}
-              onImportBackup={handleImportBackup}
-              isDark={isDark}
-            />
+          <DataManagementSection
+            onCreateBackup={handleCreateBackup}
+            onImportBackup={handleImportBackup}
+            isDark={isDark}
+          />
             <CloudSyncSection />
           </div>
         </section>
