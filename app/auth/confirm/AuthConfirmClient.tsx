@@ -5,6 +5,15 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../../lib/supabase/client";
 import { setFlashToast } from "../../../lib/flashToast";
+import { safeNextPath } from "../../../lib/safeNextPath";
+
+const setSuccessToastIfNeeded = (otpType: EmailOtpType | null) => {
+  if (otpType !== "signup") return;
+  setFlashToast({
+    message: "メール確認が完了し、ログインしました。",
+    tone: "success",
+  });
+};
 
 export default function AuthConfirmClient() {
   const router = useRouter();
@@ -13,7 +22,7 @@ export default function AuthConfirmClient() {
   useEffect(() => {
     const token_hash = searchParams.get("token_hash");
     const type = searchParams.get("type") as EmailOtpType | null;
-    const next = searchParams.get("next") ?? "/";
+    const next = safeNextPath(searchParams.get("next"), "/");
     const hash =
       typeof window !== "undefined" ? window.location.hash.slice(1) : "";
     const hashParams = new URLSearchParams(hash);
@@ -70,10 +79,3 @@ export default function AuthConfirmClient() {
     </main>
   );
 }
-    const setSuccessToastIfNeeded = (otpType: EmailOtpType | null) => {
-      if (otpType !== "signup") return;
-      setFlashToast({
-        message: "メール確認が完了し、ログインしました。",
-        tone: "success",
-      });
-    };

@@ -35,7 +35,7 @@ export default function ResetPasswordRequestPage() {
     setBusy(true);
     try {
       const redirectTo = getAuthRedirectUrl(
-        "/auth/confirm?next=/reset-password"
+        "/auth/confirm?next=/reset-password/"
       );
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
@@ -110,7 +110,7 @@ export default function ResetPasswordRequestPage() {
 
           <div className="pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
             <Link
-              href="/login"
+              href="/login/"
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
             >
               ログイン画面へ戻る

@@ -127,7 +127,7 @@ export default function ResetPasswordPage() {
       });
       setNewPassword("");
       setConfirmPassword("");
-      router.replace("/login");
+      router.replace("/login/");
       router.refresh();
     } catch (err) {
       const message =
@@ -272,7 +272,7 @@ export default function ResetPasswordPage() {
 
             <div className="pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
               <Link
-                href="/login"
+                href="/login/"
                 className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
               >
                 ログイン画面へ
@@ -285,7 +285,7 @@ export default function ResetPasswordPage() {
               このページは再設定メールのリンクから開くと、新しいパスワードを設定できます。
             </p>
             <Link
-              href="/reset-password/request"
+              href="/reset-password/request/"
               className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
               再設定メールを送信する

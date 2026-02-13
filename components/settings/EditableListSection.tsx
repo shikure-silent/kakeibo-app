@@ -10,7 +10,6 @@ type EditableListSectionProps = {
   onAdd: () => void;
   onRemove: (index: number) => void;
   onReorder: (from: number, to: number) => void;
-  showReorderButtons?: boolean;
   isDark?: boolean;
 };
 
@@ -22,13 +21,17 @@ export function EditableListSection({
   onAdd,
   onRemove,
   onReorder,
-  showReorderButtons = false,
   isDark = false,
 }: EditableListSectionProps) {
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
+  const [dragGhostY, setDragGhostY] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const prevLengthRef = useRef<number>(items.length);
   const initializedRef = useRef(false);
+  const touchDragTimerRef = useRef<number | null>(null);
+  const touchDragStartedRef = useRef(false);
+  const touchDragStartYRef = useRef(0);
 
   const handleDragStart = (index: number, e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = "move";
@@ -49,6 +52,72 @@ export function EditableListSection({
     onReorder(fromIndex, toIndex);
     setDraggingIndex(null);
   };
+
+  const clearTouchDragTimer = () => {
+    if (touchDragTimerRef.current !== null) {
+      window.clearTimeout(touchDragTimerRef.current);
+      touchDragTimerRef.current = null;
+    }
+  };
+
+  const startTouchDrag = (event: React.TouchEvent, index: number) => {
+    event.preventDefault();
+    const touch = event.touches[0];
+    if (!touch) return;
+    touchDragStartedRef.current = false;
+    touchDragStartYRef.current = touch.clientY;
+    clearTouchDragTimer();
+    touchDragTimerRef.current = window.setTimeout(() => {
+      touchDragStartedRef.current = true;
+      setDraggingIndex(index);
+      setTouchDragIndex(index);
+      setDragGhostY(touch.clientY);
+    }, 260);
+  };
+
+  const handleTouchDragMove = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    if (!touch) return;
+    if (!touchDragStartedRef.current) {
+      event.preventDefault();
+      if (Math.abs(touch.clientY - touchDragStartYRef.current) > 8) {
+        clearTouchDragTimer();
+      }
+      return;
+    }
+    event.preventDefault();
+    setDragGhostY(touch.clientY);
+    const target = document.elementFromPoint(touch.clientX, touch.clientY) as
+      | HTMLElement
+      | null;
+    const row = target?.closest("[data-category-row-index]") as
+      | HTMLElement
+      | null;
+    if (!row) return;
+    const to = Number(row.dataset.categoryRowIndex);
+    if (touchDragIndex == null || Number.isNaN(to) || to === touchDragIndex) {
+      return;
+    }
+    onReorder(touchDragIndex, to);
+    setTouchDragIndex(to);
+    setDraggingIndex(to);
+  };
+
+  const endTouchDrag = () => {
+    clearTouchDragTimer();
+    if (touchDragStartedRef.current) {
+      setDraggingIndex(null);
+      setTouchDragIndex(null);
+      setDragGhostY(null);
+    }
+    touchDragStartedRef.current = false;
+  };
+
+  useEffect(() => {
+    return () => {
+      clearTouchDragTimer();
+    };
+  }, []);
 
   useEffect(() => {
     const prev = prevLengthRef.current;
@@ -137,9 +206,10 @@ export function EditableListSection({
       </div>
 
       <div className="space-y-1 max-h-64 overflow-auto pr-1" ref={listRef}>
-        {items.map((item, index) => (
+      {items.map((item, index) => (
           <div
             key={index}
+            data-category-row-index={index}
             className="flex flex-col sm:flex-row items-stretch gap-2 rounded-xl border px-3 py-2"
             style={{
               borderColor:
@@ -168,9 +238,19 @@ export function EditableListSection({
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <span
-                className={`text-[14px] select-none cursor-grab ${
+                onTouchStart={(e) => startTouchDrag(e, index)}
+                onTouchMove={handleTouchDragMove}
+                onTouchEnd={endTouchDrag}
+                onTouchCancel={endTouchDrag}
+                onContextMenu={(e) => e.preventDefault()}
+                className={`text-[14px] select-none touch-none cursor-grab active:cursor-grabbing ${
                   isDark ? "text-slate-500" : "text-slate-400"
                 }`}
+                style={{
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  WebkitTouchCallout: "none",
+                }}
               >
                 ≡
               </span>
@@ -189,42 +269,6 @@ export function EditableListSection({
                 />
               </div>
             </div>
-            {showReorderButtons && (
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => onReorder(index, Math.max(0, index - 1))}
-                  disabled={index === 0}
-                  className="rounded-full border px-2 py-1 text-[11px]"
-                  style={{
-                    borderColor: isDark ? "#475569" : "#e2e8f0",
-                    backgroundColor: isDark ? "#0f172a" : "white",
-                    color: isDark ? "#cbd5f5" : "#475569",
-                    opacity: index === 0 ? 0.4 : 1,
-                  }}
-                  aria-label="上に移動"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    onReorder(index, Math.min(items.length - 1, index + 1))
-                  }
-                  disabled={index === items.length - 1}
-                  className="rounded-full border px-2 py-1 text-[11px]"
-                  style={{
-                    borderColor: isDark ? "#475569" : "#e2e8f0",
-                    backgroundColor: isDark ? "#0f172a" : "white",
-                    color: isDark ? "#cbd5f5" : "#475569",
-                    opacity: index === items.length - 1 ? 0.4 : 1,
-                  }}
-                  aria-label="下に移動"
-                >
-                  ↓
-                </button>
-              </div>
-            )}
             <button
               type="button"
               onClick={() => onRemove(index)}
@@ -245,6 +289,23 @@ export function EditableListSection({
           </p>
         )}
       </div>
+
+      {touchDragIndex !== null && dragGhostY !== null && (
+        <div
+          className="pointer-events-none fixed left-1/2 z-[95] -translate-x-1/2"
+          style={{ top: dragGhostY - 24 }}
+        >
+          <div
+            className={`rounded-lg border px-4 py-2 text-sm font-medium shadow-lg ${
+              isDark
+                ? "border-slate-600 bg-slate-800 text-slate-100"
+                : "border-slate-300 bg-white text-slate-800"
+            }`}
+          >
+            {items[touchDragIndex] ?? "カテゴリ"}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

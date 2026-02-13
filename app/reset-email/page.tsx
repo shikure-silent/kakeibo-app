@@ -33,7 +33,7 @@ export default function ResetEmailPage() {
 
     setBusy(true);
     try {
-      const emailRedirectTo = getAuthRedirectUrl("/auth/confirm?next=/settings");
+      const emailRedirectTo = getAuthRedirectUrl("/auth/confirm?next=/settings/");
       const { error } = await supabase.auth.updateUser({
         email: newEmail.trim(),
       }, {
@@ -124,7 +124,7 @@ export default function ResetEmailPage() {
 
             <div className="pt-2 text-center text-sm text-slate-500 dark:text-slate-400">
               <Link
-                href="/settings"
+                href="/settings/"
                 className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
               >
                 設定へ戻る
@@ -137,7 +137,7 @@ export default function ResetEmailPage() {
               メールアドレスの変更にはログインが必要です。
             </div>
             <Link
-              href="/login"
+              href="/login/"
               className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
               ログインへ

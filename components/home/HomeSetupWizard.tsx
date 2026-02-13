@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { AgeGroup, ageGroupLabels } from "../../data/ageGroupData";
 import { ExpenseMedian } from "../../data/prefectureData";
 import { CustomExpenseItem } from "../../types/budget";
@@ -85,9 +85,19 @@ export default function HomeSetupWizard({
   lastAddedCustomItemId,
   isDark = false,
 }: Props) {
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const clampedStep = Math.min(Math.max(step, 1), MAX_STEP);
   const visibleMembers = incomeMembers.slice(0, Math.max(memberCount, 1));
   const isIncomeOnly = entryMode === "income";
+
+  useEffect(() => {
+    if (!isConfirmModalOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [isConfirmModalOpen]);
 
   const handlePrev = () => {
     if (isIncomeOnly && clampedStep === 4) {
@@ -393,6 +403,30 @@ export default function HomeSetupWizard({
             </p>
           </div>
 
+          <div
+            className={`rounded-2xl border px-5 py-4 ${
+              isDark
+                ? "border-slate-600 bg-emerald-900/20"
+                : "border-emerald-200 bg-emerald-50"
+            }`}
+          >
+            <p className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              貯金見込み
+            </p>
+            <p
+              className={`mt-1 text-3xl lg:text-4xl font-extrabold tracking-tight ${
+                saving >= 0 ? "text-emerald-600" : "text-red-500"
+              }`}
+            >
+              {saving >= 0 ? "" : "-"}¥{Math.abs(saving).toLocaleString()}
+            </p>
+            <p className={`mt-1 text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              {saving >= 0
+                ? "この予算なら、今月は黒字見込みです。"
+                : "この予算だと、今月は赤字見込みです。"}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div
               className={`rounded-2xl border px-4 py-3 ${
@@ -418,24 +452,6 @@ export default function HomeSetupWizard({
               </p>
               <p className="text-sm font-semibold text-emerald-700">
                 ¥{totalExpense.toLocaleString()}
-              </p>
-            </div>
-            <div
-              className={`rounded-2xl border px-4 py-3 ${
-                isDark
-                  ? "border-slate-700 bg-slate-800"
-                  : "border-slate-100 bg-slate-50"
-              }`}
-            >
-              <p className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}>
-                貯金見込み
-              </p>
-              <p
-                className={`text-sm font-semibold ${
-                  saving >= 0 ? "text-emerald-600" : "text-red-500"
-                }`}
-              >
-                ¥{Math.abs(saving).toLocaleString()}
               </p>
             </div>
             <div
@@ -480,13 +496,54 @@ export default function HomeSetupWizard({
         ) : (
           <button
             type="button"
-            onClick={onConfirmStart}
+            onClick={() => setIsConfirmModalOpen(true)}
             className="rounded-full bg-emerald-600 text-white px-5 py-2 text-xs font-semibold hover:bg-emerald-700"
           >
             この予算でスタート
           </button>
         )}
       </div>
+
+      {isConfirmModalOpen && (
+        <div
+          className="fixed inset-0 z-[95] bg-black/60 px-4 flex items-center justify-center"
+          onClick={() => setIsConfirmModalOpen(false)}
+        >
+          <div
+            className={`w-full max-w-sm rounded-2xl border p-4 shadow-xl ${
+              isDark
+                ? "border-slate-700 bg-slate-900 text-slate-100"
+                : "border-slate-200 bg-white text-slate-900"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold">この予算でよろしいですか？</h3>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsConfirmModalOpen(false)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium ${
+                  isDark
+                    ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+                    : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsConfirmModalOpen(false);
+                  onConfirmStart();
+                }}
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              >
+                スタートする
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -40,7 +40,7 @@ export default function ContactPage() {
 
         <div className="text-right">
           <Link
-            href="/settings"
+            href="/settings/"
             className="text-[12px] font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
           >
             設定へ戻る

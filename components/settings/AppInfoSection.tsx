@@ -98,7 +98,7 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         </p>
         <div className="flex flex-wrap items-center gap-3 text-[12px]">
           <Link
-            href="/terms"
+            href="/terms/"
             className={`font-semibold ${
               isDark ? "text-emerald-200" : "text-emerald-700"
             } hover:underline`}
@@ -106,7 +106,7 @@ export function AppInfoSection({ version, isDark = false }: Props) {
             利用規約
           </Link>
           <Link
-            href="/privacy"
+            href="/privacy/"
             className={`font-semibold ${
               isDark ? "text-emerald-200" : "text-emerald-700"
             } hover:underline`}
@@ -114,7 +114,7 @@ export function AppInfoSection({ version, isDark = false }: Props) {
             プライバシーポリシー
           </Link>
           <Link
-            href="/contact"
+            href="/contact/"
             className={`font-semibold ${
               isDark ? "text-emerald-200" : "text-emerald-700"
             } hover:underline`}

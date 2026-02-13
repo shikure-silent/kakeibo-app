@@ -10,9 +10,9 @@ export default function RootPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isInitialSetupComplete()) {
-      router.replace("/calendar");
+      router.replace("/calendar/");
     } else {
-      router.replace("/welcome");
+      router.replace("/welcome/");
     }
   }, [router]);
 

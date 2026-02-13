@@ -44,7 +44,7 @@ export function DetailListItem({
   onSaveCategoryOptions,
 }: Props) {
   const PICKER_ROW_HEIGHT = 48;
-  const PICKER_SHEET_HEIGHT = 192;
+  const PICKER_SHEET_HEIGHT = 180;
   const PICKER_EDGE_SPACE = (PICKER_SHEET_HEIGHT - PICKER_ROW_HEIGHT) / 2;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -77,6 +77,12 @@ export function DetailListItem({
     setIsCategoryPickerOpen(false);
     setShowPayFromSuggestions(false);
   }, [isEditing]);
+
+  useEffect(() => {
+    if (record.mode === "income" && showPayFromSuggestions) {
+      setShowPayFromSuggestions(false);
+    }
+  }, [record.mode, showPayFromSuggestions]);
 
   useEffect(() => {
     if (!showPayFromSuggestions) return;
@@ -574,60 +580,68 @@ export function DetailListItem({
                   payFrom: e.target.value,
                 } as DetailRecord)
               }
-              placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
+              placeholder={
+                record.mode === "income"
+                  ? "直接入力（例：会社名 / 銀行名 / サービス名 など）"
+                  : "直接入力（例：現金 / クレジットカード / 電子決済 など）"
+              }
             />
 
-            <div ref={payFromRef} className="relative inline-block">
-              <button
-                type="button"
-                onClick={() => setShowPayFromSuggestions((prev) => !prev)}
-                className="
-                  rounded-full border border-slate-300
-                  bg-slate-50 px-4 py-1.5 text-[12px]
-                  text-slate-700 hover:bg-slate-100
-                "
-              >
-                候補から選ぶ
-              </button>
-
-              {showPayFromSuggestions && (
-                <div
+            {record.mode === "expense" && (
+              <div ref={payFromRef} className="relative inline-block">
+                <button
+                  type="button"
+                  onClick={() => setShowPayFromSuggestions((prev) => !prev)}
                   className="
-                    absolute z-20 mt-1
-                    max-h-40 w-44 overflow-auto
-                    rounded-lg border border-slate-200
-                    bg-white shadow-lg
+                    rounded-full border border-slate-300
+                    bg-slate-50 px-4 py-1.5 text-[12px]
+                    text-slate-700 hover:bg-slate-100
                   "
                 >
-                  {payFromOptions.map((src) => (
-                    <button
-                      key={src}
-                      type="button"
-                      onClick={() => {
-                        onChange(
-                          index,
-                          { ...record, payFrom: src } as DetailRecord
-                        );
-                        setShowPayFromSuggestions(false);
-                      }}
-                      className={`
-                        w-full px-2 py-1 text-left text-[11px]
-                        hover:bg-emerald-50
-                        ${
-                          src === record.payFrom
-                            ? "bg-emerald-50 text-emerald-700 font-semibold"
-                            : "text-slate-700"
-                        }
-                      `}
-                    >
-                      {src}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+                  候補から選ぶ
+                </button>
+
+                {showPayFromSuggestions && (
+                  <div
+                    className="
+                      absolute z-20 mt-1
+                      max-h-40 w-44 overflow-auto
+                      rounded-lg border border-slate-200
+                      bg-white shadow-lg
+                    "
+                  >
+                    {payFromOptions.map((src) => (
+                      <button
+                        key={src}
+                        type="button"
+                        onClick={() => {
+                          onChange(
+                            index,
+                            { ...record, payFrom: src } as DetailRecord
+                          );
+                          setShowPayFromSuggestions(false);
+                        }}
+                        className={`
+                          w-full px-2 py-1 text-left text-[11px]
+                          hover:bg-emerald-50
+                          ${
+                            src === record.payFrom
+                              ? "bg-emerald-50 text-emerald-700 font-semibold"
+                              : "text-slate-700"
+                          }
+                        `}
+                      >
+                        {src}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <p className="text-[10px] text-slate-400">
-              直接入力してもOKです。「候補から選ぶ」を押すと、よく使う支出元・入金元から選べます。
+              {record.mode === "expense"
+                ? "直接入力してもOKです。「候補から選ぶ」を押すと、よく使う支出元から選べます。"
+                : "入金元は自由入力で記録できます。"}
             </p>
           </div>
 
@@ -662,27 +676,38 @@ export function DetailListItem({
         </button>
         <button
           type="button"
-          onClick={() => onDelete(index)}
-          className="text-[11px] font-medium text-red-500 hover:text-red-600"
+          onClick={() => setIsEditing(false)}
+          className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700"
         >
-          この項目を削除
+          保存
         </button>
       </div>
     </div>
     {isCategoryPickerOpen && (
-      <div className="fixed inset-0 z-[70] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center">
+      <div
+        className="fixed inset-0 z-[70] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center"
+        onClick={closeCategoryPicker}
+      >
         <div
-          className={`mx-auto w-full max-w-sm rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
+        className={`mx-auto w-full max-w-[22rem] rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
             isDark
               ? "border-slate-700 bg-slate-900 text-slate-100"
               : "border-slate-200 bg-white text-slate-900"
           }`}
+          onClick={(e) => e.stopPropagation()}
           style={{
             maxHeight:
               "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
           }}
         >
           <div className={`flex items-center justify-between gap-2 border-b px-4 py-3 shrink-0 ${isDark ? "border-slate-700" : "border-slate-200"}`}>
+            <button
+              type="button"
+              onClick={openCategoryManagerFromPickerWithCommit}
+              className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-100"
+            >
+              追加・編集
+            </button>
             <button
               type="button"
               onClick={closeCategoryPicker}
@@ -692,21 +717,14 @@ export function DetailListItem({
                   : "border-slate-300 text-slate-600 hover:bg-slate-50"
               }`}
             >
-              閉じる
-            </button>
-            <button
-              type="button"
-              onClick={openCategoryManagerFromPickerWithCommit}
-              className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-100"
-            >
-              追加・編集
+              完了
             </button>
           </div>
           <div className="px-3 py-3 overflow-y-auto overscroll-contain flex-1 min-h-0">
             <p className={`mb-3 text-xs ${isDark ? "text-slate-300" : "text-slate-500"}`}>
               {record.mode === "expense" ? "支出" : "収入"}カテゴリを選択
             </p>
-            <div className="relative mx-auto w-full max-w-sm">
+            <div className="relative mx-auto w-full max-w-[20rem]">
               <div
                 className={`pointer-events-none absolute inset-x-0 top-1/2 z-10 h-12 -translate-y-1/2 rounded-xl border bg-transparent ${
                   isDark
@@ -737,7 +755,7 @@ export function DetailListItem({
                 onMouseDown={startPickerInteraction}
                 onMouseUp={endPickerInteraction}
                 onMouseLeave={endPickerInteraction}
-                className={`h-48 overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
+                className={`h-[180px] overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
                   isDark ? "border-slate-700" : "border-slate-200"
                 }`}
                 style={{

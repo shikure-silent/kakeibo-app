@@ -45,7 +45,7 @@ export default function InitialSetupGate({
   useEffect(() => {
     if (shouldAllow) return;
     if (setupComplete === false) {
-      router.replace("/welcome");
+      router.replace("/welcome/");
     }
   }, [router, shouldAllow, setupComplete]);
 

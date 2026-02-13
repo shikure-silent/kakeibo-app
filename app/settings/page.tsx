@@ -119,7 +119,7 @@ export default function SettingsPage() {
     if (typeof window === "undefined") return;
 
     const ok = window.confirm(
-      "支出元・入金元の候補を最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？",
+      "支出元の候補を最初の状態（デフォルト）に戻します。\n\n編集した名前や並び順はすべてリセットされます。\n本当に戻してよろしいですか？",
     );
     if (!ok) return;
 
@@ -127,7 +127,7 @@ export default function SettingsPage() {
     setPayFromPresets(next);
     savePayFromPresets(next);
 
-    window.alert("支出元・入金元の候補をデフォルトに戻しました。");
+    window.alert("支出元の候補をデフォルトに戻しました。");
   };
 
   const handleCreateBackup = () => {

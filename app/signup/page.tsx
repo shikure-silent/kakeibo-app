@@ -7,17 +7,13 @@ import { getSupabaseClient } from "../../lib/supabaseClient";
 import { setFlashToast } from "../../lib/flashToast";
 import { getAuthRedirectUrl } from "../../lib/authRedirect";
 import { toJapaneseAuthErrorMessage } from "../../lib/authErrorMessageJa";
-
-function safeNext(next: string | null) {
-  if (!next) return "/";
-  return next.startsWith("/") ? next : "/";
-}
+import { safeNextPath } from "../../lib/safeNextPath";
 
 function SignupPageInner() {
   const router = useRouter();
   const sp = useSearchParams();
 
-  const nextUrl = safeNext(sp.get("next"));
+  const nextUrl = safeNextPath(sp.get("next"), "/");
   const supabase = getSupabaseClient();
 
   const [email, setEmail] = useState("");
