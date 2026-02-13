@@ -12,7 +12,7 @@ export default function WelcomePage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isInitialSetupComplete()) {
-      router.replace("/calendar");
+      router.replace("/calendar/");
       return;
     }
     setReady(true);
@@ -40,7 +40,7 @@ export default function WelcomePage() {
             最初にあなた向けの初期設定を行います。収入や予算、集計開始日などを入力して、家計管理をすぐ始めましょう。
           </p>
           <Link
-            href="/setup"
+            href="/setup/"
             className="mt-7 inline-flex w-full items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
           >
             はじめる

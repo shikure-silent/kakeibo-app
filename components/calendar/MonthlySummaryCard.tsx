@@ -1,14 +1,6 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
 import { MonthlyBudget } from "../../types/calendar";
 
 type WeeklySummary = {
@@ -110,6 +102,7 @@ export default function MonthlySummaryCard({
   remainingBudget,
   daysInMonth,
   amounts,
+  maxAmount,
   dailyTarget,
   weeklySummary,
   periodLabel,
@@ -128,12 +121,14 @@ export default function MonthlySummaryCard({
     [amounts, daysInMonth]
   );
 
-  const handleBarClick = (entry?: { payload?: { day?: number } }) => {
+  const chartMax = useMemo(
+    () => Math.max(1, maxAmount, dailyTarget ?? 0),
+    [maxAmount, dailyTarget]
+  );
+
+  const handleBarClick = (day: number) => {
     if (!onSelectDayFromChart) return;
-    const day = entry?.payload?.day;
-    if (typeof day === "number") {
-      onSelectDayFromChart(day);
-    }
+    onSelectDayFromChart(day);
   };
 
   const dailyTargetBadge =
@@ -145,8 +140,6 @@ export default function MonthlySummaryCard({
     ? "bg-slate-900 border-slate-700 text-slate-50"
     : "bg-white border-slate-100 text-slate-900";
 
-  const axisTickColor = isDark ? "#cbd5f5" : "#64748b";
-  const axisLineColor = isDark ? "#475569" : "#cbd5f5";
   const [showAllExpenseCategory, setShowAllExpenseCategory] = useState(false);
   const [showAllPayFrom, setShowAllPayFrom] = useState(false);
   const [showAllIncomeFrom, setShowAllIncomeFrom] = useState(false);
@@ -231,44 +224,51 @@ export default function MonthlySummaryCard({
         </div>
       </div>
 
-      {/* 棒グラフ */}
-      <div className="h-40">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data}>
-            <XAxis
-              dataKey="day"
-              tick={{ fontSize: 10, fill: axisTickColor }}
-              axisLine={{ stroke: axisLineColor }}
-              tickLine={false}
-            />
-            <Tooltip
-              formatter={(
-                value: number | string | Array<number | string> | null | undefined
-              ) => {
-                const raw =
-                  Array.isArray(value) ? value[0] : value ?? 0;
-                const v = typeof raw === "number" ? raw : Number(raw || 0);
-                return [`¥${v.toLocaleString()}`, "支出合計"];
+      {/* 棒グラフ（WebViewでも落ちにくいシンプル実装） */}
+      <div className="space-y-1">
+        <div
+          className={`relative h-40 rounded-lg border px-1 pt-2 ${
+            isDark ? "border-slate-700 bg-slate-800" : "border-slate-100 bg-slate-50"
+          }`}
+        >
+          {dailyTarget != null && (
+            <div
+              className="pointer-events-none absolute left-1 right-1 border-t border-dashed border-amber-500/70"
+              style={{
+                bottom: `${Math.max(
+                  0,
+                  Math.min(100, (dailyTarget / chartMax) * 100)
+                )}%`,
               }}
-              labelFormatter={(label: number | string) => `${label}日`}
             />
-            {dailyTarget && (
-              <ReferenceLine
-                y={dailyTarget}
-                stroke="#f97316"
-                strokeDasharray="4 4"
-              />
-            )}
-            <Bar
-              dataKey="amount"
-              radius={[4, 4, 0, 0]}
-              maxBarSize={18}
-              fill="#22c55e"
-              cursor="pointer"
-              onClick={handleBarClick}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+          )}
+          <div className="flex h-full items-end gap-[2px]">
+            {data.map((item) => {
+              const heightPercent = Math.max(
+                2,
+                Math.min(100, (item.amount / chartMax) * 100)
+              );
+              return (
+                <button
+                  key={item.day}
+                  type="button"
+                  onClick={() => handleBarClick(item.day)}
+                  className={`flex-1 rounded-t-[3px] ${
+                    isDark ? "bg-emerald-400/80" : "bg-emerald-500"
+                  }`}
+                  style={{ height: `${heightPercent}%` }}
+                  title={`${item.day}日: ${formatYen(item.amount)}`}
+                  aria-label={`${item.day}日の支出 ${formatYen(item.amount)}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+        <div className={`flex items-center justify-between text-[10px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+          <span>1日</span>
+          <span>{Math.ceil(daysInMonth / 2)}日</span>
+          <span>{daysInMonth}日</span>
+        </div>
       </div>
 
       {hasBreakdownSection && (

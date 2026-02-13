@@ -10,12 +10,7 @@ import { clearKakeiboKeys, importKakeiboDump } from "../../lib/cloudSync";
 import { loadKakeiboState } from "../../lib/kakeiboStateRepo";
 import type { User } from "@supabase/supabase-js";
 import { toJapaneseAuthErrorMessage } from "../../lib/authErrorMessageJa";
-
-function safeNext(next: string | null) {
-  // 外部URLへのopen redirectを避けるため、アプリ内パスだけ許可
-  if (!next) return "/";
-  return next.startsWith("/") ? next : "/";
-}
+import { safeNextPath } from "../../lib/safeNextPath";
 
 function LoginPageInner() {
   const router = useRouter();
@@ -25,13 +20,13 @@ function LoginPageInner() {
   useEffect(() => {
     const mode = sp.get("mode");
     if (mode === "signup") {
-      const next = sp.get("next");
+      const next = safeNextPath(sp.get("next"), "/");
       const q = next ? `?next=${encodeURIComponent(next)}` : "";
       router.replace(`/signup${q}`);
     }
   }, [sp, router]);
 
-  const nextUrl = safeNext(sp.get("next"));
+  const nextUrl = safeNextPath(sp.get("next"), "/");
   const supabase = getSupabaseClient();
 
   const [email, setEmail] = useState("");
@@ -85,9 +80,8 @@ function LoginPageInner() {
       if (dump) {
         importKakeiboDump(dump, { includeSettings: true, clearBefore: true });
       }
-      if (!dump) {
-        clearKakeiboKeys({ includeSettings: true });
-      }
+      // dump が無いだけでローカルデータを消すと、
+      // 初回クラウド利用ユーザーの端末データが消えるため削除しない。
 
       // 画面を整える
       setFlashToast({ message: "ログインしました。", tone: "success" });
@@ -206,7 +200,7 @@ function LoginPageInner() {
 
           <div className="text-center text-sm text-slate-500 dark:text-slate-400">
             <Link
-              href="/reset-email"
+              href="/reset-email/"
               className="font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
             >
               メールアドレスの再設定

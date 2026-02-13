@@ -244,7 +244,7 @@ export default function ExpenseInputsBlock({
 
         <div className="space-y-2">
           {customItems.map((item) => {
-            const isCopyEnabled = item.copyFromPrevious ?? false;
+            const isCopyEnabled = item.copyFromPrevious !== false;
 
             return (
               <div
@@ -283,7 +283,7 @@ export default function ExpenseInputsBlock({
                           : "bg-slate-100 text-slate-500 border-slate-200"
                       }`}
                     >
-                      前月コピー: {isCopyEnabled ? "オン" : "オフ"}
+                      自動更新: {isCopyEnabled ? "オン" : "オフ"}
                     </button>
                   </div>
                   <input

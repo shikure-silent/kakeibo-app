@@ -13,11 +13,15 @@ import { useSupportBell } from "./support/SupportBellProvider";
 type NavItem = { href: string; label: string };
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/input", label: "入力" },
-  { href: "/calendar", label: "カレンダー" },
-  { href: "/data", label: "データ" },
-  { href: "/settings", label: "設定" },
+  { href: "/input/", label: "入力" },
+  { href: "/calendar/", label: "カレンダー" },
+  { href: "/data/", label: "データ" },
+  { href: "/settings/", label: "設定" },
 ];
+
+function normalizePath(path: string) {
+  return path.replace(/\/+$/, "") || "/";
+}
 
 function maskEmail(email: string) {
   const [local, domain] = email.split("@");
@@ -97,12 +101,14 @@ export default function TopNav() {
     return null;
   }
 
+  const normalizedPathname = normalizePath(pathname);
+
   return (
     <header className="relative z-50 border-b border-slate-200 bg-white/80 backdrop-blur dark:border-slate-800 dark:bg-slate-950/70 lg:sticky lg:top-0">
       <div className="mx-auto max-w-6xl px-3 sm:px-4">
         <div className="flex h-16 items-center justify-between gap-3">
           {/* 左：ロゴ */}
-          <Link href="/calendar" className="flex items-center gap-2">
+          <Link href="/calendar/" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-full bg-emerald-600 text-white grid place-items-center text-sm font-bold">
               ¥
             </div>
@@ -118,8 +124,8 @@ export default function TopNav() {
             <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-900">
               {NAV_ITEMS.map((item) => {
                 const isActive =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
+                  normalizedPathname === normalizePath(item.href) ||
+                  normalizedPathname.startsWith(`${normalizePath(item.href)}/`);
 
                 return (
                   <Link
@@ -175,13 +181,13 @@ export default function TopNav() {
 
                     <div className="p-2">
                       <MenuLink
-                        href="/settings"
+                        href="/settings/"
                         onClick={() => setOpenMenu(false)}
                       >
                         設定
                       </MenuLink>
                       <MenuLink
-                        href="/settings#account"
+                        href="/settings/#account"
                         onClick={() => setOpenMenu(false)}
                       >
                         アカウント
@@ -200,13 +206,13 @@ export default function TopNav() {
             ) : (
               <>
                 <Link
-                  href="/signup"
+                  href="/signup/"
                   className="inline-flex items-center whitespace-nowrap rounded-full bg-emerald-600 px-2.5 py-2 text-[10px] font-semibold text-white hover:bg-emerald-700 sm:px-4 sm:text-sm"
                 >
                   アカウントを作成
                 </Link>
                 <Link
-                  href="/login"
+                  href="/login/"
                   className="inline-flex items-center whitespace-nowrap rounded-full border border-emerald-200 bg-white px-2.5 py-2 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-200 dark:hover:bg-emerald-950/30 sm:px-4 sm:text-sm"
                 >
                   ログイン

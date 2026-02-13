@@ -41,7 +41,7 @@ export function DetailAddModal({
   onSaveCategoryOptions,
 }: Props) {
   const PICKER_ROW_HEIGHT = 48;
-  const PICKER_SHEET_HEIGHT = 192;
+  const PICKER_SHEET_HEIGHT = 180;
   const PICKER_EDGE_SPACE = (PICKER_SHEET_HEIGHT - PICKER_ROW_HEIGHT) / 2;
 
   const [payFromOptions] = useState<string[]>(
@@ -65,6 +65,7 @@ export function DetailAddModal({
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isCategoryManagerEdit, setIsCategoryManagerEdit] = useState(false);
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [dragCategoryIndex, setDragCategoryIndex] = useState<number | null>(null);
   const [touchDragIndex, setTouchDragIndex] = useState<number | null>(null);
   const [dragGhostY, setDragGhostY] = useState<number | null>(null);
@@ -113,14 +114,22 @@ export function DetailAddModal({
 
   useEffect(() => {
     const isAnyCategoryModalOpen =
-      isCategoryPickerOpen || isCategoryManagerOpen || isAddCategoryModalOpen;
+      isCategoryPickerOpen ||
+      isCategoryManagerOpen ||
+      isAddCategoryModalOpen ||
+      isSubmitConfirmOpen;
     if (!isAnyCategoryModalOpen) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = original;
     };
-  }, [isCategoryPickerOpen, isCategoryManagerOpen, isAddCategoryModalOpen]);
+  }, [
+    isCategoryPickerOpen,
+    isCategoryManagerOpen,
+    isAddCategoryModalOpen,
+    isSubmitConfirmOpen,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -141,6 +150,19 @@ export function DetailAddModal({
     value: DetailRecord[K]
   ) => {
     setDraft((prev) => ({ ...prev, [key]: value } as DetailRecord));
+  };
+
+  const handleSwitchMode = (nextMode: Mode) => {
+    setDraft((prev) => {
+      if (prev.mode === nextMode) return prev;
+      return {
+        ...prev,
+        mode: nextMode,
+        category: "",
+      } as DetailRecord;
+    });
+    setIsCategoryPickerOpen(false);
+    setShowPayFromSuggestions(false);
   };
 
   const handleChangeAmount = (raw: string) => {
@@ -164,6 +186,11 @@ export function DetailAddModal({
   };
 
   const handleSubmit = () => {
+    setIsSubmitConfirmOpen(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setIsSubmitConfirmOpen(false);
     onConfirm(draft);
   };
 
@@ -501,7 +528,7 @@ export function DetailAddModal({
           <div className="inline-flex rounded-full bg-slate-100 p-1 text-[11px]">
             <button
               type="button"
-              onClick={() => handleChangeDraft("mode", "expense")}
+              onClick={() => handleSwitchMode("expense")}
               className={`px-3 py-1.5 rounded-full font-medium ${
                 draft.mode !== "income"
                   ? "bg-white text-emerald-700 shadow-sm"
@@ -512,7 +539,7 @@ export function DetailAddModal({
             </button>
             <button
               type="button"
-              onClick={() => handleChangeDraft("mode", "income")}
+              onClick={() => handleSwitchMode("income")}
               className={`px-3 py-1.5 rounded-full font-medium ${
                 draft.mode === "income"
                   ? "bg-white text-emerald-700 shadow-sm"
@@ -554,62 +581,68 @@ export function DetailAddModal({
         {/* 支出元 / 入金元 */}
         <div className="space-y-1">
           <label className="block text-[11px] text-slate-500">
-            {draft.mode === "income" ? "入金元を選択" : "支出元を選択"}
+            {draft.mode === "income" ? "入金元を入力" : "支出元を選択"}
           </label>
           <input
             type="text"
             className="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-[12px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-300"
             value={draft.payFrom ?? ""}
             onChange={(e) => handleChangeDraft("payFrom", e.target.value)}
-            placeholder="直接入力（例：現金 / クレジットカード / 電子決済 など）"
+            placeholder={
+              draft.mode === "income"
+                ? "直接入力（例：会社名 / 銀行名 / サービス名 など）"
+                : "直接入力（例：現金 / クレジットカード / 電子決済 など）"
+            }
           />
 
-          <div ref={payFromRef} className="relative inline-block">
-            <button
-              type="button"
-              onClick={() => setShowPayFromSuggestions((prev) => !prev)}
-              className="
-                rounded-full border border-slate-300
-                bg-slate-50 px-4 py-1.5 text-[12px]
-                text-slate-700 hover:bg-slate-100
-              "
-            >
-              候補から選ぶ
-            </button>
-
-            {showPayFromSuggestions && (
-              <div
+          {draft.mode === "expense" && (
+            <div ref={payFromRef} className="relative inline-block">
+              <button
+                type="button"
+                onClick={() => setShowPayFromSuggestions((prev) => !prev)}
                 className="
-                  absolute z-20 mt-1
-                  max-h-40 w-44 overflow-auto
-                  rounded-lg border border-slate-200
-                  bg-white shadow-lg
+                  rounded-full border border-slate-300
+                  bg-slate-50 px-4 py-1.5 text-[12px]
+                  text-slate-700 hover:bg-slate-100
                 "
               >
-                {payFromOptions.map((opt) => (
-                  <button
-                    key={opt}
-                    type="button"
-                    onClick={() => {
-                      handleChangeDraft("payFrom", opt);
-                      setShowPayFromSuggestions(false);
-                    }}
-                    className={`
-                      w-full px-2 py-1 text-left text-[11px]
-                      hover:bg-emerald-50
-                      ${
-                        opt === draft.payFrom
-                          ? "bg-emerald-50 text-emerald-700 font-semibold"
-                          : "text-slate-700"
-                      }
-                    `}
-                  >
-                    {opt}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+                候補から選ぶ
+              </button>
+
+              {showPayFromSuggestions && (
+                <div
+                  className="
+                    absolute z-20 mt-1
+                    max-h-40 w-44 overflow-auto
+                    rounded-lg border border-slate-200
+                    bg-white shadow-lg
+                  "
+                >
+                  {payFromOptions.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => {
+                        handleChangeDraft("payFrom", opt);
+                        setShowPayFromSuggestions(false);
+                      }}
+                      className={`
+                        w-full px-2 py-1 text-left text-[11px]
+                        hover:bg-emerald-50
+                        ${
+                          opt === draft.payFrom
+                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                            : "text-slate-700"
+                        }
+                      `}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 金額（新規追加） */}
@@ -671,13 +704,17 @@ export function DetailAddModal({
       </div>
 
       {isCategoryPickerOpen && (
-        <div className="fixed inset-0 z-[70] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center">
+        <div
+          className="fixed inset-0 z-[70] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center"
+          onClick={closeCategoryPicker}
+        >
           <div
-            className={`mx-auto w-full max-w-sm rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
+          className={`mx-auto w-full max-w-[22rem] rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
               isDark
                 ? "border-slate-700 bg-slate-900 text-slate-100"
                 : "border-slate-200 bg-white text-slate-900"
             }`}
+            onClick={(e) => e.stopPropagation()}
             style={{
               maxHeight:
                 "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
@@ -690,6 +727,13 @@ export function DetailAddModal({
             >
               <button
                 type="button"
+                onClick={openCategoryManagerFromPickerWithCommit}
+                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-100"
+              >
+                追加・編集
+              </button>
+              <button
+                type="button"
                 onClick={closeCategoryPicker}
                 className={`rounded-full border px-3 py-1.5 text-sm font-medium ${
                   isDark
@@ -697,21 +741,14 @@ export function DetailAddModal({
                     : "border-slate-300 text-slate-600 hover:bg-slate-50"
                 }`}
               >
-                閉じる
-              </button>
-              <button
-                type="button"
-                onClick={openCategoryManagerFromPickerWithCommit}
-                className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-600 hover:bg-amber-100"
-              >
-                追加・編集
+                完了
               </button>
             </div>
             <div className="px-3 py-3 overflow-y-auto overscroll-contain flex-1 min-h-0">
               <p className={`mb-3 text-xs ${isDark ? "text-slate-300" : "text-slate-500"}`}>
                 {draft.mode === "expense" ? "支出" : "収入"}カテゴリを選択
               </p>
-              <div className="relative mx-auto w-full max-w-sm">
+              <div className="relative mx-auto w-full max-w-[20rem]">
                 <div
                   className={`pointer-events-none absolute inset-x-0 top-1/2 z-10 h-12 -translate-y-1/2 rounded-xl border bg-transparent ${
                     isDark
@@ -742,7 +779,7 @@ export function DetailAddModal({
                   onMouseDown={startPickerInteraction}
                   onMouseUp={endPickerInteraction}
                   onMouseLeave={endPickerInteraction}
-                  className={`h-48 overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
+                  className={`h-[180px] overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
                     isDark ? "border-slate-700" : "border-slate-200"
                   }`}
                   style={{
@@ -1046,6 +1083,44 @@ export function DetailAddModal({
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
                 追加
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSubmitConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[86] bg-black/60 px-4 flex items-center justify-center"
+          onClick={() => setIsSubmitConfirmOpen(false)}
+        >
+          <div
+            className={`w-full max-w-sm rounded-2xl border p-4 shadow-xl ${
+              isDark
+                ? "border-slate-700 bg-slate-900 text-slate-100"
+                : "border-slate-200 bg-white text-slate-900"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold">この内容でよろしいですか？</h3>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSubmitConfirmOpen(false)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium ${
+                  isDark
+                    ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+                    : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSubmit}
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              >
+                追加する
               </button>
             </div>
           </div>

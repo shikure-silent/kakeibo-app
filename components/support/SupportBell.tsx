@@ -212,7 +212,7 @@ export default function SupportBell({ cards, mode = "nav" }: Props) {
       window.localStorage.setItem(OPEN_WIZARD_STEP_KEY, "2");
     }
     setActiveSupportCard(null);
-    router.push("/data");
+    router.push("/data/");
   };
 
   const handlePlanSameOk = () => {
@@ -308,7 +308,7 @@ export default function SupportBell({ cards, mode = "nav" }: Props) {
           <div className="border-b border-slate-100 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800 dark:text-slate-400">
             通知の設定は
             <Link
-              href="/settings#osnotify"
+              href="/settings/#osnotify"
               className="ml-1 font-semibold text-emerald-700 hover:underline dark:text-emerald-200"
               onClick={() => setIsOpen(false)}
             >
@@ -400,7 +400,7 @@ export default function SupportBell({ cards, mode = "nav" }: Props) {
             {activeSupportCard.kind === "inputGap" && (
               <div className="mt-3">
                 <Link
-                  href="/input"
+                  href="/input/"
                   className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-3 py-1.5 text-[12px] font-semibold text-slate-700 hover:bg-white dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
                 >
                   入力へ

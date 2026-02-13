@@ -31,6 +31,12 @@ type PeriodDailyInfo = {
   income: number;
 };
 
+const normalizeLabel = (value: unknown, fallback: string): string => {
+  if (typeof value !== "string") return fallback;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : fallback;
+};
+
 export default function MonthlySummarySection() {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [now, setNow] = useState(() => new Date());
@@ -209,7 +215,7 @@ export default function MonthlySummarySection() {
     dailyDetails.forEach((day) => {
       day.forEach((rec) => {
         if (rec.mode !== "expense") return;
-        const label = rec.payFrom?.trim() ? rec.payFrom : "支出元なし";
+        const label = normalizeLabel(rec.payFrom, "支出元なし");
         const next = (totals.get(label) || 0) + Number(rec.amount || 0);
         totals.set(label, next);
       });
@@ -224,7 +230,7 @@ export default function MonthlySummarySection() {
     dailyDetails.forEach((day) => {
       day.forEach((rec) => {
         if (rec.mode !== "expense") return;
-        const label = rec.category?.trim() ? rec.category : "カテゴリなし";
+        const label = normalizeLabel(rec.category, "カテゴリなし");
         const next = (totals.get(label) || 0) + Number(rec.amount || 0);
         totals.set(label, next);
       });
@@ -239,7 +245,7 @@ export default function MonthlySummarySection() {
     dailyDetails.forEach((day) => {
       day.forEach((rec) => {
         if (rec.mode !== "income") return;
-        const label = rec.payFrom?.trim() ? rec.payFrom : "入金元なし";
+        const label = normalizeLabel(rec.payFrom, "入金元なし");
         const next = (totals.get(label) || 0) + Number(rec.amount || 0);
         totals.set(label, next);
       });

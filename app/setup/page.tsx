@@ -16,7 +16,7 @@ export default function SetupPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isInitialSetupComplete()) {
-      router.replace("/calendar");
+      router.replace("/calendar/");
       return;
     }
     setReady(true);
@@ -24,7 +24,7 @@ export default function SetupPage() {
 
   const handleConfirmSetup = () => {
     saveInitialSetupComplete();
-    router.replace("/calendar");
+    router.replace("/calendar/");
   };
 
   if (!ready) {

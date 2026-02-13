@@ -55,12 +55,13 @@ export default function InputFormCard({
   isDark = false,
 }: Props) {
   const PICKER_ROW_HEIGHT = 48;
-  const PICKER_SHEET_HEIGHT = 192;
+  const PICKER_SHEET_HEIGHT = 180;
   const PICKER_EDGE_SPACE = (PICKER_SHEET_HEIGHT - PICKER_ROW_HEIGHT) / 2;
 
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isAddCategoryModalOpen, setIsAddCategoryModalOpen] = useState(false);
+  const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryManagerTab, setCategoryManagerTab] = useState<Mode>(mode);
   const [isCategoryManagerEdit, setIsCategoryManagerEdit] = useState(false);
@@ -73,8 +74,6 @@ export default function InputFormCard({
   const touchDragStartedRef = useRef(false);
   const touchDragStartYRef = useRef(0);
 
-  const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
-  const payFromRef = useRef<HTMLDivElement | null>(null);
   const pickerScrollRef = useRef<HTMLDivElement | null>(null);
   const pickerScrollStopTimerRef = useRef<number | null>(null);
   const pickerScrollRafRef = useRef<number | null>(null);
@@ -102,27 +101,23 @@ export default function InputFormCard({
   }, []);
 
   useEffect(() => {
-    if (!showPayFromSuggestions) return;
-    const handleOutsideClick = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (payFromRef.current && !payFromRef.current.contains(target)) {
-        setShowPayFromSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, [showPayFromSuggestions]);
-
-  useEffect(() => {
     const isAnyCategoryModalOpen =
-      isCategoryPickerOpen || isCategoryManagerOpen || isAddCategoryModalOpen;
+      isCategoryPickerOpen ||
+      isCategoryManagerOpen ||
+      isAddCategoryModalOpen ||
+      isSubmitConfirmOpen;
     if (!isAnyCategoryModalOpen) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = original;
     };
-  }, [isCategoryPickerOpen, isCategoryManagerOpen, isAddCategoryModalOpen]);
+  }, [
+    isCategoryPickerOpen,
+    isCategoryManagerOpen,
+    isAddCategoryModalOpen,
+    isSubmitConfirmOpen,
+  ]);
 
   useEffect(() => {
     return () => {
@@ -140,6 +135,11 @@ export default function InputFormCard({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitConfirmOpen(true);
+  };
+
+  const handleConfirmSubmit = () => {
+    setIsSubmitConfirmOpen(false);
     onSubmit();
   };
 
@@ -703,81 +703,12 @@ export default function InputFormCard({
                   }}
                   placeholder="例: 給与、〇〇銀行、フリマ売上 など"
                 />
-                <div ref={payFromRef} className="relative inline-block">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowPayFromSuggestions((prev) => !prev)
-                    }
-                    className="
-                      rounded-full border
-                      px-4 py-1.5 text-[12px]
-                      hover:bg-slate-100
-                    "
-                    style={{
-                      backgroundColor: isDark ? "#0f172a" : "#f8fafc",
-                      color: isDark ? "#e2e8f0" : "#334155",
-                      borderColor: isDark ? "#475569" : "#cbd5e1",
-                    }}
-                  >
-                    候補から選ぶ
-                  </button>
-
-                  {showPayFromSuggestions && (
-                    <div
-                      className="
-                        absolute z-20 mt-1
-                        max-h-40 w-44 overflow-auto
-                        rounded-lg border
-                        bg-white shadow-lg
-                      "
-                      style={{
-                        backgroundColor: isDark ? "#0f172a" : "white",
-                        borderColor: isDark ? "#475569" : "#e2e8f0",
-                      }}
-                    >
-                      {payFromOptions.map((src) => (
-                        <button
-                          key={src}
-                          type="button"
-                          onClick={() => {
-                            onChangePayFrom(src);
-                            setShowPayFromSuggestions(false);
-                          }}
-                          className={`
-                            w-full px-2 py-1 text-left text-[11px]
-                            hover:bg-emerald-50
-                            ${src === payFrom ? "font-semibold" : ""}
-                          `}
-                          style={{
-                            backgroundColor:
-                              src === payFrom
-                                ? isDark
-                                  ? "#065f46"
-                                  : "#ecfdf3"
-                                : "transparent",
-                            color:
-                              src === payFrom
-                                ? isDark
-                                  ? "#bbf7d0"
-                                  : "#047857"
-                                : isDark
-                                ? "#e2e8f0"
-                                : "#334155",
-                          }}
-                        >
-                          {src}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
                 <p
                   className={`text-[10px] ${
                     isDark ? "text-slate-400" : "text-slate-400"
                   }`}
                 >
-                  入金元を自由に入力できます。（会社名・銀行名・サービス名など）
+                  入金元は自由入力です。（会社名・銀行名・サービス名など）
                 </p>
               </>
             )}
@@ -845,13 +776,17 @@ export default function InputFormCard({
       </form>
 
       {isCategoryPickerOpen && (
-        <div className="fixed inset-0 z-[80] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center">
+        <div
+          className="fixed inset-0 z-[80] bg-black/60 px-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4 flex items-end justify-center"
+          onClick={closeCategoryPicker}
+        >
           <div
-            className={`mx-auto w-full max-w-sm rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
+            className={`mx-auto w-full max-w-[22rem] rounded-2xl border shadow-xl overflow-hidden flex flex-col ${
               isDark
                 ? "bg-slate-900 border-slate-700 text-slate-100"
                 : "bg-white border-slate-200 text-slate-900"
             }`}
+            onClick={(e) => e.stopPropagation()}
             style={{
               maxHeight:
                 "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem)",
@@ -860,17 +795,17 @@ export default function InputFormCard({
             <div className="flex items-center justify-between gap-2 border-b px-4 py-3 shrink-0 dark:border-slate-700">
               <button
                 type="button"
-                onClick={closeCategoryPicker}
-                className="rounded-full border px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
-                閉じる
-              </button>
-              <button
-                type="button"
                 onClick={openCategoryManagerFromPickerWithCommit}
                 className="rounded-full border px-3 py-1.5 text-sm font-medium text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100"
               >
                 追加・編集
+              </button>
+              <button
+                type="button"
+                onClick={closeCategoryPicker}
+                className="rounded-full border px-3 py-1.5 text-sm font-medium text-slate-500 hover:text-slate-700 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                完了
               </button>
             </div>
 
@@ -882,7 +817,7 @@ export default function InputFormCard({
               >
                 {mode === "expense" ? "支出" : "収入"}カテゴリを選択
               </p>
-              <div className="relative mx-auto w-full max-w-sm">
+              <div className="relative mx-auto w-full max-w-[20rem]">
                 <div
                   className={`pointer-events-none absolute inset-x-0 top-1/2 z-10 h-12 -translate-y-1/2 rounded-xl border bg-transparent ${
                     isDark
@@ -913,7 +848,7 @@ export default function InputFormCard({
                   onMouseDown={startPickerInteraction}
                   onMouseUp={endPickerInteraction}
                   onMouseLeave={endPickerInteraction}
-                  className={`h-48 overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
+                  className={`h-[180px] overflow-y-auto snap-y snap-mandatory rounded-xl border overscroll-contain ${
                     isDark ? "border-slate-700" : "border-slate-200"
                   }`}
                   style={{
@@ -1240,6 +1175,44 @@ export default function InputFormCard({
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
                 追加
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isSubmitConfirmOpen && (
+        <div
+          className="fixed inset-0 z-[95] bg-black/60 px-4 flex items-center justify-center"
+          onClick={() => setIsSubmitConfirmOpen(false)}
+        >
+          <div
+            className={`w-full max-w-sm rounded-2xl border p-4 shadow-xl ${
+              isDark
+                ? "bg-slate-900 border-slate-700 text-slate-100"
+                : "bg-white border-slate-200 text-slate-900"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-sm font-semibold">この内容でよろしいですか？</h3>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setIsSubmitConfirmOpen(false)}
+                className={`rounded-full border px-4 py-2 text-sm font-medium ${
+                  isDark
+                    ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+                    : "border-slate-300 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSubmit}
+                className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              >
+                追加する
               </button>
             </div>
           </div>

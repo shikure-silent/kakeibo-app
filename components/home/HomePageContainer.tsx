@@ -38,6 +38,7 @@ import { CustomExpenseItem } from "../../types/budget";
 import { HomePageView } from "./HomePageView";
 import type { IncomeMember } from "./IncomeSettingsCard";
 import RemainingBudgetCard from "./RemainingBudgetCard";
+import ClientErrorBoundary from "../ClientErrorBoundary";
 
 type HomeMode = "setup" | "dashboard";
 
@@ -220,7 +221,7 @@ export default function HomePageContainer({
             id: item.id ?? `restored-${index}`,
             label: item.label ?? "",
             value: item.value ?? "",
-            copyFromPrevious: item.copyFromPrevious ?? false,
+            copyFromPrevious: item.copyFromPrevious !== false,
           }))
         );
       }
@@ -250,7 +251,7 @@ export default function HomePageContainer({
         id: `restored-custom-${index}`,
         label: item.label || "カスタム項目",
         value: String(item.amount ?? 0),
-        copyFromPrevious: false,
+        copyFromPrevious: true,
       });
     });
 
@@ -306,7 +307,7 @@ export default function HomePageContainer({
             id: item.id ?? `draft-${index}`,
             label: item.label ?? "",
             value: item.value ?? "",
-            copyFromPrevious: item.copyFromPrevious ?? false,
+            copyFromPrevious: item.copyFromPrevious !== false,
           }))
         );
       }
@@ -545,7 +546,7 @@ export default function HomePageContainer({
         id,
         label: "",
         value: "",
-        copyFromPrevious: false,
+        copyFromPrevious: true,
       },
     ]);
     setLastAddedCustomItemId(id);
@@ -569,7 +570,10 @@ export default function HomePageContainer({
     setCustomExpenseItems((prev) =>
       prev.map((item) =>
         item.id === id
-          ? { ...item, copyFromPrevious: !(item.copyFromPrevious ?? false) }
+          ? {
+              ...item,
+              copyFromPrevious: !(item.copyFromPrevious !== false),
+            }
           : item
       )
     );
@@ -926,7 +930,7 @@ export default function HomePageContainer({
     }
   }, [copiedDefaultsFromPrev, homeMode, settings]);
 
-  // カスタム項目を前月からコピー（前月コピーがオンの項目のみ）
+  // カスタム項目を前月からコピー（自動更新オンの項目のみ）
   useEffect(() => {
     if (copiedCustomFromPrev) return;
     if (customExpenseItems.length > 0) return;
@@ -953,12 +957,12 @@ export default function HomePageContainer({
       if (!Array.isArray(prevItems) || prevItems.length === 0) return;
 
       const mapped = prevItems
-        .filter((item) => item.copyFromPrevious ?? false)
+        .filter((item) => item.copyFromPrevious !== false)
         .map((item, idx) => ({
           id: item.id ?? `copied-${idx}`,
           label: item.label ?? "",
           value: item.value ?? "",
-          copyFromPrevious: item.copyFromPrevious ?? false,
+          copyFromPrevious: item.copyFromPrevious !== false,
         }));
       if (mapped.length === 0) return;
       setCustomExpenseItems(mapped);
@@ -981,8 +985,10 @@ export default function HomePageContainer({
       savingHighlightExtra={
         isData ? (
           <>
-            <RemainingBudgetCard isDark={isDark} />
-            {extraSection}
+            <ClientErrorBoundary>
+              <RemainingBudgetCard isDark={isDark} />
+            </ClientErrorBoundary>
+            <ClientErrorBoundary>{extraSection}</ClientErrorBoundary>
           </>
         ) : null
       }

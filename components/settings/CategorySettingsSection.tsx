@@ -156,11 +156,11 @@ export function CategorySettingsSection({
           </div>
         </div>
 
-        {/* 支出元 / 入金元プリセット */}
+        {/* 支出元プリセット */}
         <div className={`rounded-2xl border p-4 ${cardBase}`}>
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold">支出元・入金元の候補</h3>
+              <h3 className="text-sm font-semibold">支出元の候補</h3>
               <p className={`mt-1 text-[11px] ${subText}`}>
                 {previewItems(payFromPresets)}
               </p>
@@ -234,7 +234,6 @@ export function CategorySettingsSection({
                   onAdd={onAddExpenseCategory}
                   onRemove={onRemoveExpenseCategory}
                   onReorder={onReorderExpenseCategory}
-                  showReorderButtons
                   isDark={isDark}
                 />
               )}
@@ -248,21 +247,19 @@ export function CategorySettingsSection({
                   onAdd={onAddIncomeCategory}
                   onRemove={onRemoveIncomeCategory}
                   onReorder={onReorderIncomeCategory}
-                  showReorderButtons
                   isDark={isDark}
                 />
               )}
 
               {activeModal === "payfrom" && (
                 <EditableListSection
-                  title="支出元・入金元の候補"
-                  description="現金・クレジットカード・電子決済など、よく使う支出元や入金元の候補を編集できます。入力タブとカレンダー編集モーダルに反映されます。"
+                  title="支出元の候補"
+                  description="現金・クレジットカード・電子決済など、よく使う支出元の候補を編集できます。入力タブとカレンダー編集モーダルに反映されます。"
                   items={payFromPresets}
                   onEdit={onEditPayFrom}
                   onAdd={onAddPayFrom}
                   onRemove={onRemovePayFrom}
                   onReorder={onReorderPayFrom}
-                  showReorderButtons
                   isDark={isDark}
                 />
               )}

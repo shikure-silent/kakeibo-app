@@ -20,6 +20,9 @@ export default function DayRecordsCard({
 }: Props) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draft, setDraft] = useState<DetailRecord | null>(null);
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(
+    null
+  );
 
   const hasRecords = records.length > 0;
 
@@ -67,6 +70,20 @@ export default function DayRecordsCard({
       memo: draft.memo || "",
     });
     cancelEdit();
+  };
+
+  const openDeleteConfirm = (index: number) => {
+    setPendingDeleteIndex(index);
+  };
+
+  const closeDeleteConfirm = () => {
+    setPendingDeleteIndex(null);
+  };
+
+  const confirmDelete = () => {
+    if (pendingDeleteIndex == null) return;
+    onDeleteRecord(pendingDeleteIndex);
+    setPendingDeleteIndex(null);
   };
 
   return (
@@ -331,22 +348,24 @@ export default function DayRecordsCard({
                         <button
                           type="button"
                           onClick={() => startEdit(idx, rec)}
-                          className="inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-[12px] font-medium"
-                          style={{
-                            borderColor: isDark ? "#475569" : "#cbd5e1",
-                            color: isDark ? "#cbd5e1" : "#475569",
-                          }}
+                          className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-[12px] font-medium ${
+                            isDark
+                              ? "border-slate-500 text-slate-200 hover:bg-slate-800"
+                              : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                          }`}
+                          aria-label="編集"
                         >
                           編集
                         </button>
                         <button
                           type="button"
-                          onClick={() => onDeleteRecord(idx)}
-                          className="inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-[12px] font-medium"
-                          style={{
-                            borderColor: isDark ? "#7f1d1d" : "#fecaca",
-                            color: isDark ? "#fecaca" : "#dc2626",
-                          }}
+                          onClick={() => openDeleteConfirm(idx)}
+                          className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-[12px] font-medium ${
+                            isDark
+                              ? "border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/20"
+                              : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100"
+                          }`}
+                          aria-label="削除"
                         >
                           削除
                         </button>
@@ -358,6 +377,50 @@ export default function DayRecordsCard({
             ))}
           </div>
         </>
+      )}
+
+      {pendingDeleteIndex !== null && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 px-4"
+          onClick={closeDeleteConfirm}
+        >
+          <div
+            className={`w-full max-w-xs rounded-2xl border p-4 shadow-lg ${
+              isDark
+                ? "border-slate-700 bg-slate-900 text-slate-100"
+                : "border-slate-100 bg-white text-slate-900"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className={`mb-4 text-sm ${isDark ? "text-slate-200" : "text-slate-800"}`}>
+              削除してもよろしいですか？
+            </p>
+            <div className="flex justify-end gap-2 text-[12px]">
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                className={`rounded-full border px-3 py-1.5 ${
+                  isDark
+                    ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+                    : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                キャンセル
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className={`rounded-full px-3 py-1.5 font-semibold ${
+                  isDark
+                    ? "bg-red-500/80 text-white hover:bg-red-500"
+                    : "bg-red-600 text-white hover:bg-red-700"
+                }`}
+              >
+                削除する
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

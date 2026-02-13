@@ -71,14 +71,14 @@ export function AccountLoginSection() {
                 </p>
                 <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <Link
-                    href="/reset-email"
+                    href="/reset-email/"
                     className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     メールアドレス再設定
                   </Link>
 
                   <Link
-                    href="/reset-password"
+                    href="/reset-password/"
                     className="inline-flex items-center justify-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     パスワード再設定
@@ -160,7 +160,7 @@ export function AccountLoginSection() {
                           message: "アカウントを削除しました。",
                           tone: "info",
                         });
-                        window.location.href = "/signup";
+                        window.location.href = "/signup/";
                       } catch (e) {
                         const message =
                           e instanceof Error
@@ -177,7 +177,7 @@ export function AccountLoginSection() {
                   </button>
 
                   <Link
-                    href="/login"
+                    href="/login/"
                     className="text-xs font-medium text-slate-500 underline underline-offset-2 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                   >
                     別アカウントでログイン
@@ -197,13 +197,13 @@ export function AccountLoginSection() {
 
             <div className="mt-3 flex flex-wrap gap-2">
               <Link
-                href="/signup"
+                href="/signup/"
                 className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
               >
                 アカウントを作成
               </Link>
               <Link
-                href="/login"
+                href="/login/"
                 className="rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:bg-slate-950 dark:text-emerald-200 dark:hover:bg-emerald-950/30"
               >
                 ログイン

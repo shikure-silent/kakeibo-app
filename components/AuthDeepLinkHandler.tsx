@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { getSupabaseClient } from "../lib/supabaseClient";
+import { safeNextPath } from "../lib/safeNextPath";
 
 type ParsedDeepLink = {
   rawPath: string;
@@ -66,7 +67,7 @@ function resolveAppPath(link: ParsedDeepLink): string | null {
     if (link.type === "recovery") {
       params.set("next", "/reset-password");
     } else if (link.next) {
-      params.set("next", link.next);
+      params.set("next", safeNextPath(link.next, "/"));
     }
     return `/auth/confirm?${params.toString()}`;
   }

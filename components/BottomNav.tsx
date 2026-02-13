@@ -12,7 +12,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   {
-    href: "/input",
+    href: "/input/",
     label: "入力",
     icon: ({ active }) => (
         <svg
@@ -33,7 +33,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    href: "/calendar",
+    href: "/calendar/",
     label: "カレンダー",
     icon: ({ active }) => (
       <svg
@@ -58,7 +58,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    href: "/data",
+    href: "/data/",
     label: "データ",
     icon: ({ active }) => (
       <svg
@@ -77,7 +77,7 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
-    href: "/settings",
+    href: "/settings/",
     label: "設定",
     icon: ({ active }) => (
         <svg
@@ -99,8 +99,13 @@ const NAV_ITEMS: NavItem[] = [
   },
 ];
 
+function normalizePath(path: string) {
+  return path.replace(/\/+$/, "") || "/";
+}
+
 export default function BottomNav() {
   const pathname = usePathname();
+  const normalizedPathname = normalizePath(pathname);
   const isSetupFlow =
     pathname.startsWith("/setup") || pathname.startsWith("/welcome");
   const isPasswordRecoveryFlow =
@@ -173,7 +178,8 @@ export default function BottomNav() {
           <div className="flex items-center justify-between gap-1 pt-0.5 pb-2">
             {NAV_ITEMS.map((item) => {
               const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
+                normalizedPathname === normalizePath(item.href) ||
+                normalizedPathname.startsWith(`${normalizePath(item.href)}/`);
 
               return (
                 <Link
