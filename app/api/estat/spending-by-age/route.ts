@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-static";
-export const revalidate = 86400;
 
 const ESTAT_ENDPOINT =
   "https://api.e-stat.go.jp/rest/3.0/app/json/getStatsData";
@@ -183,7 +182,7 @@ export async function GET() {
   let res: Response;
   try {
     res = await fetch(url.toString(), {
-      next: { revalidate },
+      cache: "no-store",
     });
   } catch {
     return fallback("e-Stat fetch failed");
