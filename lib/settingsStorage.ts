@@ -161,7 +161,10 @@ export function saveAppSettings(settings: AppSettings) {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    window.dispatchEvent(new Event(SETTINGS_EVENT));
+    // React render中に同期発火すると "setState in render" 警告になるため非同期で通知
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event(SETTINGS_EVENT));
+    }, 0);
   } catch {
     // 保存失敗時は何もしない
   }
@@ -195,6 +198,7 @@ export function getAutoUpdateCategories(
 const EXPENSE_CATEGORIES_KEY = "kakeibo_expense_categories_v1";
 const INCOME_CATEGORIES_KEY = "kakeibo_income_categories_v1";
 const PAY_FROM_PRESETS_KEY = "kakeibo_payfrom_presets_v1";
+const INITIAL_SETUP_KEY = "kakeibo_initial_setup_v1";
 
 // 共通：string[] を保存
 function saveStringList(key: string, list: string[]) {
@@ -302,7 +306,8 @@ export function clearAllKakeiboData(options?: { includeSettings?: boolean }) {
         (key === SETTINGS_KEY ||
           key === EXPENSE_CATEGORIES_KEY ||
           key === INCOME_CATEGORIES_KEY ||
-          key === PAY_FROM_PRESETS_KEY)
+          key === PAY_FROM_PRESETS_KEY ||
+          key === INITIAL_SETUP_KEY)
       ) {
         continue;
       }
