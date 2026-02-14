@@ -665,19 +665,23 @@ export function DetailListItem({
         </div>
       </div>
 
-      {/* 削除ボタン */}
+      {/* 編集アクション */}
       <div className="flex justify-end gap-2">
         <button
           type="button"
           onClick={() => setIsEditing(false)}
-          className="text-[11px] font-medium text-slate-500 hover:text-slate-700"
+          className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1.5 text-[11px] font-medium ${
+            isDark
+              ? "border-slate-600 text-slate-200 hover:bg-slate-800"
+              : "border-slate-300 text-slate-700 hover:bg-slate-50"
+          }`}
         >
           編集を閉じる
         </button>
         <button
           type="button"
           onClick={() => setIsEditing(false)}
-          className="text-[11px] font-medium text-emerald-600 hover:text-emerald-700"
+          className="inline-flex min-h-9 items-center justify-center rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700"
         >
           保存
         </button>

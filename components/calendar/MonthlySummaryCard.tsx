@@ -44,6 +44,7 @@ function BreakdownList({
   expanded,
   onToggleExpanded,
   isDark,
+  formatAmount = formatYen,
 }: {
   title: string;
   emptyText: string;
@@ -51,6 +52,7 @@ function BreakdownList({
   expanded: boolean;
   onToggleExpanded: () => void;
   isDark: boolean;
+  formatAmount?: (value: number) => string;
 }) {
   const hiddenCount = Math.max(0, items.length - TOP_ITEMS_COUNT);
   const visibleItems = expanded ? items : items.slice(0, TOP_ITEMS_COUNT);
@@ -76,7 +78,7 @@ function BreakdownList({
                 }`}
               >
                 <span className="truncate">{item.label}</span>
-                <span className="font-semibold">{formatYen(item.amount)}</span>
+                <span className="font-semibold">{formatAmount(item.amount)}</span>
               </div>
             ))}
           </div>
@@ -311,6 +313,7 @@ export default function MonthlySummaryCard({
               expanded={showAllIncomeFrom}
               onToggleExpanded={() => setShowAllIncomeFrom((prev) => !prev)}
               isDark={isDark}
+              formatAmount={(value) => `+${Number(value ?? 0).toLocaleString()}円`}
             />
           )}
         </div>
