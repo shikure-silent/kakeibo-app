@@ -6,6 +6,7 @@ import HomePageContainer from "../../components/home/HomePageContainer";
 import InitialSetupSettingsCard from "../../components/setup/InitialSetupSettingsCard";
 import {
   isInitialSetupComplete,
+  isIntroWizardComplete,
   saveInitialSetupComplete,
 } from "../../lib/initialSetupStorage";
 
@@ -17,6 +18,10 @@ export default function SetupPage() {
     if (typeof window === "undefined") return;
     if (isInitialSetupComplete()) {
       router.replace("/calendar/");
+      return;
+    }
+    if (!isIntroWizardComplete()) {
+      router.replace("/intro/");
       return;
     }
     setReady(true);

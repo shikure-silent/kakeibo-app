@@ -107,7 +107,9 @@ export default function BottomNav() {
   const pathname = usePathname();
   const normalizedPathname = normalizePath(pathname);
   const isSetupFlow =
-    pathname.startsWith("/setup") || pathname.startsWith("/welcome");
+    pathname.startsWith("/intro") ||
+    pathname.startsWith("/setup") ||
+    pathname.startsWith("/welcome");
   const isPasswordRecoveryFlow =
     pathname.startsWith("/reset-password") || pathname.startsWith("/auth/confirm");
 

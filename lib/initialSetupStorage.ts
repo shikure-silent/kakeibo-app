@@ -6,6 +6,7 @@ export type InitialSetupState = {
 
 const INITIAL_SETUP_VERSION = 1;
 const INITIAL_SETUP_KEY = "kakeibo_initial_setup_v1";
+const INTRO_WIZARD_KEY = "kakeibo_intro_wizard_v1";
 export const INITIAL_SETUP_EVENT = "kakeibo:initial-setup-complete";
 
 export function loadInitialSetupState(): InitialSetupState {
@@ -56,6 +57,35 @@ export function clearInitialSetupState() {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.removeItem(INITIAL_SETUP_KEY);
+  } catch {
+    // noop
+  }
+}
+
+export function isIntroWizardComplete(): boolean {
+  if (typeof window === "undefined") return false;
+  if (isInitialSetupComplete()) return true;
+  try {
+    const raw = window.localStorage.getItem(INTRO_WIZARD_KEY);
+    return raw === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveIntroWizardComplete() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(INTRO_WIZARD_KEY, "1");
+  } catch {
+    // noop
+  }
+}
+
+export function clearIntroWizardState() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(INTRO_WIZARD_KEY);
   } catch {
     // noop
   }

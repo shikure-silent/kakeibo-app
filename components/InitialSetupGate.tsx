@@ -10,6 +10,7 @@ import {
 import { isHomeCycleConfirmed } from "../lib/homeStorage";
 
 const ALLOWED_PREFIXES = [
+  "/intro",
   "/setup",
   "/welcome",
   "/login",
