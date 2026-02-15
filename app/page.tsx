@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isInitialSetupComplete } from "../lib/initialSetupStorage";
+import {
+  isInitialSetupComplete,
+  isIntroWizardComplete,
+} from "../lib/initialSetupStorage";
 
 export default function RootPage() {
   const router = useRouter();
@@ -11,6 +14,8 @@ export default function RootPage() {
     if (typeof window === "undefined") return;
     if (isInitialSetupComplete()) {
       router.replace("/calendar/");
+    } else if (!isIntroWizardComplete()) {
+      router.replace("/intro/");
     } else {
       router.replace("/welcome/");
     }

@@ -69,7 +69,9 @@ export default function TopNav() {
   const [isIosNative, setIsIosNative] = useState(false);
   const menuRef = useClickOutside<HTMLDivElement>(() => setOpenMenu(false));
   const isSetupFlow =
-    pathname.startsWith("/setup") || pathname.startsWith("/welcome");
+    pathname.startsWith("/intro") ||
+    pathname.startsWith("/setup") ||
+    pathname.startsWith("/welcome");
   const isPasswordRecoveryFlow =
     pathname.startsWith("/reset-password") ||
     pathname.startsWith("/auth/confirm");

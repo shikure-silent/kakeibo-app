@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { isInitialSetupComplete } from "../../lib/initialSetupStorage";
+import {
+  isInitialSetupComplete,
+  isIntroWizardComplete,
+} from "../../lib/initialSetupStorage";
 
 export default function WelcomePage() {
   const router = useRouter();
@@ -13,6 +16,10 @@ export default function WelcomePage() {
     if (typeof window === "undefined") return;
     if (isInitialSetupComplete()) {
       router.replace("/calendar/");
+      return;
+    }
+    if (!isIntroWizardComplete()) {
+      router.replace("/intro/");
       return;
     }
     setReady(true);
