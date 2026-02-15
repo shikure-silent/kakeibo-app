@@ -120,7 +120,7 @@ export default function HomeSetupWizard({
   const ageGroupWarningText =
     budgetBase === "userAverage"
       ? "年代は、過去データが少ない場合の補完に使われます（未選択でもOK）。"
-      : "年代を選ぶと、全国×年代別の支出平均値を使って予算の初期値がより自然になります（未選択でもOK）。";
+      : "年代別の支出平均値を使って予算の計算ができます。（未選択でもOK）";
   const warningIncomeZero = totalIncome === 0;
   const warningBudgetZero = totalExpense === 0;
 
@@ -193,20 +193,6 @@ export default function HomeSetupWizard({
             <h2 className="text-sm lg:text-base font-semibold">
               世帯の基本情報
             </h2>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              収入入力人数と年代を先に決めておくと、後の入力がスムーズになります。
-            </p>
-          </div>
-
-          <div
-            className={`rounded-2xl border px-4 py-3 text-[11px] leading-snug ${
-              isDark
-                ? "border-slate-700 bg-slate-800 text-slate-200"
-                : "border-slate-100 bg-slate-50 text-slate-600"
-            }`}
-          >
-            このアプリはゲスト（未ログイン）でも使えます。
-            アカウントを作成してログインすると、データをクラウドに保存して引き継ぎができます。
           </div>
 
           <div className="space-y-1.5">
@@ -240,9 +226,7 @@ export default function HomeSetupWizard({
           </div>
 
           {warningAgeUnselected && (
-            <p className="text-[11px] text-amber-600">
-              {ageGroupWarningText}
-            </p>
+            <p className="text-[11px] text-amber-600">{ageGroupWarningText}</p>
           )}
 
           <div className="space-y-1.5">
@@ -257,7 +241,7 @@ export default function HomeSetupWizard({
               value={memberCount}
               onChange={(e) =>
                 onMemberCountChange(
-                  Math.min(10, Math.max(1, Number(e.target.value) || 1))
+                  Math.min(10, Math.max(1, Number(e.target.value) || 1)),
                 )
               }
               className="
@@ -285,9 +269,6 @@ export default function HomeSetupWizard({
         <div className="space-y-4">
           <div>
             <h2 className="text-sm lg:text-base font-semibold">収入入力</h2>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              世帯のメンバーごとの毎月の手取り収入を入力してください。
-            </p>
           </div>
 
           <div className="space-y-3">
@@ -316,7 +297,9 @@ export default function HomeSetupWizard({
                       borderColor: isDark ? "#475569" : "#e2e8f0",
                     }}
                   />
-                  <span className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+                  <span
+                    className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}
+                  >
                     名前は任意
                   </span>
                 </div>
@@ -335,9 +318,7 @@ export default function HomeSetupWizard({
             <p className={isDark ? "text-slate-200" : "text-slate-600"}>
               世帯収入合計
             </p>
-            <p className="font-semibold">
-              ¥{totalIncome.toLocaleString()}
-            </p>
+            <p className="font-semibold">¥{totalIncome.toLocaleString()}</p>
           </div>
 
           {warningIncomeZero && (
@@ -354,9 +335,6 @@ export default function HomeSetupWizard({
             <h2 className="text-sm lg:text-base font-semibold">
               支出予算の入力
             </h2>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
-              カテゴリ別の予算を入力してください。固定費は次月以降も反映されます。
-            </p>
           </div>
 
           <ExpenseInputsBlock
@@ -368,7 +346,9 @@ export default function HomeSetupWizard({
             onChangeCustomItemLabel={onChangeCustomExpenseLabel}
             onChangeCustomItemAmount={onChangeCustomExpenseAmount}
             onRemoveCustomItem={onRemoveCustomExpenseItem}
-            onToggleCustomItemCopyFromPrevious={onToggleCustomItemCopyFromPrevious}
+            onToggleCustomItemCopyFromPrevious={
+              onToggleCustomItemCopyFromPrevious
+            }
             autoUpdateMap={autoUpdateMap}
             onToggleAutoUpdateCategory={onToggleAutoUpdateCategory}
             customTemplates={customTemplates}
@@ -398,7 +378,9 @@ export default function HomeSetupWizard({
         <div className="space-y-4">
           <div>
             <h2 className="text-sm lg:text-base font-semibold">最終確認</h2>
-            <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <p
+              className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}
+            >
               収入と予算のバランスを確認して、この予算でスタートします。
             </p>
           </div>
@@ -410,7 +392,9 @@ export default function HomeSetupWizard({
                 : "border-emerald-200 bg-emerald-50"
             }`}
           >
-            <p className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+            <p
+              className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-600"}`}
+            >
               貯金見込み
             </p>
             <p
@@ -420,7 +404,9 @@ export default function HomeSetupWizard({
             >
               {saving >= 0 ? "" : "-"}¥{Math.abs(saving).toLocaleString()}
             </p>
-            <p className={`mt-1 text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+            <p
+              className={`mt-1 text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}
+            >
               {saving >= 0
                 ? "この予算なら、今月は黒字見込みです。"
                 : "この予算だと、今月は赤字見込みです。"}
@@ -435,10 +421,14 @@ export default function HomeSetupWizard({
                   : "border-slate-100 bg-slate-50"
               }`}
             >
-              <p className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+              <p
+                className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}
+              >
                 収入合計
               </p>
-              <p className="text-sm font-semibold">¥{totalIncome.toLocaleString()}</p>
+              <p className="text-sm font-semibold">
+                ¥{totalIncome.toLocaleString()}
+              </p>
             </div>
             <div
               className={`rounded-2xl border px-4 py-3 ${
@@ -447,7 +437,9 @@ export default function HomeSetupWizard({
                   : "border-slate-100 bg-slate-50"
               }`}
             >
-              <p className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+              <p
+                className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}
+              >
                 予算合計
               </p>
               <p className="text-sm font-semibold text-emerald-700">
@@ -461,7 +453,9 @@ export default function HomeSetupWizard({
                   : "border-slate-100 bg-slate-50"
               }`}
             >
-              <p className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}>
+              <p
+                className={`text-[11px] ${isDark ? "text-slate-300" : "text-slate-500"}`}
+              >
                 貯金率
               </p>
               <p className="text-sm font-semibold">
@@ -517,7 +511,9 @@ export default function HomeSetupWizard({
             }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-sm font-semibold">この予算でよろしいですか？</h3>
+            <h3 className="text-sm font-semibold">
+              この予算でよろしいですか？
+            </h3>
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
