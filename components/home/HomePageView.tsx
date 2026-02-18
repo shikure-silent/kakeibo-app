@@ -54,6 +54,7 @@ type Props = {
   wizardEntryMode: "full" | "income" | "budget";
   wizardStep: number;
   onWizardStepChange: (step: number) => void;
+  onWizardBackToSetupIntro?: () => void;
   showSetupIntro?: boolean;
   onStartSetupWizard?: () => void;
   onWizardStartOver: () => void;
@@ -107,6 +108,7 @@ export function HomePageView({
   wizardEntryMode,
   wizardStep,
   onWizardStepChange,
+  onWizardBackToSetupIntro,
   showSetupIntro = false,
   onStartSetupWizard,
   onWizardStartOver,
@@ -182,6 +184,7 @@ export function HomePageView({
                 entryMode={wizardEntryMode}
                 step={wizardStep}
                 onStepChange={onWizardStepChange}
+                onBackToSetupIntro={onWizardBackToSetupIntro}
                 onStartOver={onWizardStartOver}
                 onConfirmStart={onWizardConfirmStart}
                 ageGroup={ageGroup}
