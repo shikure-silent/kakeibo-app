@@ -64,11 +64,19 @@ export default function IntroPage() {
   const [index, setIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [animateNextArrow, setAnimateNextArrow] = useState(false);
+  const [fromSettings, setFromSettings] = useState(false);
 
   const isLast = index === INTRO_STEPS.length - 1;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    const viaSettings =
+      new URLSearchParams(window.location.search).get("from") === "settings";
+    setFromSettings(viaSettings);
+    if (viaSettings) {
+      setReady(true);
+      return;
+    }
     if (isInitialSetupComplete()) {
       router.replace("/calendar/");
       return;
@@ -82,6 +90,10 @@ export default function IntroPage() {
 
   const goNext = () => {
     if (isLast) {
+      if (fromSettings) {
+        router.replace("/settings/");
+        return;
+      }
       saveIntroWizardComplete();
       router.replace("/welcome/");
       return;
@@ -195,7 +207,11 @@ export default function IntroPage() {
               onClick={goNext}
               className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700"
             >
-              {isLast ? "ウェルカムへ" : "次へ"}
+              {isLast
+                ? fromSettings
+                  ? "設定ページに戻る"
+                  : "here we go!"
+                : "次へ"}
               {!isLast ? (
                 <span
                   className={`inline-block transition-transform duration-150 ${
