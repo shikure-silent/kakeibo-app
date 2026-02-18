@@ -14,7 +14,11 @@ import {
   loadBudgetWithFallback,
   loadDetailsFromStorage,
 } from "../../lib/calendarStorage";
-import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
+import {
+  getEffectivePaydayForMonth,
+  getPayPeriodForMonth,
+  listDatesInPeriod,
+} from "../../lib/payPeriod";
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import MonthlySummaryCard from "../calendar/MonthlySummaryCard";
 
@@ -131,7 +135,12 @@ export default function MonthlySummarySection() {
       return { year: currentYear, month: currentMonth };
     }
     const todayDay = now.getDate();
-    if (todayDay < payday) {
+    const effectivePaydayThisMonth = getEffectivePaydayForMonth(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      payday
+    );
+    if (todayDay < effectivePaydayThisMonth) {
       return { year: currentYear, month: currentMonth };
     }
     let nextMonth = now.getMonth() + 2;

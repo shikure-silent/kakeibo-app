@@ -1,20 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState, type ChangeEvent } from "react";
 import type {
   AppSettings,
   NotificationPresetOption,
 } from "../../lib/settingsStorage";
+import { requestInitialNotificationPermissionOnce } from "../../lib/notifications";
+import { OsNotificationSection } from "./OsNotificationSection";
 
 type OnChangeSetting = <K extends keyof AppSettings>(
   key: K,
-  value: AppSettings[K]
+  value: AppSettings[K],
 ) => void;
 
 type Props = {
   settings: AppSettings;
   onChangeSetting: OnChangeSetting;
   showHeader?: boolean;
+  isDark?: boolean;
 };
 
 type PresetDefinition = {
@@ -78,18 +82,30 @@ const PRESETS: PresetDefinition[] = [
   },
 ];
 
+const normalizeDigits = (value: string) =>
+  value
+    .replace(/[０-９]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) - 0xfee0))
+    .replace(/[^0-9]/g, "");
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function applyPreset(
   presetKey: Exclude<NotificationPresetOption, "custom">,
-  onChangeSetting: OnChangeSetting
+  onChangeSetting: OnChangeSetting,
 ) {
   const preset = PRESETS.find((item) => item.key === presetKey);
   if (!preset) return;
   const entries = Object.entries(preset.values) as [
     keyof PresetDefinition["values"],
-    PresetDefinition["values"][keyof PresetDefinition["values"]]
+    PresetDefinition["values"][keyof PresetDefinition["values"]],
   ][];
   entries.forEach(([key, value]) =>
-    onChangeSetting(key as keyof AppSettings, value as AppSettings[keyof AppSettings])
+    onChangeSetting(
+      key as keyof AppSettings,
+      value as AppSettings[keyof AppSettings],
+    ),
   );
 }
 
@@ -97,8 +113,36 @@ export function SavingSupportSection({
   settings,
   onChangeSetting,
   showHeader = true,
+  isDark = false,
 }: Props) {
   const selectedPreset = settings.notificationPreset ?? "recommended";
+  const [inputGapDays, setInputGapDays] = useState(
+    String(settings.inputGapDays ?? 2),
+  );
+
+  useEffect(() => {
+    setInputGapDays(String(settings.inputGapDays ?? 2));
+  }, [settings.inputGapDays]);
+
+  const handleInputGapChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setInputGapDays(normalizeDigits(e.target.value));
+  };
+
+  const handleInputGapBlur = () => {
+    if (!inputGapDays) {
+      const fallback = settings.inputGapDays ?? 2;
+      setInputGapDays(String(fallback));
+      onChangeSetting("inputGapDays", fallback);
+      return;
+    }
+    let next = Number(inputGapDays);
+    if (!Number.isFinite(next)) {
+      next = settings.inputGapDays ?? 2;
+    }
+    next = clampNumber(next, 0, 30);
+    setInputGapDays(String(next));
+    onChangeSetting("inputGapDays", next);
+  };
 
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
@@ -116,7 +160,7 @@ export function SavingSupportSection({
       <div className="mt-4 space-y-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            通知プリセット
+            貯金サポート通知プリセット
           </p>
           {selectedPreset === "custom" && (
             <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
@@ -171,6 +215,58 @@ export function SavingSupportSection({
           >
             詳細設定を開く
           </Link>
+        </div>
+
+        <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-950/30">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                入力忘れ防止通知
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                数日入力が空いたときに声かけを出します。
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              className="h-5 w-5 accent-emerald-600"
+              checked={!!settings.enableInputGapReminder}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                onChangeSetting("enableInputGapReminder", checked);
+                if (checked) {
+                  void requestInitialNotificationPermissionOnce();
+                }
+              }}
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-slate-600 dark:text-slate-300">
+              何日空いたら通知する？
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={inputGapDays}
+              onChange={handleInputGapChange}
+              onBlur={handleInputGapBlur}
+              disabled={!settings.enableInputGapReminder}
+              className={`h-9 w-20 rounded-full border px-3 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-300 ${
+                settings.enableInputGapReminder
+                  ? "border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+                  : "border-slate-200 bg-white text-slate-700 opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+              }`}
+            />
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              日
+            </span>
+          </div>
+        </div>
+
+        <div id="osnotify">
+          <OsNotificationSection isDark={isDark} />
         </div>
       </div>
     </section>
