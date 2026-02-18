@@ -17,6 +17,7 @@ type Props = {
   entryMode?: "full" | "income" | "budget";
   step: number;
   onStepChange: (step: number) => void;
+  onBackToSetupIntro?: () => void;
   onStartOver: () => void;
   onConfirmStart: () => void;
   ageGroup: AgeGroup;
@@ -55,6 +56,7 @@ export default function HomeSetupWizard({
   entryMode = "full",
   step,
   onStepChange,
+  onBackToSetupIntro,
   onStartOver,
   onConfirmStart,
   ageGroup,
@@ -89,6 +91,7 @@ export default function HomeSetupWizard({
   const clampedStep = Math.min(Math.max(step, 1), MAX_STEP);
   const visibleMembers = incomeMembers.slice(0, Math.max(memberCount, 1));
   const isIncomeOnly = entryMode === "income";
+  const canBackToSetupIntro = !!onBackToSetupIntro;
 
   useEffect(() => {
     if (!isConfirmModalOpen) return;
@@ -100,6 +103,10 @@ export default function HomeSetupWizard({
   }, [isConfirmModalOpen]);
 
   const handlePrev = () => {
+    if (clampedStep === 1 && canBackToSetupIntro) {
+      onBackToSetupIntro();
+      return;
+    }
     if (isIncomeOnly && clampedStep === 4) {
       onStepChange(2);
       return;
@@ -470,9 +477,9 @@ export default function HomeSetupWizard({
         <button
           type="button"
           onClick={handlePrev}
-          disabled={clampedStep === 1}
+          disabled={clampedStep === 1 && !canBackToSetupIntro}
           className={`rounded-full px-4 py-2 text-xs font-semibold border ${
-            clampedStep === 1
+            clampedStep === 1 && !canBackToSetupIntro
               ? "opacity-40 cursor-not-allowed"
               : "hover:bg-slate-50"
           } ${isDark ? "border-slate-600 text-slate-100" : "border-slate-200 text-slate-700"}`}

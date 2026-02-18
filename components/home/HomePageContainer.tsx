@@ -1028,6 +1028,15 @@ export default function HomePageContainer({
       wizardEntryMode={wizardEntryMode}
       wizardStep={wizardStep}
       onWizardStepChange={setWizardStep}
+      onWizardBackToSetupIntro={
+        variant === "setup"
+          ? () => {
+              setSetupIntroCompleted(false);
+              setWizardEntryMode("full");
+              setWizardStep(1);
+            }
+          : undefined
+      }
       showSetupIntro={variant === "setup" && homeMode === "setup" && !setupIntroCompleted}
       onStartSetupWizard={() => {
         setSetupIntroCompleted(true);

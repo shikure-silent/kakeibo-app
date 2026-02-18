@@ -26,7 +26,6 @@ import {
 
 import { ThemeSettingsSection } from "../../components/settings/ThemeSettingsSection";
 import { SavingSupportSection } from "../../components/settings/SavingSupportSection";
-import { OsNotificationSection } from "../../components/settings/OsNotificationSection";
 import { CategorySettingsSection } from "../../components/settings/CategorySettingsSection";
 import { AggregationSettingsSection } from "../../components/settings/AggregationSettingsSection";
 import { AccountLoginSection } from "../../components/settings/AccountLoginSection";
@@ -40,7 +39,7 @@ import {
 } from "../../lib/localBackup";
 
 // バージョンは package.json から取るのが面倒なら、ここでベタ書きでもOK
-const APP_VERSION = "0.9.0-beta";
+const APP_VERSION = "1.0.0";
 const SHOW_DATA_MANAGEMENT = false;
 
 export default function SettingsPage() {
@@ -376,11 +375,8 @@ export default function SettingsPage() {
             settings={settings}
             onChangeSetting={handleChangeSetting}
             showHeader={true}
+            isDark={isDark}
           />
-        </section>
-
-        <section id="osnotify">
-          <OsNotificationSection isDark={isDark} />
         </section>
 
         <section id="category" className="space-y-2">

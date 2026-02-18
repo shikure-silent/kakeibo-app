@@ -17,7 +17,11 @@ import {
   loadAppSettings,
 } from "../../lib/settingsStorage";
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
-import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
+import {
+  getEffectivePaydayForMonth,
+  getPayPeriodForMonth,
+  listDatesInPeriod,
+} from "../../lib/payPeriod";
 import CalendarView from "../../components/calendar/CalendarView";
 import {
   buildSavingSupportState,
@@ -316,7 +320,12 @@ export default function CalendarPage() {
       return { year: currentYear, month: currentMonth };
     }
     const todayDay = today.getDate();
-    if (todayDay < payday) {
+    const effectivePaydayThisMonth = getEffectivePaydayForMonth(
+      today.getFullYear(),
+      today.getMonth() + 1,
+      payday
+    );
+    if (todayDay < effectivePaydayThisMonth) {
       return { year: currentYear, month: currentMonth };
     }
     let nextMonth = today.getMonth() + 2;

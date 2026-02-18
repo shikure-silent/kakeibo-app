@@ -66,11 +66,6 @@ export function AppInfoSection({ version, isDark = false }: Props) {
           ログインしていない場合、家計簿データはこの端末内に保存されます。
           ログインしている場合は、端末内保存に加えてクラウドへ自動保存され、機種変更時も同じアカウントで引き継げます。
         </p>
-        <p
-          className={`text-[10px] ${isDark ? "text-slate-400" : "text-slate-400"}`}
-        >
-          端末データはブラウザの「サイトデータの削除」で消えるためご注意ください。必要なときは「クラウド復元」を利用できます。
-        </p>
       </div>
 
       <div className="space-y-1">
@@ -86,6 +81,24 @@ export function AppInfoSection({ version, isDark = false }: Props) {
         >
           「全国×年代別の支出平均値」をベースに、無理なく貯金できるペースをつかむことを目指した家計簿アプリです。
         </p>
+      </div>
+
+      <div className="space-y-1">
+        <p
+          className={`text-[11px] font-medium ${
+            isDark ? "text-slate-200" : "text-slate-600"
+          }`}
+        >
+          使い方ガイド
+        </p>
+        <Link
+          href="/intro?from=settings"
+          className={`inline-flex items-center gap-1 text-[12px] font-semibold ${
+            isDark ? "text-emerald-200" : "text-emerald-700"
+          } hover:underline`}
+        >
+          このアプリの使い方を見る
+        </Link>
       </div>
 
       <div className="space-y-1">

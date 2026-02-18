@@ -14,7 +14,11 @@ import {
   loadAppSettings,
   SETTINGS_EVENT,
 } from "../../lib/settingsStorage";
-import { getPayPeriodForMonth, listDatesInPeriod } from "../../lib/payPeriod";
+import {
+  getEffectivePaydayForMonth,
+  getPayPeriodForMonth,
+  listDatesInPeriod,
+} from "../../lib/payPeriod";
 import BudgetHighlightCard from "../calendar/BudgetHighlightCard";
 
 type PeriodDailyInfo = {
@@ -80,7 +84,12 @@ export default function RemainingBudgetCard({ isDark = false }: Props) {
       return { year: currentYear, month: currentMonth };
     }
     const todayDay = now.getDate();
-    if (todayDay < payday) {
+    const effectivePaydayThisMonth = getEffectivePaydayForMonth(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      payday
+    );
+    if (todayDay < effectivePaydayThisMonth) {
       return { year: currentYear, month: currentMonth };
     }
     let nextMonth = now.getMonth() + 2;

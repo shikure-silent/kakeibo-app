@@ -9,6 +9,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:ios": "npm run build && npx cap copy ios",
+    "build:ios:clean": "rm -rf .next out && npm run build:ios",
     "copy:ios": "npx cap copy ios",
     "start": "next start",
     "lint": "next lint"
