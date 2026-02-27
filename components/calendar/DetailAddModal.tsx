@@ -9,6 +9,12 @@ import {
 import {
   loadPayFromPresets,
 } from "../../lib/settingsStorage";
+import { createNewDetailRecord } from "../../lib/detailSync";
+import {
+  MAX_ENTRY_AMOUNT,
+  MAX_ENTRY_AMOUNT_DIGITS,
+  isValidEntryAmount,
+} from "../../lib/amountValidation";
 
 type Props = {
   open: boolean;
@@ -49,8 +55,7 @@ export function DetailAddModal({
   );
 
   const [draft, setDraft] = useState<DetailRecord>(() => {
-    const now = new Date();
-    return {
+    return createNewDetailRecord({
       mode: "expense",
       amount: 0,
       category: "",
@@ -58,10 +63,10 @@ export function DetailAddModal({
       memo: "",
       shopName: "",
       date: "",
-      createdAt: now.toISOString(),
-    } as DetailRecord;
+    });
   });
   const [amountText, setAmountText] = useState("");
+  const [showAmountLimitWarning, setShowAmountLimitWarning] = useState(false);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
   const [isCategoryManagerEdit, setIsCategoryManagerEdit] = useState(false);
@@ -167,7 +172,9 @@ export function DetailAddModal({
 
   const handleChangeAmount = (raw: string) => {
     const half = toHalfWidthNumber(raw);
-    const digitsOnly = half.replace(/[^\d]/g, "");
+    const normalized = half.replace(/[^\d]/g, "");
+    const digitsOnly = normalized.slice(0, MAX_ENTRY_AMOUNT_DIGITS);
+    setShowAmountLimitWarning(normalized.length > MAX_ENTRY_AMOUNT_DIGITS);
 
     if (digitsOnly === "") {
       setAmountText("");
@@ -190,8 +197,16 @@ export function DetailAddModal({
   };
 
   const handleConfirmSubmit = () => {
+    if (!isValidEntryAmount(Number(draft.amount ?? 0))) {
+      window.alert(`金額は1〜${MAX_ENTRY_AMOUNT.toLocaleString()}円で入力してください。`);
+      return;
+    }
     setIsSubmitConfirmOpen(false);
-    onConfirm(draft);
+    onConfirm(
+      createNewDetailRecord({
+        ...draft,
+      })
+    );
   };
 
   const normalizeCategoryList = (list: string[]) => {
@@ -653,12 +668,12 @@ export function DetailAddModal({
             inputMode="numeric"
             className="
               w-full rounded-lg border border-slate-300 bg-white
-              px-2 py-1 text-[12px] text-slate-800
+              px-2 py-1 text-right text-[12px] text-slate-800
               focus:outline-none focus:ring-2 focus:ring-emerald-300
             "
             value={amountText}
             onChange={(e) => handleChangeAmount(e.target.value)}
-            placeholder="例：1200"
+            placeholder="例：1,200"
           />
           <p className="text-[10px] text-slate-500">
             入力中:{" "}
@@ -668,6 +683,11 @@ export function DetailAddModal({
               )}
             </span>
           </p>
+          {showAmountLimitWarning && (
+            <p className="text-[10px] text-amber-600">
+              {MAX_ENTRY_AMOUNT_DIGITS}桁まで入力できます。
+            </p>
+          )}
         </div>
 
         {/* メモ */}
