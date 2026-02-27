@@ -1,27 +1,6 @@
 import { DetailRecord, MonthlyBudget } from "../types/calendar";
 import { buildBudgetKey, buildDetailsKey, buildSpendingKey } from "./const";
-
-const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
-
-const normalizeDetailRecord = (value: unknown): DetailRecord | null => {
-  if (!isObjectRecord(value)) return null;
-
-  const mode = value.mode === "income" ? "income" : "expense";
-  const amountRaw = Number(value.amount);
-  const amount = Number.isFinite(amountRaw) ? amountRaw : 0;
-
-  return {
-    mode,
-    amount,
-    category: typeof value.category === "string" ? value.category : "",
-    payFrom: typeof value.payFrom === "string" ? value.payFrom : "",
-    shopName: typeof value.shopName === "string" ? value.shopName : undefined,
-    memo: typeof value.memo === "string" ? value.memo : "",
-    date: typeof value.date === "string" ? value.date : "",
-    createdAt: typeof value.createdAt === "string" ? value.createdAt : "",
-  };
-};
+import { loadDeletedRecordIds, normalizeDetailRecords } from "./detailSync";
 
 // localStorage に日別支出合計を保存／読込
 export const loadAmountsFromStorage = (
@@ -65,11 +44,13 @@ export const loadDetailsFromStorage = (
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed
-        .map((item) => normalizeDetailRecord(item))
-        .filter((item): item is DetailRecord => item !== null);
-    }
+    const deletedIds = loadDeletedRecordIds();
+    const fallbackDate = `${year}-${String(month).padStart(2, "0")}-${String(
+      day
+    ).padStart(2, "0")}`;
+    return normalizeDetailRecords(parsed, fallbackDate).filter(
+      (item) => !!item.id && !deletedIds.has(item.id)
+    );
   } catch {
     // noop
   }
