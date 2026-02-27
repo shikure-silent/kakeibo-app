@@ -13,6 +13,7 @@ import {
 import { DetailAddModal } from "./DetailAddModal";
 import { DetailConfirmModal } from "./DetailConfirmModal";
 import { DetailListItem } from "./DetailListItem";
+import { MAX_ENTRY_AMOUNT, isValidEntryAmount } from "../../lib/amountValidation";
 
 type Props = {
   selectedDay: number | null;
@@ -190,6 +191,12 @@ export default function SelectedDayDetailsCard({
         isDark={isDark}
         onConfirm={(rec) => {
           const digits = Number(rec.amount ?? 0);
+          if (!isValidEntryAmount(digits)) {
+            window.alert(
+              `金額は1〜${MAX_ENTRY_AMOUNT.toLocaleString()}円で入力してください。`
+            );
+            return;
+          }
           const normalized: DetailRecord = {
             ...rec,
             amount: Number.isNaN(digits) ? 0 : digits,
