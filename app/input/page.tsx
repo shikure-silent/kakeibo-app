@@ -16,6 +16,13 @@ import {
 } from "../../lib/settingsStorage";
 import { useResolvedTheme } from "../../lib/useResolvedTheme";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
+import {
+  addDeletedRecordId,
+  createNewDetailRecord,
+  normalizeDetailRecords,
+  touchDetailRecord,
+} from "../../lib/detailSync";
+import { MAX_ENTRY_AMOUNT, isValidEntryAmount } from "../../lib/amountValidation";
 
 // 日付文字列を生成（YYYY-MM-DD）
 const getTodayDateString = () => {
@@ -61,13 +68,10 @@ const loadDetailsForDate = (dateStr: string): DetailRecord[] => {
   if (!raw) return [];
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed as DetailRecord[];
-    }
+    return normalizeDetailRecords(parsed, dateStr).filter((rec) => !rec.deletedAt);
   } catch {
     return [];
   }
-  return [];
 };
 
 // ある日付の明細を書き込む（＋その月の支出サマリーを更新）
@@ -189,15 +193,14 @@ export default function InputPage() {
     }
 
     const numeric = Number(normalizedStr);
-    if (!Number.isFinite(numeric) || numeric <= 0) {
-      alert("金額は0より大きい数字で入力してください。");
+    if (!isValidEntryAmount(numeric)) {
+      alert(`金額は1〜${MAX_ENTRY_AMOUNT.toLocaleString()}円で入力してください。`);
       return;
     }
 
-    const now = new Date();
     const categoryToSave =
       customCategory.trim() !== "" ? customCategory.trim() : category;
-    const newRecord: DetailRecord = {
+    const newRecord: DetailRecord = createNewDetailRecord({
       mode,
       amount: numeric,
       category: categoryToSave,
@@ -205,8 +208,7 @@ export default function InputPage() {
       shopName: "",
       memo: memo.trim(),
       date: dateStr,
-      createdAt: now.toISOString(),
-    };
+    });
 
     setDayRecords((prev) => {
       const next = [...prev, newRecord];
@@ -223,6 +225,8 @@ export default function InputPage() {
   const handleDeleteRecord = (index: number) => {
     if (!isClient) return;
     setDayRecords((prev) => {
+      const target = prev[index];
+      if (target?.id) addDeletedRecordId(target.id);
       const next = prev.filter((_, i) => i !== index);
       saveDetailsForDate(dateStr, next);
       return next;
@@ -232,7 +236,9 @@ export default function InputPage() {
   const handleUpdateRecord = (index: number, updated: DetailRecord) => {
     if (!isClient) return;
     setDayRecords((prev) => {
-      const next = prev.map((item, i) => (i === index ? updated : item));
+      const next = prev.map((item, i) =>
+        i === index ? touchDetailRecord(updated) : item
+      );
       saveDetailsForDate(dateStr, next);
       return next;
     });
