@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useSupabaseAuth } from "../../lib/useSupabaseAuth";
 import { clearKakeiboKeys } from "../../lib/cloudSync";
@@ -18,6 +19,7 @@ function maskEmail(email: string) {
 }
 
 export function AccountLoginSection() {
+  const router = useRouter();
   const { supabase, user, isLoading } = useSupabaseAuth();
 
   const [mounted, setMounted] = useState(false);
@@ -129,27 +131,13 @@ export function AccountLoginSection() {
 
                       setDeletingAccount(true);
                       try {
-                        const { data, error: sessionError } =
-                          await supabase.auth.getSession();
-                        if (sessionError || !data.session?.access_token) {
+                        const { error } = await supabase.functions.invoke(
+                          "delete-account",
+                          { method: "DELETE" },
+                        );
+                        if (error) {
                           throw new Error(
-                            "認証セッションを確認できませんでした。再ログインしてお試しください。"
-                          );
-                        }
-
-                        const res = await fetch("/api/account/delete", {
-                          method: "DELETE",
-                          headers: {
-                            Authorization: `Bearer ${data.session.access_token}`,
-                          },
-                        });
-                        if (!res.ok) {
-                          const body = (await res.json().catch(() => null)) as
-                            | { error?: string }
-                            | null;
-                          throw new Error(
-                            body?.error ??
-                              "アカウント削除に失敗しました。時間をおいて再度お試しください。"
+                            "アカウント削除に失敗しました。時間をおいて再度お試しください。",
                           );
                         }
 
@@ -160,7 +148,7 @@ export function AccountLoginSection() {
                           message: "アカウントを削除しました。",
                           tone: "info",
                         });
-                        window.location.href = "/signup/";
+                        router.replace("/signup/");
                       } catch (e) {
                         const message =
                           e instanceof Error

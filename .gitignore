@@ -28,6 +28,8 @@ coverage/
 .cache/
 tmp/
 temp/
+deno.lock
+supabase/.temp/
 
 # OS files
 .DS_Store
@@ -43,9 +45,4 @@ Thumbs.db
 
 # iOS generated local files
 ios/App/.DS_Store
-ios/App/App/config\ 31.xml
-ios/App/App/config\ 32.xml
-ios/App/App/config\ 33.xml
-ios/App/App/config\ 34.xml
-ios/App/App/config\ 35.xml
-ios/App/App/config\ 36.xml
+ios/App/App/config [0-9]*.xml
