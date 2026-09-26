@@ -6,8 +6,13 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "../../lib/supabaseClient";
 import { setFlashToast } from "../../lib/flashToast";
 import { getActiveUserId, setActiveUserId } from "../../lib/accountScope";
-import { clearKakeiboKeys, importKakeiboDump } from "../../lib/cloudSync";
-import { loadKakeiboState } from "../../lib/kakeiboStateRepo";
+import {
+  clearKakeiboKeys,
+  exportKakeiboDump,
+  importKakeiboDump,
+  mergeKakeiboDumps,
+} from "../../lib/cloudSync";
+import { loadKakeiboState, saveKakeiboState } from "../../lib/kakeiboStateRepo";
 import type { User } from "@supabase/supabase-js";
 import { toJapaneseAuthErrorMessage } from "../../lib/authErrorMessageJa";
 import { safeNextPath } from "../../lib/safeNextPath";
@@ -75,13 +80,13 @@ function LoginPageInner() {
 
       setActiveUserId(user.id);
 
-      // ✅ クラウドに保存があるなら自動復元（なければ何もしない）
-      const dump = await loadKakeiboState(supabase, user.id);
-      if (dump) {
-        importKakeiboDump(dump, { includeSettings: true, clearBefore: true });
-      }
-      // dump が無いだけでローカルデータを消すと、
-      // 初回クラウド利用ユーザーの端末データが消えるため削除しない。
+      // ログイン直後に「ローカル + クラウド」を統合。
+      // 競合は明細ID/updatedAtで解決し、統合結果を即クラウド保存する。
+      const localDump = exportKakeiboDump({ includeSettings: true });
+      const remoteDump = (await loadKakeiboState(supabase, user.id)) ?? {};
+      const mergedDump = mergeKakeiboDumps(localDump, remoteDump);
+      importKakeiboDump(mergedDump, { includeSettings: true, clearBefore: true });
+      await saveKakeiboState(supabase, user.id, mergedDump);
 
       // 画面を整える
       setFlashToast({ message: "ログインしました。", tone: "success" });

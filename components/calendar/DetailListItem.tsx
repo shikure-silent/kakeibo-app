@@ -8,6 +8,11 @@ import {
   INCOME_CATEGORIES,
   PAY_FROM_OPTIONS,
 } from "../../lib/const";
+import {
+  MAX_ENTRY_AMOUNT,
+  MAX_ENTRY_AMOUNT_DIGITS,
+  isValidEntryAmount,
+} from "../../lib/amountValidation";
 
 const toHalfWidthNumber = (value: string) =>
   value.replace(/[０-９]/g, (ch) =>
@@ -60,6 +65,7 @@ export function DetailListItem({
   const [expenseCategoryDraft, setExpenseCategoryDraft] = useState<string[]>([]);
   const [incomeCategoryDraft, setIncomeCategoryDraft] = useState<string[]>([]);
   const [showPayFromSuggestions, setShowPayFromSuggestions] = useState(false);
+  const [showAmountLimitWarning, setShowAmountLimitWarning] = useState(false);
   const payFromRef = useRef<HTMLDivElement | null>(null);
   const touchDragTimerRef = useRef<number | null>(null);
   const touchDragStartedRef = useRef(false);
@@ -525,7 +531,7 @@ export function DetailListItem({
         </div>
 
         {/* 金額（既存行） */}
-        <div className="w-32 space-y-1 text-right">
+        <div className="w-36 max-w-full space-y-1 text-right">
           <label className="block text-[11px] text-slate-500 text-left">
             金額
           </label>
@@ -538,11 +544,15 @@ export function DetailListItem({
               record.amount === undefined ||
               Number.isNaN(Number(record.amount))
                 ? ""
-                : String(record.amount)
+                : Number(record.amount).toLocaleString("ja-JP")
             }
             onChange={(e) => {
               const half = toHalfWidthNumber(e.target.value);
-              const digitsOnly = half.replace(/[^\d]/g, "");
+              const normalized = half.replace(/[^\d]/g, "");
+              const digitsOnly = normalized.slice(0, MAX_ENTRY_AMOUNT_DIGITS);
+              setShowAmountLimitWarning(
+                normalized.length > MAX_ENTRY_AMOUNT_DIGITS
+              );
               const num = digitsOnly === "" ? NaN : Number(digitsOnly);
               const amount = Number.isNaN(num) ? 0 : num;
 
@@ -558,6 +568,11 @@ export function DetailListItem({
               {formatAmountInt(record.amount)}
             </span>
           </p>
+          {showAmountLimitWarning && (
+            <p className="text-[10px] text-amber-600 text-left">
+              {MAX_ENTRY_AMOUNT_DIGITS}桁まで入力できます。
+            </p>
+          )}
         </div>
       </div>
 
@@ -680,7 +695,15 @@ export function DetailListItem({
         </button>
         <button
           type="button"
-          onClick={() => setIsEditing(false)}
+          onClick={() => {
+            if (!isValidEntryAmount(Number(record.amount ?? 0))) {
+              window.alert(
+                `金額は1〜${MAX_ENTRY_AMOUNT.toLocaleString()}円で入力してください。`
+              );
+              return;
+            }
+            setIsEditing(false);
+          }}
           className="inline-flex min-h-9 items-center justify-center rounded-full bg-emerald-600 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-emerald-700"
         >
           保存

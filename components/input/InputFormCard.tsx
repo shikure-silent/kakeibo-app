@@ -16,6 +16,7 @@ import {
   saveExpenseCategories,
   saveIncomeCategories,
 } from "../../lib/settingsStorage";
+import { MAX_ENTRY_AMOUNT_DIGITS } from "../../lib/amountValidation";
 
 type Props = {
   mode: Mode;
@@ -752,6 +753,7 @@ export default function InputFormCard({
               value={amount}
               onChange={onChangeAmount}
               placeholder="例: 3,000"
+              maxDigits={MAX_ENTRY_AMOUNT_DIGITS}
               isDark={isDark}
             />
           </div>

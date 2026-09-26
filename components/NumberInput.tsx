@@ -7,6 +7,7 @@ type Props = {
   value: string; // 親からは「カンマなしの数字文字列」が来る想定
   onChange: (value: string) => void;
   placeholder?: string;
+  maxDigits?: number;
   isDark?: boolean;
 };
 
@@ -31,9 +32,11 @@ export default function NumberInput({
   value,
   onChange,
   placeholder,
+  maxDigits,
   isDark = false,
 }: Props) {
-  const [showWarning, setShowWarning] = useState(false);
+  const [showInvalidWarning, setShowInvalidWarning] = useState(false);
+  const [showLimitWarning, setShowLimitWarning] = useState(false);
 
   // 見た目用の値（カンマ付き）
   const displayValue = formatWithComma(value);
@@ -47,14 +50,14 @@ export default function NumberInput({
       >
         {label}
       </label>
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         <input
           type="text"
           inputMode="numeric"
           // カンマ付き表示を許容
           pattern="[0-9,]*"
           className="
-            flex-1 rounded-xl border
+            min-w-0 flex-1 rounded-xl border
             px-3 py-2 text-sm
             text-right
             shadow-sm
@@ -73,11 +76,20 @@ export default function NumberInput({
             const hasFullWidthOrInvalid =
               /[０-９]/.test(raw) || /[^0-9,\s]/.test(raw);
 
-            setShowWarning(hasFullWidthOrInvalid && raw.trim().length > 0);
+            setShowInvalidWarning(hasFullWidthOrInvalid && raw.trim().length > 0);
 
             // 親には「カンマなしの数字文字列」を渡す（今まで通り）
             const normalized = normalizeNumber(raw);
-            onChange(normalized);
+            const limited =
+              typeof maxDigits === "number" && maxDigits > 0
+                ? normalized.slice(0, maxDigits)
+                : normalized;
+            setShowLimitWarning(
+              typeof maxDigits === "number" &&
+                maxDigits > 0 &&
+                normalized.length > maxDigits
+            );
+            onChange(limited);
           }}
           placeholder={placeholder}
         />
@@ -85,9 +97,14 @@ export default function NumberInput({
           円 / 月
         </span>
       </div>
-      {showWarning && (
+      {showInvalidWarning && (
         <p className="text-[11px] text-amber-600">
           半角数字のみ入力してください（全角は自動的に半角に変換されます）
+        </p>
+      )}
+      {showLimitWarning && maxDigits && (
+        <p className="text-[11px] text-amber-600">
+          {maxDigits}桁まで入力できます。
         </p>
       )}
     </div>

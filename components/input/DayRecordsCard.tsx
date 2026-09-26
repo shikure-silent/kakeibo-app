@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import { DetailRecord } from "../../types/calendar";
+import { MAX_ENTRY_AMOUNT, MAX_ENTRY_AMOUNT_DIGITS, isValidEntryAmount } from "../../lib/amountValidation";
 
 type Props = {
   dateLabel: string;
@@ -58,8 +59,8 @@ export default function DayRecordsCard({
   const saveEdit = () => {
     if (editingIndex == null || !draft) return;
     const amount = Number(draft.amount || 0);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      window.alert("金額は0より大きい数字で入力してください。");
+    if (!isValidEntryAmount(amount)) {
+      window.alert(`金額は1〜${MAX_ENTRY_AMOUNT.toLocaleString()}円で入力してください。`);
       return;
     }
     onUpdateRecord(editingIndex, {
@@ -217,7 +218,9 @@ export default function DayRecordsCard({
                           const half = e.target.value.replace(/[０-９]/g, (ch) =>
                             String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
                           );
-                          const digits = half.replace(/[^\d]/g, "");
+                          const digits = half
+                            .replace(/[^\d]/g, "")
+                            .slice(0, MAX_ENTRY_AMOUNT_DIGITS);
                           setDraft((prev) =>
                             prev
                               ? {

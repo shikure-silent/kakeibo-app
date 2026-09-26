@@ -29,6 +29,11 @@ import {
 } from "../../lib/savingSupport";
 import { useCloudAutoSaveOnLeave } from "../../lib/useCloudAutoSaveOnLeave";
 import { useSupportBell } from "../../components/support/SupportBellProvider";
+import {
+  addDeletedRecordId,
+  createNewDetailRecord,
+  touchDetailRecord,
+} from "../../lib/detailSync";
 
 type PeriodDailyInfo = {
   date: Date;
@@ -269,7 +274,7 @@ export default function CalendarPage() {
     if (selectedDay == null) return;
     setSelectedDetails((prev) => {
       const next = [...prev];
-      next[index] = updated;
+      next[index] = touchDetailRecord(updated);
       recalcDayTotalsAndSave(selectedDay, next);
       return next;
     });
@@ -278,6 +283,8 @@ export default function CalendarPage() {
   const handleDeleteDetail = (index: number) => {
     if (selectedDay == null) return;
     setSelectedDetails((prev) => {
+      const target = prev[index];
+      if (target?.id) addDeletedRecordId(target.id);
       const next = prev.filter((_, i) => i !== index);
       recalcDayTotalsAndSave(selectedDay, next);
       return next;
@@ -288,16 +295,14 @@ export default function CalendarPage() {
   const handleAddDetail = () => {
     if (selectedDay == null) return;
     setSelectedDetails((prev) => {
-      const now = new Date();
-      const newRecord: DetailRecord = {
+      const newRecord: DetailRecord = createNewDetailRecord({
         mode: "expense",
         amount: 0,
         category: "",
         payFrom: "現金",
         memo: "",
         date: "",
-        createdAt: now.toISOString(),
-      } as DetailRecord;
+      });
       const next = [...prev, newRecord];
       recalcDayTotalsAndSave(selectedDay, next);
       return next;
