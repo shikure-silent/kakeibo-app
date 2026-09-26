@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "build:ios": "npm run build && npx cap copy ios",
     "build:ios:clean": "rm -rf .next out && npm run build:ios",
     "copy:ios": "npx cap copy ios",
