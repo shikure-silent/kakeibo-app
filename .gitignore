@@ -1,13 +1,26 @@
 # dependencies
 node_modules/
+*.node
 
 # next.js build output
 .next/
+next-env.d.ts
 out/
+/out [0-9]*/
+*.tsbuildinfo
 
 # env
 .env
 .env.local
+.env.*
+!.env.example
+/.env [0-9]*.local
 
 # logs
 npm-debug.log*
+
+# OS and numbered native copies
+.DS_Store
+/android/**/* [0-9]*
+/ios/**/* [0-9]*
+/ios/capacitor-cordova-ios-plugins [0-9]*/
