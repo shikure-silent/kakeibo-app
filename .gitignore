@@ -1,9 +1,12 @@
 # dependencies
 node_modules/
+*.node
 
 # next.js / build output
 .next/
+next-env.d.ts
 out/
+/out [0-9]*/
 dist/
 .turbo/
 *.tsbuildinfo
@@ -12,6 +15,7 @@ dist/
 .env
 .env.*
 !.env.example
+/.env [0-9]*.local
 
 # logs
 *.log
@@ -46,3 +50,10 @@ Thumbs.db
 # iOS generated local files
 ios/App/.DS_Store
 ios/App/App/config [0-9]*.xml
+
+# Numbered local copies and generated native plugin copies
+/android/**/* [0-9]*
+/ios/**/* [0-9]*
+/ios/capacitor-cordova-ios-plugins [0-9]*/
+/.eslintrc [0-9]*.json
+/vercel [0-9]*.json
