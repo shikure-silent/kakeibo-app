@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.0.0 <24.0.0"
+    "node": ">=24.22.1 <25.0.0"
   },
   "scripts": {
     "dev": "next dev",
@@ -15,32 +15,40 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@capacitor/android": "^8.0.0",
+    "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
+    "@capacitor/core": "^8.5.3",
     "@capacitor/haptics": "^8.0.0",
-    "@capacitor/ios": "^8.0.0",
+    "@capacitor/ios": "^8.5.3",
     "@capacitor/local-notifications": "^8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.1",
     "framer-motion": "10.12.17",
-    "next": "^16.3.6",
+    "next": "^16.4.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "recharts": "2.4.3"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.0.0",
+    "@capacitor/cli": "^8.5.3",
     "@types/node": "20.5.1",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.19",
     "autoprefixer": "^10.4.16",
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.6",
+    "eslint-config-next": "^16.4.2",
     "postcss": "^8.4.31",
     "serve": "^14.2.6",
     "tailwindcss": "3.4.4",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "compression": "^1.8.2",
+    "postcss-selector-parser": "^7.1.6",
+    "source-map-js": "^1.2.2",
+    "xcode": {
+      "uuid": "^11.1.1"
+    }
   }
 }

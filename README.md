@@ -2,6 +2,9 @@
 
 Next.js TypeScript sample project for a household budgeting app.
 ## How to run
+Use Node.js 24.22.1 or a newer 24.x release. With nvm, run `nvm install`
+and `nvm use` in this directory to use the version specified in `.nvmrc`.
+
 1. Install dependencies:
    ```
    npm install
@@ -26,6 +29,8 @@ handlers are not included in this static export.
 
 ## Notes
 
+- Dependency security updates and remaining upstream advisories are documented in
+  [docs/dependency-security.md](docs/dependency-security.md).
 - Uses Tailwind CSS (you may need to run `npx tailwindcss init -p` if you change versions).
 - This project includes Recharts and Framer Motion; run `npm install` to fetch them.
 - React Strict Mode is enabled in development (`npm run dev`) only.
